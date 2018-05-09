@@ -122,5 +122,7 @@ int main(void)
     /* Start BIOS */
     BIOS_start();
 
+    System_printf("Hello World.\n"); // test
+
     return (0);
 }
