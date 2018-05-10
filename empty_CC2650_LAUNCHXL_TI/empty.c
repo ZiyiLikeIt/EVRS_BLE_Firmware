@@ -120,9 +120,10 @@ int main(void)
     System_flush();
 
     /* Start BIOS */
-    BIOS_start();
 
-    System_printf("Hello World.\n"); // test
+    System_printf("Hello World.\n");
+
+    BIOS_start();
 
     return (0);
 }
