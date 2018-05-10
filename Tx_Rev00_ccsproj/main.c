@@ -56,6 +56,10 @@
 
 Task_Struct task0Struct;
 Char task0Stack[TASKSTACKSIZE];
+Task_Struct task1Struct;
+Char task1Stack[TASKSTACKSIZE];
+
+int ledFlashCounter = 0;
 
 /* Pin driver handle */
 static PIN_Handle ledPinHandle;
@@ -76,12 +80,35 @@ PIN_Config ledPinTable[] = {
  *  Toggle the Board_LED0. The Task_sleep is determined by arg0 which
  *  is configured for the heartBeat Task instance.
  */
-Void heartBeatFxn(UArg arg0, UArg arg1)
+Void heartBeatFxn0(UArg arg0, UArg arg1)
 {
     while (1) {
         Task_sleep((UInt)arg0);
+        /*
+        System_printf("heart beat task running, led counter == %d\n", ledFlashCounter);
+        System_flush();
+        ledFlashCounter++;
+        if (ledFlashCounter >= 7)
+            System_exit(0);
+        */
         PIN_setOutputValue(ledPinHandle, Board_LED0,
                            !PIN_getOutputValue(Board_LED0));
+    }
+}
+
+Void heartBeatFxn1(UArg arg0, UArg arg1)
+{
+    while (1) {
+        Task_sleep((UInt)arg0);
+        /*
+        System_printf("heart beat task running, led counter == %d\n", ledFlashCounter);
+        System_flush();
+        ledFlashCounter++;
+        if (ledFlashCounter >= 7)
+            System_exit(0);
+        */
+        PIN_setOutputValue(ledPinHandle, Board_LED1,
+                           !PIN_getOutputValue(Board_LED1));
     }
 }
 
@@ -90,7 +117,8 @@ Void heartBeatFxn(UArg arg0, UArg arg1)
  */
 int main(void)
 {
-    Task_Params taskParams;
+    Task_Params task0Params;  // construct struct for task parameters
+    Task_Params task1Params;
 
     /* Call board init functions */
     Board_initGeneral();
@@ -100,26 +128,34 @@ int main(void)
     // Board_initWatchdog();
 
     /* Construct heartBeat Task  thread */
-    Task_Params_init(&taskParams);
-    taskParams.arg0 = 1000000 / Clock_tickPeriod;
-    taskParams.stackSize = TASKSTACKSIZE;
-    taskParams.stack = &task0Stack;
-    Task_construct(&task0Struct, (Task_FuncPtr)heartBeatFxn, &taskParams, NULL);
+    Task_Params_init(&task0Params);  //initial task params struct
+    task0Params.arg0 = 1000000 / Clock_tickPeriod;
+    task0Params.stackSize = TASKSTACKSIZE;
+    task0Params.stack = &task0Stack;
+    Task_construct(&task0Struct, (Task_FuncPtr)heartBeatFxn0, &task0Params, NULL);  //start task
+
+    Task_Params_init(&task1Params);
+    task1Params.arg0 = 600000 / Clock_tickPeriod;
+    task1Params.stackSize = TASKSTACKSIZE;
+    task1Params.stack = &task1Stack;
+    Task_construct(&task1Struct, (Task_FuncPtr)heartBeatFxn1, &task1Params, NULL);
 
     /* Open LED pins */
-    ledPinHandle = PIN_open(&ledPinState, ledPinTable);
-    if(!ledPinHandle) {
+    ledPinHandle = PIN_open(&ledPinState, ledPinTable);  // open pin
+    if(!ledPinHandle) {  //open failed
         System_abort("Error initializing board LED pins\n");
     }
 
-    PIN_setOutputValue(ledPinHandle, Board_LED1, 1);
+    //PIN_setOutputValue(ledPinHandle, Board_LED1, 1);  // set output pin value
 
     System_printf("Starting the example\nSystem provider is set to SysMin. "
                   "Halt the target to view any SysMin contents in ROV.\n");
+
     /* SysMin will only print to the console when you call flush or exit */
     System_flush();
 
     /* Start BIOS */
+
     BIOS_start();
 
     return (0);
