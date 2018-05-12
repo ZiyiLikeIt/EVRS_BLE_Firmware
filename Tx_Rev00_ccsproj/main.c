@@ -31,7 +31,7 @@
  */
 
 /*
- *  ======== empty.c ========
+ *  ======== main.c ========
  */
 /* XDCtools Header files */
 #include <xdc/std.h>
@@ -59,11 +59,15 @@ Char task0Stack[TASKSTACKSIZE];
 Task_Struct task1Struct;
 Char task1Stack[TASKSTACKSIZE];
 
-int ledFlashCounter = 0;
+Task_Params task1Params;
+
+static bool ledTaskIsRunning = 0;
 
 /* Pin driver handle */
 static PIN_Handle ledPinHandle;
+static PIN_Handle buttonPinHandle;
 static PIN_State ledPinState;
+static PIN_State buttonPinState;
 
 /*
  * Application LED pin configuration table:
@@ -76,6 +80,16 @@ PIN_Config ledPinTable[] = {
 };
 
 /*
+ * Application button pin configuration table:
+ *   - Buttons interrupts are configured to trigger on falling edge.
+ */
+PIN_Config buttonPinTable[] = {
+    Board_BUTTON0  | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_NEGEDGE,
+    Board_BUTTON1  | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_NEGEDGE,
+    PIN_TERMINATE
+};
+
+/*
  *  ======== heartBeatFxn ========
  *  Toggle the Board_LED0. The Task_sleep is determined by arg0 which
  *  is configured for the heartBeat Task instance.
@@ -84,9 +98,8 @@ Void heartBeatFxn0(UArg arg0, UArg arg1)
 {
     while (1) {
         Task_sleep((UInt)arg0);
+
         /*
-        System_printf("heart beat task running, led counter == %d\n", ledFlashCounter);
-        System_flush();
         ledFlashCounter++;
         if (ledFlashCounter >= 7)
             System_exit(0);
@@ -100,15 +113,59 @@ Void heartBeatFxn1(UArg arg0, UArg arg1)
 {
     while (1) {
         Task_sleep((UInt)arg0);
+
         /*
-        System_printf("heart beat task running, led counter == %d\n", ledFlashCounter);
-        System_flush();
         ledFlashCounter++;
         if (ledFlashCounter >= 7)
             System_exit(0);
-        */
+         */
         PIN_setOutputValue(ledPinHandle, Board_LED1,
                            !PIN_getOutputValue(Board_LED1));
+    }
+}
+
+/*
+ *  ======== buttonCallbackFxn ========
+ *  Pin interrupt Callback function board buttons configured in the pinTable.
+ *  If Board_LED3 and Board_LED4 are defined, then we'll add them to the PIN
+ *  callback function.
+ */
+void buttonCallbackFxn(PIN_Handle handle, PIN_Id pinId) {
+    uint32_t currVal = 0;
+
+    /* Debounce logic, only toggle if the button is still pushed (low) */
+    CPUdelay(8000*50);
+    if (!PIN_getInputValue(pinId)) {
+        /* Toggle LED based on the button pressed */
+        switch (pinId) {
+
+            case Board_BUTTON0:
+                currVal =  PIN_getOutputValue(Board_LED0);
+                PIN_setOutputValue(ledPinHandle, Board_LED0, !currVal);
+                System_printf("Button 0 pressed\n");
+                System_flush();
+                break;
+
+            case Board_BUTTON1:
+                System_printf("Button 1 pressed\n");
+                if (ledTaskIsRunning)  {
+                    Task_destruct(&task1Struct);
+                    ledTaskIsRunning = !ledTaskIsRunning;
+                    PIN_setOutputValue(ledPinHandle, Board_LED1, 0);
+                    System_printf("task LED1 destructed\n");
+                }  else  {
+                    Task_construct(&task1Struct, (Task_FuncPtr)heartBeatFxn1, &task1Params, NULL);
+                    ledTaskIsRunning = !ledTaskIsRunning;
+                    PIN_setOutputValue(ledPinHandle, Board_LED1, 1);
+                    System_printf("task LED1 constructed\n");
+                }
+                System_flush();
+                break;
+
+            default:
+                /* Do nothing */
+                break;
+        }
     }
 }
 
@@ -118,7 +175,7 @@ Void heartBeatFxn1(UArg arg0, UArg arg1)
 int main(void)
 {
     Task_Params task0Params;  // construct struct for task parameters
-    Task_Params task1Params;
+
 
     /* Call board init functions */
     Board_initGeneral();
@@ -133,17 +190,24 @@ int main(void)
     task0Params.stackSize = TASKSTACKSIZE;
     task0Params.stack = &task0Stack;
     Task_construct(&task0Struct, (Task_FuncPtr)heartBeatFxn0, &task0Params, NULL);  //start task
+    System_printf("task LED0 constructed\n");
+    System_flush();
 
     Task_Params_init(&task1Params);
     task1Params.arg0 = 600000 / Clock_tickPeriod;
     task1Params.stackSize = TASKSTACKSIZE;
     task1Params.stack = &task1Stack;
-    Task_construct(&task1Struct, (Task_FuncPtr)heartBeatFxn1, &task1Params, NULL);
+    //Task_construct(&task1Struct, (Task_FuncPtr)heartBeatFxn1, &task1Params, NULL);
 
-    /* Open LED pins */
+    /* Open IO pins */
     ledPinHandle = PIN_open(&ledPinState, ledPinTable);  // open pin
     if(!ledPinHandle) {  //open failed
         System_abort("Error initializing board LED pins\n");
+    }
+
+    buttonPinHandle = PIN_open(&buttonPinState, buttonPinTable);
+    if(!buttonPinHandle) {
+        System_abort("Error initializing button pins\n");
     }
 
     //PIN_setOutputValue(ledPinHandle, Board_LED1, 1);  // set output pin value
@@ -153,6 +217,11 @@ int main(void)
 
     /* SysMin will only print to the console when you call flush or exit */
     System_flush();
+
+    /* Setup callback for button pins */
+    if (PIN_registerIntCb(buttonPinHandle, &buttonCallbackFxn) != 0) {
+        System_abort("Error registering button callback function");
+    }
 
     /* Start BIOS */
 
