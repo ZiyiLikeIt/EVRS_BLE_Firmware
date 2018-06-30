@@ -61,7 +61,8 @@ Char task1Stack[TASKSTACKSIZE];
 
 Task_Params task1Params;
 
-static bool ledTaskIsRunning = 0;
+static bool ledTaskIsRunning = 1;
+static int freqCounter = 0;
 
 /* Pin driver handle */
 static PIN_Handle ledPinHandle;
@@ -94,7 +95,7 @@ PIN_Config buttonPinTable[] = {
  *  Toggle the Board_LED0. The Task_sleep is determined by arg0 which
  *  is configured for the heartBeat Task instance.
  */
-Void heartBeatFxn0(UArg arg0, UArg arg1)
+void heartBeatFxn0(UArg arg0, UArg arg1)
 {
     while (1) {
         Task_sleep((UInt)arg0);
@@ -109,7 +110,7 @@ Void heartBeatFxn0(UArg arg0, UArg arg1)
     }
 }
 
-Void heartBeatFxn1(UArg arg0, UArg arg1)
+void heartBeatFxn1(UArg arg0, UArg arg1)
 {
     while (1) {
         Task_sleep((UInt)arg0);
@@ -131,7 +132,6 @@ Void heartBeatFxn1(UArg arg0, UArg arg1)
  *  callback function.
  */
 void buttonCallbackFxn(PIN_Handle handle, PIN_Id pinId) {
-    uint32_t currVal = 0;
 
     /* Debounce logic, only toggle if the button is still pushed (low) */
     CPUdelay(8000*50);
@@ -140,9 +140,21 @@ void buttonCallbackFxn(PIN_Handle handle, PIN_Id pinId) {
         switch (pinId) {
 
             case Board_BUTTON0:
-                currVal =  PIN_getOutputValue(Board_LED0);
-                PIN_setOutputValue(ledPinHandle, Board_LED0, !currVal);
-                System_printf("Button 0 pressed\n");
+                freqCounter++;
+                freqCounter %= 4;
+                task1Params.arg0 = (freqCounter * 100000 + 100000) / Clock_tickPeriod;
+
+                if (ledTaskIsRunning)  {
+                    Task_destruct(&task1Struct);
+                    ledTaskIsRunning = !ledTaskIsRunning;
+                    PIN_setOutputValue(ledPinHandle, Board_LED1, 0);
+                }
+                Task_construct(&task1Struct, (Task_FuncPtr)heartBeatFxn1, &task1Params, NULL);
+                ledTaskIsRunning = !ledTaskIsRunning;
+                PIN_setOutputValue(ledPinHandle, Board_LED1, 1);
+
+                System_printf("Button 0 pressed ");
+                System_printf("with the param %d\n",task1Params.arg0);
                 System_flush();
                 break;
 
@@ -186,7 +198,7 @@ int main(void)
 
     /* Construct heartBeat Task  thread */
     Task_Params_init(&task0Params);  //initial task params struct
-    task0Params.arg0 = 1000000 / Clock_tickPeriod;
+    task0Params.arg0 = 100000 / Clock_tickPeriod;
     task0Params.stackSize = TASKSTACKSIZE;
     task0Params.stack = &task0Stack;
     Task_construct(&task0Struct, (Task_FuncPtr)heartBeatFxn0, &task0Params, NULL);  //start task
@@ -194,10 +206,11 @@ int main(void)
     System_flush();
 
     Task_Params_init(&task1Params);
-    task1Params.arg0 = 600000 / Clock_tickPeriod;
+    task1Params.arg0 = 100000 / Clock_tickPeriod;
     task1Params.stackSize = TASKSTACKSIZE;
     task1Params.stack = &task1Stack;
-    //Task_construct(&task1Struct, (Task_FuncPtr)heartBeatFxn1, &task1Params, NULL);
+    Task_construct(&task1Struct, (Task_FuncPtr)heartBeatFxn1, &task1Params, NULL);
+    ledTaskIsRunning = 1;
 
     /* Open IO pins */
     ledPinHandle = PIN_open(&ledPinState, ledPinTable);  // open pin
