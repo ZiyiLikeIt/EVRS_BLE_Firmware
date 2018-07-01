@@ -1,7 +1,7 @@
 ******************************************************************************
                   TI ARM Linker PC v18.1.1                     
 ******************************************************************************
->> Linked Sat Jun 30 15:46:18 2018
+>> Linked Sun Jul  1 23:04:03 2018
 
 OUTPUT FILE NAME:   <EVRS_TX_REV0.out>
 ENTRY POINT SYMBOL: "ResetISR"  address: 00002f31
@@ -173,7 +173,7 @@ section   page    origin      length       input sections
                   00000928    00000234     main.obj (.text:main)
                   00000b5c    00000228     drivers_cc26xxware.aem3 : PowerCC26XX.oem3 (.text:Power_sleep)
                   00000d84    00000204     driverlib.lib : sys_ctrl.obj (.text:NOROM_SysCtrlSetRechargeBeforePowerDown)
-                  00000f88    000001f0     main.obj (.text:buttonCallbackFxn)
+                  00000f88    000001f0     main.obj (.text:buttonCallbackFunc)
                   00001178    000001d0     drivers_cc26xxware.aem3 : PowerCC26XX_calibrateRCOSC.oem3 (.text:calibrateRcoscHf1)
                   00001348    000001c4                             : PINCC26XX.oem3 (.text:PIN_init)
                   0000150c    00000184                             : PowerCC26XX_calibrateRCOSC.oem3 (.text:PowerCC26XX_doCalibrate)
@@ -249,8 +249,8 @@ section   page    origin      length       input sections
                   000032a0    00000030     driverlib.lib : setup_rom.obj (.text:NOROM_SetupSetAonRtcSubSecInc)
                   000032d0    00000030     drivers_cc26xxware.aem3 : PowerCC26XX.oem3 (.text:Power_releaseConstraint)
                   00003300    00000030                             : PowerCC26XX.oem3 (.text:Power_setConstraint)
-                  00003330    00000030     main.obj (.text:heartBeatFxn0)
-                  00003360    00000030     main.obj (.text:heartBeatFxn1)
+                  00003330    00000030     main.obj (.text:heartBeatFunc0)
+                  00003360    00000030     main.obj (.text:heartBeatFunc1)
                   00003390    00000030     main_pem3.oem3 (.text:ti_sysbios_BIOS_atExitFunc__I)
                   000033c0    00000030     main_pem3.oem3 (.text:ti_sysbios_BIOS_startFunc__I)
                   000033f0    00000030     rom_sysbios.aem3 : rom_sysbios.obj (.text:ti_sysbios_family_arm_cc26xx_Timer_setThreshold__I)
@@ -1021,8 +1021,8 @@ section   page    origin      length       input sections
 .vecs      0    20000000    000000c8     NOLOAD SECTION
                   20000000    000000c8     main_pem3.oem3 (.vecs)
 
-xdc.meta   0    00000000    000000f0     COPY SECTION
-                  00000000    000000f0     main_pem3.oem3 (xdc.meta)
+xdc.meta   0    00000000    000000ea     COPY SECTION
+                  00000000    000000ea     main_pem3.oem3 (xdc.meta)
 
 xdc.noload 
 *          0    00000000    00000000     COPY SECTION
@@ -1040,7 +1040,7 @@ MODULE SUMMARY
     +--+---------------------------------+-------+---------+---------+
        Total:                            1178    156       1308   
                                                                   
-    C:\Users\ziyix\git\EVRS_TX_PROTOTYPE\Tx_Rev00_ccsproj\Debug\configPkg\package\cfg\
+    E:\Documents\EVRS_TX_PROTOTYPE\Tx_Rev00_ccsproj\Debug\configPkg\package\cfg\
        main_pem3.oem3                    706     1487      2866   
     +--+---------------------------------+-------+---------+---------+
        Total:                            706     1487      2866   
@@ -1074,12 +1074,6 @@ MODULE SUMMARY
     +--+---------------------------------+-------+---------+---------+
        Total:                            212     0         0      
                                                                   
-    C:\Users\ziyix\git\EVRS_TX_PROTOTYPE\Tx_Rev00_ccsproj\src\sysbios\rom_sysbios.aem3
-       rom_sysbios.obj                   2519    0         0      
-       rom_sysbios_config.obj            26      0         0      
-    +--+---------------------------------+-------+---------+---------+
-       Total:                            2545    0         0      
-                                                                  
     C:\ti\ccs800\ccsv8\tools\compiler\ti-cgt-arm_18.1.1.LTS\lib\rtsv7M3_T_le_eabi.lib
        trgmsg.c.obj                      108     0         288    
        memcpy_t2.asm.obj                 156     0         0      
@@ -1110,6 +1104,12 @@ MODULE SUMMARY
        boot.oem3                         68      0         0      
     +--+---------------------------------+-------+---------+---------+
        Total:                            68      0         0      
+                                                                  
+    E:\Documents\EVRS_TX_PROTOTYPE\Tx_Rev00_ccsproj\src\sysbios\rom_sysbios.aem3
+       rom_sysbios.obj                   2519    0         0      
+       rom_sysbios_config.obj            26      0         0      
+    +--+---------------------------------+-------+---------+---------+
+       Total:                            2545    0         0      
                                                                   
        Stack:                            0       0         768    
        Linker Generated:                 336     591       0      
@@ -1174,8 +1174,8 @@ ti_sysbios_BIOS_setThreadType__E  $Tramp$TT$L$PI$$ti_sysbios_BIOS_setThreadType_
    1001c045     00003bcc     0000339c   main_pem3.oem3 (.text:ti_sysbios_BIOS_atExitFunc__I)
                              000039aa   main_pem3.oem3 (.text:ti_sysbios_BIOS_exitFunc__I)
 ti_sysbios_knl_Task_sleep__E  $Tramp$TT$L$PI$$ti_sysbios_knl_Task_sleep__E
-   1001a96d     00003bd4     00003338   main.obj (.text:heartBeatFxn0)
-                             00003368   main.obj (.text:heartBeatFxn1)
+   1001a96d     00003bd4     00003338   main.obj (.text:heartBeatFunc0)
+                             00003368   main.obj (.text:heartBeatFunc1)
 xdc_runtime_Gate_leaveSystem__E  $Tramp$TT$L$PI$$xdc_runtime_Gate_leaveSystem__E
    1001c879     00003bdc     00002fa4   rom_sysbios.aem3 : rom_sysbios.obj (.text:xdc_runtime_SysMin_flush__E)
                              0000318c                    : rom_sysbios.obj (.text:xdc_runtime_SysMin_putch__E)
@@ -1252,8 +1252,8 @@ ti_sysbios_knl_Semaphore_construct  $Tramp$TT$L$PI$$ti_sysbios_knl_Semaphore_con
 ti_sysbios_knl_Semaphore_Params__init__S  $Tramp$TT$L$PI$$ti_sysbios_knl_Semaphore_Params__init__S
    1001c1c1     00003c7c     00001400   drivers_cc26xxware.aem3 : PINCC26XX.oem3 (.text:PIN_init)
 ti_sysbios_knl_Task_destruct  $Tramp$TT$L$PI$$ti_sysbios_knl_Task_destruct
-   1001c305     00003c84     00000fe0   main.obj (.text:buttonCallbackFxn)
-                             00001060   main.obj (.text:buttonCallbackFxn)
+   1001c305     00003c84     00000fe0   main.obj (.text:buttonCallbackFunc)
+                             00001060   main.obj (.text:buttonCallbackFunc)
 ti_sysbios_knl_Task_restore__E  $Tramp$TT$L$PI$$ti_sysbios_knl_Task_restore__E
    1001ba49     00003c8c     00000d44   drivers_cc26xxware.aem3 : PowerCC26XX.oem3 (.text:Power_sleep)
 ti_sysbios_knl_Swi_restore__E  $Tramp$TT$L$PI$$ti_sysbios_knl_Swi_restore__E
@@ -1269,8 +1269,8 @@ ti_sysbios_BIOS_start__E  $Tramp$TT$L$PI$$ti_sysbios_BIOS_start__E
 ti_sysbios_knl_Task_construct  $Tramp$TT$L$PI$$ti_sysbios_knl_Task_construct
    1001b125     00003cb4     00000964   main.obj (.text:main)
                              0000099c   main.obj (.text:main)
-                             00001012   main.obj (.text:buttonCallbackFxn)
-                             0000109a   main.obj (.text:buttonCallbackFxn)
+                             00001012   main.obj (.text:buttonCallbackFunc)
+                             0000109a   main.obj (.text:buttonCallbackFunc)
 xdc_runtime_System_abort__E  $Tramp$TT$L$PI$$xdc_runtime_System_abort__E
    1001c749     00003cbc     0000093c   main.obj (.text:main)
                              000009ba   main.obj (.text:main)
@@ -1370,11 +1370,11 @@ UNDEFED   SHT$$INIT_ARRAY$$Limit
 00003559  SafeHapiVoid                                                              
 00000000  __ASM__                                                                   
 20000c08  __CIOBUF_                                                                 
-0000006a  __ISA__                                                                   
-0000007c  __PLAT__                                                                  
+00000064  __ISA__                                                                   
+00000076  __PLAT__                                                                  
 20005000  __STACK_END                                                               
 00000300  __STACK_SIZE                                                              
-000000a3  __TARG__                                                                  
+0000009d  __TARG__                                                                  
 00004000  __TI_CINIT_Base                                                           
 00004060  __TI_CINIT_Limit                                                          
 00003fb8  __TI_Handler_Table_Base                                                   
@@ -1389,7 +1389,7 @@ ffffffff  __TI_prof_data_start
 00003e08  __TI_static_base__                                                        
 000030f5  __TI_writemsg                                                             
 00003b19  __TI_zero_init                                                            
-000000c8  __TRDR__                                                                  
+000000c2  __TRDR__                                                                  
 0000252f  __aeabi_idiv0                                                             
 0000252f  __aeabi_ldiv0                                                             
 00003941  __aeabi_lmul                                                              
@@ -1417,12 +1417,12 @@ ffffffff  __c_args__
 00003b0d  _register_unlock                                                          
 20001380  _unlock                                                                   
 ffffffff  binit                                                                     
-00000f89  buttonCallbackFxn                                                         
+00000f89  buttonCallbackFunc                                                        
 20001358  buttonPinTable                                                            
 00002dc5  copy_in                                                                   
 200010a0  driverlib_release_0_47020                                                 
-00003331  heartBeatFxn0                                                             
-00003361  heartBeatFxn1                                                             
+00003331  heartBeatFunc0                                                            
+00003361  heartBeatFunc1                                                            
 20001364  ledPinTable                                                               
 00000929  main                                                                      
 20001204  main_func_sp                                                              
@@ -2027,10 +2027,10 @@ address   name
 00000000  ti_sysbios_family_arm_m3_Hwi_resetVectors                                 
 00000001  xdc_runtime_Startup__EXECFXN__C                                           
 00000001  xdc_runtime_Startup__RESETFXN__C                                          
-0000006a  __ISA__                                                                   
-0000007c  __PLAT__                                                                  
-000000a3  __TARG__                                                                  
-000000c8  __TRDR__                                                                  
+00000064  __ISA__                                                                   
+00000076  __PLAT__                                                                  
+0000009d  __TARG__                                                                  
+000000c2  __TRDR__                                                                  
 00000100  ti_sysbios_knl_Task_Object__PARAMS__C                                     
 0000013c  ti_sysbios_knl_Mailbox_Object__PARAMS__C                                  
 00000170  ti_sysbios_family_arm_m3_Hwi_Object__PARAMS__C                            
@@ -2155,7 +2155,7 @@ address   name
 00000929  main                                                                      
 00000b5d  Power_sleep                                                               
 00000d85  NOROM_SysCtrlSetRechargeBeforePowerDown                                   
-00000f89  buttonCallbackFxn                                                         
+00000f89  buttonCallbackFunc                                                        
 00001349  PIN_init                                                                  
 0000150d  PowerCC26XX_doCalibrate                                                   
 00001691  NOROM_SetupAfterColdResetWakeupFromShutDownCfg3                           
@@ -2235,8 +2235,8 @@ address   name
 000032a1  NOROM_SetupSetAonRtcSubSecInc                                             
 000032d1  Power_releaseConstraint                                                   
 00003301  Power_setConstraint                                                       
-00003331  heartBeatFxn0                                                             
-00003361  heartBeatFxn1                                                             
+00003331  heartBeatFunc0                                                            
+00003361  heartBeatFunc1                                                            
 00003391  ti_sysbios_BIOS_atExitFunc__I                                             
 000033c1  ti_sysbios_BIOS_startFunc__I                                              
 000033f1  ti_sysbios_family_arm_cc26xx_Timer_setThreshold__I                        

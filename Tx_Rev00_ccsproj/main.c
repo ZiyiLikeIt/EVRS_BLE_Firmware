@@ -51,8 +51,7 @@
 
 /* Board Header files */
 #include "Board.h"
-
-#define TASKSTACKSIZE   512
+#include "Params.h"
 
 Task_Struct task0Struct;
 Char task0Stack[TASKSTACKSIZE];
@@ -70,68 +69,37 @@ static PIN_Handle buttonPinHandle;
 static PIN_State ledPinState;
 static PIN_State buttonPinState;
 
-/*
- * Application LED pin configuration table:
- *   - All LEDs board LEDs are off.
- */
-PIN_Config ledPinTable[] = {
-    Board_LED0 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,
-    Board_LED1 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,
-    PIN_TERMINATE
-};
 
 /*
- * Application button pin configuration table:
- *   - Buttons interrupts are configured to trigger on falling edge.
- */
-PIN_Config buttonPinTable[] = {
-    Board_BUTTON0  | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_NEGEDGE,
-    Board_BUTTON1  | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_NEGEDGE,
-    PIN_TERMINATE
-};
-
-/*
- *  ======== heartBeatFxn ========
+ *  ======== heartBeatFunc ========
  *  Toggle the Board_LED0. The Task_sleep is determined by arg0 which
  *  is configured for the heartBeat Task instance.
  */
-void heartBeatFxn0(UArg arg0, UArg arg1)
+void heartBeatFunc0(UArg arg0, UArg arg1)
 {
     while (1) {
         Task_sleep((UInt)arg0);
-
-        /*
-        ledFlashCounter++;
-        if (ledFlashCounter >= 7)
-            System_exit(0);
-        */
         PIN_setOutputValue(ledPinHandle, Board_LED0,
                            !PIN_getOutputValue(Board_LED0));
     }
 }
 
-void heartBeatFxn1(UArg arg0, UArg arg1)
+void heartBeatFunc1(UArg arg0, UArg arg1)
 {
     while (1) {
         Task_sleep((UInt)arg0);
-
-        /*
-        ledFlashCounter++;
-        if (ledFlashCounter >= 7)
-            System_exit(0);
-         */
         PIN_setOutputValue(ledPinHandle, Board_LED1,
                            !PIN_getOutputValue(Board_LED1));
     }
 }
 
 /*
- *  ======== buttonCallbackFxn ========
+ *  ======== buttonCallbackFunc ========
  *  Pin interrupt Callback function board buttons configured in the pinTable.
  *  If Board_LED3 and Board_LED4 are defined, then we'll add them to the PIN
  *  callback function.
  */
-void buttonCallbackFxn(PIN_Handle handle, PIN_Id pinId) {
+void buttonCallbackFunc(PIN_Handle handle, PIN_Id pinId) {
 
     /* Debounce logic, only toggle if the button is still pushed (low) */
     CPUdelay(8000*50);
@@ -140,7 +108,7 @@ void buttonCallbackFxn(PIN_Handle handle, PIN_Id pinId) {
         switch (pinId) {
 
             case Board_BUTTON0:
-                freqCounter++;
+                freqCounter ++;
                 freqCounter %= 4;
                 task1Params.arg0 = (freqCounter * 100000 + 100000) / Clock_tickPeriod;
 
@@ -149,7 +117,7 @@ void buttonCallbackFxn(PIN_Handle handle, PIN_Id pinId) {
                     ledTaskIsRunning = !ledTaskIsRunning;
                     PIN_setOutputValue(ledPinHandle, Board_LED1, 0);
                 }
-                Task_construct(&task1Struct, (Task_FuncPtr)heartBeatFxn1, &task1Params, NULL);
+                Task_construct(&task1Struct, (Task_FuncPtr)heartBeatFunc1, &task1Params, NULL);
                 ledTaskIsRunning = !ledTaskIsRunning;
                 PIN_setOutputValue(ledPinHandle, Board_LED1, 1);
 
@@ -166,7 +134,7 @@ void buttonCallbackFxn(PIN_Handle handle, PIN_Id pinId) {
                     PIN_setOutputValue(ledPinHandle, Board_LED1, 0);
                     System_printf("task LED1 destructed\n");
                 }  else  {
-                    Task_construct(&task1Struct, (Task_FuncPtr)heartBeatFxn1, &task1Params, NULL);
+                    Task_construct(&task1Struct, (Task_FuncPtr)heartBeatFunc1, &task1Params, NULL);
                     ledTaskIsRunning = !ledTaskIsRunning;
                     PIN_setOutputValue(ledPinHandle, Board_LED1, 1);
                     System_printf("task LED1 constructed\n");
@@ -201,7 +169,7 @@ int main(void)
     task0Params.arg0 = 100000 / Clock_tickPeriod;
     task0Params.stackSize = TASKSTACKSIZE;
     task0Params.stack = &task0Stack;
-    Task_construct(&task0Struct, (Task_FuncPtr)heartBeatFxn0, &task0Params, NULL);  //start task
+    Task_construct(&task0Struct, (Task_FuncPtr)heartBeatFunc0, &task0Params, NULL);  //start task
     System_printf("task LED0 constructed\n");
     System_flush();
 
@@ -209,7 +177,7 @@ int main(void)
     task1Params.arg0 = 100000 / Clock_tickPeriod;
     task1Params.stackSize = TASKSTACKSIZE;
     task1Params.stack = &task1Stack;
-    Task_construct(&task1Struct, (Task_FuncPtr)heartBeatFxn1, &task1Params, NULL);
+    Task_construct(&task1Struct, (Task_FuncPtr)heartBeatFunc1, &task1Params, NULL);
     ledTaskIsRunning = 1;
 
     /* Open IO pins */
@@ -232,7 +200,7 @@ int main(void)
     System_flush();
 
     /* Setup callback for button pins */
-    if (PIN_registerIntCb(buttonPinHandle, &buttonCallbackFxn) != 0) {
+    if (PIN_registerIntCb(buttonPinHandle, &buttonCallbackFunc) != 0) {
         System_abort("Error registering button callback function");
     }
 
