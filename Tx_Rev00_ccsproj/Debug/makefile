@@ -13,6 +13,7 @@ ORDERED_OBJS += \
 "./CC2650_LAUNCHXL.obj" \
 "./ccfg.obj" \
 "./main.obj" \
+"./smartrf_settings.obj" \
 "../CC2650_LAUNCHXL.cmd" \
 $(GEN_CMDS__FLAG) \
 -l"C:/ti/tirtos_cc13xx_cc26xx_2_21_00_06/products/cc26xxware_2_24_03_17272/driverlib/bin/ccs/driverlib.lib" \
@@ -158,8 +159,8 @@ EVRS_TX_REV0.hex: $(EXE_OUTPUTS)
 clean:
 	-$(RM) $(GEN_CMDS__QUOTED)$(GEN_MISC_FILES__QUOTED)$(BIN_OUTPUTS__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)$(GEN_OPTS__QUOTED)
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
-	-$(RM) "CC2650_LAUNCHXL.obj" "ccfg.obj" "main.obj" 
-	-$(RM) "CC2650_LAUNCHXL.d" "ccfg.d" "main.d" 
+	-$(RM) "CC2650_LAUNCHXL.obj" "ccfg.obj" "main.obj" "smartrf_settings.obj" 
+	-$(RM) "CC2650_LAUNCHXL.d" "ccfg.d" "main.d" "smartrf_settings.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

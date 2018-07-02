@@ -14,7 +14,8 @@ CMD_SRCS += \
 C_SRCS += \
 ../CC2650_LAUNCHXL.c \
 ../ccfg.c \
-../main.c 
+../main.c \
+../smartrf_settings.c 
 
 GEN_CMDS += \
 ./configPkg/linker.cmd 
@@ -29,7 +30,8 @@ GEN_MISC_DIRS += \
 C_DEPS += \
 ./CC2650_LAUNCHXL.d \
 ./ccfg.d \
-./main.d 
+./main.d \
+./smartrf_settings.d 
 
 GEN_OPTS += \
 ./configPkg/compiler.opt 
@@ -37,7 +39,8 @@ GEN_OPTS += \
 OBJS += \
 ./CC2650_LAUNCHXL.obj \
 ./ccfg.obj \
-./main.obj 
+./main.obj \
+./smartrf_settings.obj 
 
 GEN_MISC_DIRS__QUOTED += \
 "configPkg\" 
@@ -45,12 +48,14 @@ GEN_MISC_DIRS__QUOTED += \
 OBJS__QUOTED += \
 "CC2650_LAUNCHXL.obj" \
 "ccfg.obj" \
-"main.obj" 
+"main.obj" \
+"smartrf_settings.obj" 
 
 C_DEPS__QUOTED += \
 "CC2650_LAUNCHXL.d" \
 "ccfg.d" \
-"main.d" 
+"main.d" \
+"smartrf_settings.d" 
 
 GEN_FILES__QUOTED += \
 "configPkg\linker.cmd" \
@@ -59,6 +64,7 @@ GEN_FILES__QUOTED += \
 C_SRCS__QUOTED += \
 "../CC2650_LAUNCHXL.c" \
 "../ccfg.c" \
-"../main.c" 
+"../main.c" \
+"../smartrf_settings.c" 
 
 
