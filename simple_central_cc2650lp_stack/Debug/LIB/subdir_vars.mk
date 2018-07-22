@@ -2,7 +2,10 @@
 # Automatically-generated file. Do not edit!
 ################################################################################
 
-USER_OBJS :=
+SHELL = cmd.exe
 
-LIBS := -l"C:/ti/tirtos_cc13xx_cc26xx_2_21_01_08/products/cc26xxware_2_24_03_17272/driverlib/bin/ccs/driverlib.lib" -llibc.a
+# Add inputs and outputs from these tool invocations to the build variables 
+CMD_SRCS += \
+E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/config/lib_linker.cmd 
+
 

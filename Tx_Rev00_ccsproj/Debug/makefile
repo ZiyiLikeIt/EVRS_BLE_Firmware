@@ -4,7 +4,7 @@
 
 SHELL = cmd.exe
 
-CG_TOOL_ROOT := C:/ti/ccs800/ccsv8/tools/compiler/ti-cgt-arm_18.1.1.LTS
+CG_TOOL_ROOT := C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.1.LTS
 
 GEN_OPTS__FLAG := --cmd_file="configPkg/compiler.opt"
 GEN_CMDS__FLAG := -l"configPkg/linker.cmd"
@@ -15,7 +15,7 @@ ORDERED_OBJS += \
 "./main.obj" \
 "../CC2650_LAUNCHXL.cmd" \
 $(GEN_CMDS__FLAG) \
--l"C:/ti/tirtos_cc13xx_cc26xx_2_21_00_06/products/cc26xxware_2_24_03_17272/driverlib/bin/ccs/driverlib.lib" \
+-l"C:/ti/tirtos_cc13xx_cc26xx_2_21_01_08/products/cc26xxware_2_24_03_17272/driverlib/bin/ccs/driverlib.lib" \
 -llibc.a \
 
 -include ../makefile.init
@@ -143,14 +143,14 @@ all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 EVRS_TX_REV0.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: ARM Linker'
-	"C:/ti/ccs800/ccsv8/tools/compiler/ti-cgt-arm_18.1.1.LTS/bin/armcl" -mv7M3 --code_state=16 --float_support=vfplib -me --define=ccs -g --diag_warning=225 --diag_warning=255 --diag_wrap=off --display_error_number --gen_func_subsections=on --abi=eabi -z -m"EVRS_TX_REV0.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccs800/ccsv8/tools/compiler/ti-cgt-arm_18.1.1.LTS/lib" -i"C:/ti/ccs800/ccsv8/tools/compiler/ti-cgt-arm_18.1.1.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="EVRS_TX_REV0_linkInfo.xml" --rom_model -o "EVRS_TX_REV0.out" $(ORDERED_OBJS)
+	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.1.LTS/bin/armcl" -mv7M3 --code_state=16 --float_support=vfplib -me --define=ccs -g --diag_warning=225 --diag_warning=255 --diag_wrap=off --display_error_number --gen_func_subsections=on --abi=eabi -z -m"EVRS_TX_REV0.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.1.LTS/lib" -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.1.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="EVRS_TX_REV0_linkInfo.xml" --rom_model -o "EVRS_TX_REV0.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
 EVRS_TX_REV0.hex: $(EXE_OUTPUTS)
 	@echo 'Building files: $(strip $(EXE_OUTPUTS__QUOTED))'
 	@echo 'Invoking: ARM Hex Utility'
-	"C:/ti/ccs800/ccsv8/tools/compiler/ti-cgt-arm_18.1.1.LTS/bin/armhex" --memwidth=8 --romwidth=8 --intel -o "EVRS_TX_REV0.hex" $(EXE_OUTPUTS__QUOTED)
+	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.1.LTS/bin/armhex" --memwidth=8 --romwidth=8 --intel -o "EVRS_TX_REV0.hex" $(EXE_OUTPUTS__QUOTED)
 	@echo 'Finished building: $(strip $(EXE_OUTPUTS__QUOTED))'
 	@echo ' '
 
