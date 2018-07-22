@@ -12,7 +12,7 @@
 	<rts value="libc.a"/>
 	<createSlaveProjects value=""/>
 	<templateProperties value="id=simple_central_cc2650lp_app.projectspec.simple_central_cc2650lp_app,type=rtsc,products=com.ti.rtsc.TIRTOSCC13XX_CC26XX:2.20.1.08,xdcToolsVersion=3.32.00.06,target=ti.targets.arm.elf.M3,platform=ti.platforms.simplelink:CC2650F128,buildProfile=release,isHybrid=true,configuroOptions=--compileOptions &quot;${COMPILER_FLAGS} &quot; --xdcpath &quot;${TI_BLE_SDK_BASE} &quot;,"/>
-	<origin value="E:\Documents\git\ble_examples\examples\cc2650lp\simple_central\ccs\app\simple_central_cc2650lp_app.projectspec"/>
+	<origin value="C:\ti\ble_sdk_2_02_02_25\ble_examples\examples\cc2650lp\simple_central\ccs\app\simple_central_cc2650lp_app.projectspec"/>
 	<filesToOpen value=""/>
 	<isTargetManual value="false"/>
 </projectOptions>

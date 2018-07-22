@@ -11,7 +11,6 @@ GEN_CMDS__FLAG := -l"configPkg/linker.cmd"
 
 ORDERED_OBJS += \
 "./Application/board_key.obj" \
-"./Application/simple_central.obj" \
 "./Application/util.obj" \
 "./Drivers/Display/DisplaySharp.obj" \
 "./Drivers/Display/DisplayUart.obj" \
@@ -31,9 +30,10 @@ ORDERED_OBJS += \
 "./PROFILES/central.obj" \
 "./Startup/board.obj" \
 "./Startup/ccfg_app_ble.obj" \
-"./Startup/main.obj" \
+"./src/main.obj" \
+"./src/simple_central.obj" \
 $(GEN_CMDS__FLAG) \
--l"E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/config/ccs_linker_defines.cmd" \
+-l"C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/config/ccs_linker_defines.cmd" \
 -l"C:/ti/ble_sdk_2_02_02_25/src/common/cc26xx/ccs/cc26xx_app.cmd" \
 -l"C:/ti/tirtos_cc13xx_cc26xx_2_21_01_08/products/cc26xxware_2_24_03_17272/driverlib/bin/ccs/driverlib.lib" \
 -l"C:/ti/ble_sdk_2_02_02_25/src/rom/common_rom_releases/03282014/common_rom.symbols" \
@@ -60,6 +60,7 @@ RMDIR := RMDIR /S/Q
 -include PROFILES/subdir_vars.mk
 -include Startup/subdir_vars.mk
 -include TOOLS/subdir_vars.mk
+-include src/subdir_vars.mk
 -include Application/subdir_rules.mk
 -include Drivers/Display/subdir_rules.mk
 -include Drivers/ECC/subdir_rules.mk
@@ -74,6 +75,7 @@ RMDIR := RMDIR /S/Q
 -include PROFILES/subdir_rules.mk
 -include Startup/subdir_rules.mk
 -include TOOLS/subdir_rules.mk
+-include src/subdir_rules.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -190,7 +192,7 @@ all: $(OBJS) $(GEN_CMDS)
 simple_central_cc2650lp_app.out: $(OBJS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: ARM Linker'
-	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armcl" --cmd_file="C:/ti/ble_sdk_2_02_02_25/src/config/build_components.opt" --cmd_file="E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/app/../../iar/stack/build_config.opt" --cmd_file="E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/app/../config/ccs_compiler_defines.bcfg"  -mv7M3 --code_state=16 --float_support=vfplib -me -O4 --opt_for_speed=0 --define=USE_ICALL --define=MAX_PDU_SIZE=162 --define=POWER_SAVING --define=GAPCENTRALROLE_TASK_STACK_SIZE=510 --define=HEAPMGR_SIZE=0 --define=xDisplay_DISABLE_ALL --define=xBOARD_DISPLAY_EXCLUDE_UART --define=BOARD_DISPLAY_EXCLUDE_LCD --define=GAPCENTRALROLE_NUM_RSSI_LINKS=1 --define=ICALL_MAX_NUM_TASKS=3 --define=ICALL_MAX_NUM_ENTITIES=6 --define=xdc_runtime_Assert_DISABLE_ALL --define=xdc_runtime_Log_DISABLE_ALL --define=CC26XX --define=CC2650_LAUNCHXL -g --c99 --relaxed_ansi --plain_char=unsigned --diag_suppress=48 --diag_warning=225 --diag_wrap=off --display_error_number --gen_func_subsections=on --embedded_constants=on --unaligned_access=on --enum_type=packed --wchar_t=16 --abi=eabi --common=on --fp_reassoc=off --sat_reassoc=off -z -m"simple_central_cc2650lp_app.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/lib" -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/include" --reread_libs --diag_suppress=10247-D --diag_suppress=16002-D --diag_wrap=off --display_error_number --warn_sections --xml_link_info="simple_central_cc2650lp_app_linkInfo.xml" --rom_model --unused_section_elimination=on -o "simple_central_cc2650lp_app.out" $(ORDERED_OBJS)
+	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armcl" --cmd_file="C:/ti/ble_sdk_2_02_02_25/src/config/build_components.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/app/../../iar/stack/build_config.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/app/../config/ccs_compiler_defines.bcfg"  -mv7M3 --code_state=16 --float_support=vfplib -me -O4 --opt_for_speed=0 --define=USE_ICALL --define=MAX_PDU_SIZE=162 --define=POWER_SAVING --define=GAPCENTRALROLE_TASK_STACK_SIZE=510 --define=HEAPMGR_SIZE=0 --define=xDisplay_DISABLE_ALL --define=xBOARD_DISPLAY_EXCLUDE_UART --define=BOARD_DISPLAY_EXCLUDE_LCD --define=GAPCENTRALROLE_NUM_RSSI_LINKS=1 --define=ICALL_MAX_NUM_TASKS=3 --define=ICALL_MAX_NUM_ENTITIES=6 --define=xdc_runtime_Assert_DISABLE_ALL --define=xdc_runtime_Log_DISABLE_ALL --define=CC26XX --define=CC2650_LAUNCHXL -g --c99 --relaxed_ansi --plain_char=unsigned --diag_suppress=48 --diag_warning=225 --diag_wrap=off --display_error_number --gen_func_subsections=on --embedded_constants=on --unaligned_access=on --enum_type=packed --wchar_t=16 --abi=eabi --common=on --fp_reassoc=off --sat_reassoc=off -z -m"simple_central_cc2650lp_app.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/lib" -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/include" --reread_libs --diag_suppress=10247-D --diag_suppress=16002-D --diag_wrap=off --display_error_number --warn_sections --xml_link_info="simple_central_cc2650lp_app_linkInfo.xml" --rom_model --unused_section_elimination=on -o "simple_central_cc2650lp_app.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
@@ -207,8 +209,8 @@ simple_central_cc2650lp_app.hex: $(EXE_OUTPUTS)
 clean:
 	-$(RM) $(GEN_CMDS__QUOTED)$(GEN_MISC_FILES__QUOTED)$(BIN_OUTPUTS__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)$(GEN_OPTS__QUOTED)
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
-	-$(RM) "Application\board_key.obj" "Application\simple_central.obj" "Application\util.obj" "Drivers\Display\DisplaySharp.obj" "Drivers\Display\DisplayUart.obj" "Drivers\ECC\ECCROMCC26XX.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\RF\RFCC26XX_singleMode.obj" "Drivers\SPI\SPI.obj" "Drivers\SPI\SPICC26XXDMA.obj" "Drivers\TRNG\TRNGCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "Drivers\UDMA\UDMACC26XX.obj" "ICall\icall.obj" "ICall\icall_cc2650.obj" "ICallBLE\ble_user_config.obj" "ICallBLE\icall_api.obj" "PROFILES\central.obj" "Startup\board.obj" "Startup\ccfg_app_ble.obj" "Startup\main.obj" 
-	-$(RM) "Application\board_key.d" "Application\simple_central.d" "Application\util.d" "Drivers\Display\DisplaySharp.d" "Drivers\Display\DisplayUart.d" "Drivers\ECC\ECCROMCC26XX.d" "Drivers\PIN\PINCC26XX.d" "Drivers\RF\RFCC26XX_singleMode.d" "Drivers\SPI\SPI.d" "Drivers\SPI\SPICC26XXDMA.d" "Drivers\TRNG\TRNGCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "Drivers\UDMA\UDMACC26XX.d" "ICall\icall.d" "ICall\icall_cc2650.d" "ICallBLE\ble_user_config.d" "ICallBLE\icall_api.d" "PROFILES\central.d" "Startup\board.d" "Startup\ccfg_app_ble.d" "Startup\main.d" 
+	-$(RM) "Application\board_key.obj" "Application\util.obj" "Drivers\Display\DisplaySharp.obj" "Drivers\Display\DisplayUart.obj" "Drivers\ECC\ECCROMCC26XX.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\RF\RFCC26XX_singleMode.obj" "Drivers\SPI\SPI.obj" "Drivers\SPI\SPICC26XXDMA.obj" "Drivers\TRNG\TRNGCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "Drivers\UDMA\UDMACC26XX.obj" "ICall\icall.obj" "ICall\icall_cc2650.obj" "ICallBLE\ble_user_config.obj" "ICallBLE\icall_api.obj" "PROFILES\central.obj" "Startup\board.obj" "Startup\ccfg_app_ble.obj" "src\main.obj" "src\simple_central.obj" 
+	-$(RM) "Application\board_key.d" "Application\util.d" "Drivers\Display\DisplaySharp.d" "Drivers\Display\DisplayUart.d" "Drivers\ECC\ECCROMCC26XX.d" "Drivers\PIN\PINCC26XX.d" "Drivers\RF\RFCC26XX_singleMode.d" "Drivers\SPI\SPI.d" "Drivers\SPI\SPICC26XXDMA.d" "Drivers\TRNG\TRNGCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "Drivers\UDMA\UDMACC26XX.d" "ICall\icall.d" "ICall\icall_cc2650.d" "ICallBLE\ble_user_config.d" "ICallBLE\icall_api.d" "PROFILES\central.d" "Startup\board.d" "Startup\ccfg_app_ble.d" "src\main.d" "src\simple_central.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

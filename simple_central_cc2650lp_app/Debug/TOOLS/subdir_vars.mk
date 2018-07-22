@@ -6,7 +6,7 @@ SHELL = cmd.exe
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CFG_SRCS += \
-E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/config/app_ble.cfg 
+C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/config/app_ble.cfg 
 
 GEN_CMDS += \
 ./configPkg/linker.cmd 

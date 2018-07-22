@@ -138,4 +138,5 @@ Middleware/extflash \
 PROFILES \
 Startup \
 TOOLS \
+src \
 

@@ -6,8 +6,8 @@ SHELL = cmd.exe
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-E:/Documents/git/ble_examples/src/components/display_eng/ti/mw/display/DisplaySharp.c \
-E:/Documents/git/ble_examples/src/components/display_eng/ti/mw/display/DisplayUart.c 
+C:/ti/ble_sdk_2_02_02_25/ble_examples/src/components/display_eng/ti/mw/display/DisplaySharp.c \
+C:/ti/ble_sdk_2_02_02_25/ble_examples/src/components/display_eng/ti/mw/display/DisplayUart.c 
 
 C_DEPS += \
 ./Drivers/Display/DisplaySharp.d \
@@ -26,7 +26,7 @@ C_DEPS__QUOTED += \
 "Drivers\Display\DisplayUart.d" 
 
 C_SRCS__QUOTED += \
-"E:/Documents/git/ble_examples/src/components/display_eng/ti/mw/display/DisplaySharp.c" \
-"E:/Documents/git/ble_examples/src/components/display_eng/ti/mw/display/DisplayUart.c" 
+"C:/ti/ble_sdk_2_02_02_25/ble_examples/src/components/display_eng/ti/mw/display/DisplaySharp.c" \
+"C:/ti/ble_sdk_2_02_02_25/ble_examples/src/components/display_eng/ti/mw/display/DisplayUart.c" 
 
 

@@ -7,11 +7,11 @@ SHELL = cmd.exe
 # Add inputs and outputs from these tool invocations to the build variables 
 CMD_SRCS += \
 C:/ti/ble_sdk_2_02_02_25/src/common/cc26xx/ccs/cc26xx_stack.cmd \
-E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/config/ccs_linker_defines.cmd 
+C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/config/ccs_linker_defines.cmd 
 
 OPT_SRCS += \
 C:/ti/ble_sdk_2_02_02_25/src/config/build_components.opt \
-E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/iar/stack/build_config.opt 
+C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/iar/stack/build_config.opt 
 
 C_SRCS += \
 C:/ti/ble_sdk_2_02_02_25/src/common/cc26xx/onboard.c 
@@ -30,7 +30,7 @@ C_DEPS__QUOTED += \
 
 OPT_SRCS__QUOTED += \
 "C:/ti/ble_sdk_2_02_02_25/src/config/build_components.opt" \
-"E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/iar/stack/build_config.opt" 
+"C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/iar/stack/build_config.opt" 
 
 C_SRCS__QUOTED += \
 "C:/ti/ble_sdk_2_02_02_25/src/common/cc26xx/onboard.c" 

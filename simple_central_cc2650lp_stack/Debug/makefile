@@ -34,11 +34,11 @@ ORDERED_OBJS += \
 "./Startup/osal_icall_ble.obj" \
 "./Startup/rom_jt.obj" \
 "./TOOLS/onboard.obj" \
-"E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/config/lib_linker.cmd" \
+"C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/config/lib_linker.cmd" \
 "C:/ti/ble_sdk_2_02_02_25/src/common/cc26xx/ccs/cc26xx_stack.cmd" \
-"E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/config/ccs_linker_defines.cmd" \
+"C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/config/ccs_linker_defines.cmd" \
 $(GEN_CMDS__FLAG) \
--l"E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/config/lib_linker.cmd" \
+-l"C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/config/lib_linker.cmd" \
 -l"C:/ti/ble_sdk_2_02_02_25/src/rom/enc_lib/cc26xx_ecc_rom_api.a" \
 -l"C:/ti/ble_sdk_2_02_02_25/src/rom/ble_rom_releases/04242014/ble_rom_patch.symbols" \
 -l"C:/ti/tirtos_cc13xx_cc26xx_2_21_01_08/products/cc26xxware_2_24_03_17272/driverlib/bin/ccs/driverlib.lib" \
@@ -193,7 +193,7 @@ main-build: $(OBJS) $(GEN_CMDS)
 simple_central_cc2650lp_stack.out: $(OBJS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: ARM Linker'
-	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armcl" --cmd_file="E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/stack/../../iar/stack/build_config.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/src/config/build_components.opt"  -mv7M3 --code_state=16 -me -O4 --opt_for_speed=0 --define=USE_ICALL --define=FLASH_ROM_BUILD --define=POWER_SAVING --define=OSAL_SNV=1 --define=INCLUDE_AES_DECRYPT --define=xPM_DISABLE_PWRDOWN --define=xTESTMODES --define=xTEST_BLEBOARD --define=OSAL_CBTIMER_NUM_TASKS=1 --define=EXT_HAL_ASSERT --define=xDEBUG_GPIO --define=xDEBUG_ENC --define=xDEBUG_SW_TRACE --define=NEAR_FUNC= --define=DATA= --define=CC26XXWARE --define=CC26XX -g --c99 --diag_suppress=48 --diag_suppress=16004 --diag_warning=225 --diag_warning=2 --diag_wrap=off --display_error_number --abi=eabi -z -m"simple_central_cc2650lp_stack.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/lib" -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/include" --reread_libs --diag_suppress=16002-D --diag_suppress=10247-D --diag_suppress=10325-D --diag_suppress=10229-D --diag_wrap=off --display_error_number --warn_sections --xml_link_info="simple_central_cc2650lp_stack_linkInfo.xml" --entry_point=startup_entry --rom_model -o "simple_central_cc2650lp_stack.out" $(ORDERED_OBJS)
+	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armcl" --cmd_file="C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/stack/../../iar/stack/build_config.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/src/config/build_components.opt"  -mv7M3 --code_state=16 -me -O4 --opt_for_speed=0 --define=USE_ICALL --define=FLASH_ROM_BUILD --define=POWER_SAVING --define=OSAL_SNV=1 --define=INCLUDE_AES_DECRYPT --define=xPM_DISABLE_PWRDOWN --define=xTESTMODES --define=xTEST_BLEBOARD --define=OSAL_CBTIMER_NUM_TASKS=1 --define=EXT_HAL_ASSERT --define=xDEBUG_GPIO --define=xDEBUG_ENC --define=xDEBUG_SW_TRACE --define=NEAR_FUNC= --define=DATA= --define=CC26XXWARE --define=CC26XX -g --c99 --diag_suppress=48 --diag_suppress=16004 --diag_warning=225 --diag_warning=2 --diag_wrap=off --display_error_number --abi=eabi -z -m"simple_central_cc2650lp_stack.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/lib" -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/include" --reread_libs --diag_suppress=16002-D --diag_suppress=10247-D --diag_suppress=10325-D --diag_suppress=10229-D --diag_wrap=off --display_error_number --warn_sections --xml_link_info="simple_central_cc2650lp_stack_linkInfo.xml" --entry_point=startup_entry --rom_model -o "simple_central_cc2650lp_stack.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
@@ -215,11 +215,11 @@ clean:
 	-@echo ' '
 
 pre-build:
-	-"C:/ti/ble_sdk_2_02_02_25/tools/lib_search/lib_search.exe" E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/stack/../../iar/stack/build_config.opt "C:/ti/ble_sdk_2_02_02_25/tools/lib_search/params_split_cc2640.xml" C:/ti/ble_sdk_2_02_02_25/src/../blelib "E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/stack/../config/lib_linker.cmd"
+	-"C:/ti/ble_sdk_2_02_02_25/tools/lib_search/lib_search.exe" C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/stack/../../iar/stack/build_config.opt "C:/ti/ble_sdk_2_02_02_25/tools/lib_search/params_split_cc2640.xml" C:/ti/ble_sdk_2_02_02_25/src/../blelib "C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/stack/../config/lib_linker.cmd"
 	-@echo ' '
 
 post-build:
-	-C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armhex -order MS --memwidth=8 --romwidth=8 --intel -o simple_central_cc2650lp_stack.hex simple_central_cc2650lp_stack.out &         C:/ti/ble_sdk_2_02_02_25/tools/frontier/frontier.exe ccs E:/git/EVRS_TX_PROTOTYPE/simple_central_cc2650lp_stack/Debug/simple_central_cc2650lp_stack_linkInfo.xml E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/stack/../config/ccs_compiler_defines.bcfg E:/Documents/git/ble_examples/examples/cc2650lp/simple_central/ccs/stack/../config/ccs_linker_defines.cmd
+	-C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armhex -order MS --memwidth=8 --romwidth=8 --intel -o simple_central_cc2650lp_stack.hex simple_central_cc2650lp_stack.out &         C:/ti/ble_sdk_2_02_02_25/tools/frontier/frontier.exe ccs E:/git/EVRS_TX_PROTOTYPE/simple_central_cc2650lp_stack/Debug/simple_central_cc2650lp_stack_linkInfo.xml C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/stack/../config/ccs_compiler_defines.bcfg C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/stack/../config/ccs_linker_defines.cmd
 	-@echo ' '
 
 .PHONY: all clean dependents

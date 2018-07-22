@@ -12,7 +12,6 @@ GEN_CMDS__FLAG := -l"configPkg/linker.cmd"
 ORDERED_OBJS += \
 "C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/config/ccs_linker_defines.cmd" \
 "C:/ti/ble_sdk_2_02_02_25/src/common/cc26xx/ccs/cc26xx_app.cmd" \
-"./Application/simple_peripheral.obj" \
 "./Application/util.obj" \
 "./Drivers/Display/Display.obj" \
 "./Drivers/Display/DisplayDogm1286.obj" \
@@ -38,7 +37,8 @@ ORDERED_OBJS += \
 "./PROFILES/simple_gatt_profile.obj" \
 "./Startup/board.obj" \
 "./Startup/ccfg_app_ble.obj" \
-"./Startup/main.obj" \
+"./src/main.obj" \
+"./src/simple_peripheral.obj" \
 $(GEN_CMDS__FLAG) \
 -llibc.a \
 -l"C:/ti/tirtos_cc13xx_cc26xx_2_21_01_08/products/cc26xxware_2_24_03_17272/driverlib/bin/ccs/driverlib.lib" \
@@ -66,6 +66,7 @@ RMDIR := RMDIR /S/Q
 -include PROFILES/subdir_vars.mk
 -include Startup/subdir_vars.mk
 -include TOOLS/subdir_vars.mk
+-include src/subdir_vars.mk
 -include Application/subdir_rules.mk
 -include Drivers/Display/subdir_rules.mk
 -include Drivers/ECC/subdir_rules.mk
@@ -81,6 +82,7 @@ RMDIR := RMDIR /S/Q
 -include PROFILES/subdir_rules.mk
 -include Startup/subdir_rules.mk
 -include TOOLS/subdir_rules.mk
+-include src/subdir_rules.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -214,8 +216,8 @@ simple_peripheral_cc2650lp_app.hex: $(EXE_OUTPUTS)
 clean:
 	-$(RM) $(GEN_CMDS__QUOTED)$(GEN_MISC_FILES__QUOTED)$(BIN_OUTPUTS__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)$(GEN_OPTS__QUOTED)
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
-	-$(RM) "Application\simple_peripheral.obj" "Application\util.obj" "Drivers\Display\Display.obj" "Drivers\Display\DisplayDogm1286.obj" "Drivers\Display\DisplayUart.obj" "Drivers\ECC\ECCROMCC26XX.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\RF\RFCC26XX_singleMode.obj" "Drivers\SPI\SPI.obj" "Drivers\SPI\SPICC26XXDMA.obj" "Drivers\TRNG\TRNGCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "Drivers\UDMA\UDMACC26XX.obj" "ICall\icall.obj" "ICall\icall_cc2650.obj" "ICallBLE\ble_user_config.obj" "ICallBLE\icall_api.obj" "Middleware\extflash\ExtFlash.obj" "PROFILES\devinfoservice.obj" "PROFILES\gatt_uuid.obj" "PROFILES\gattservapp_util.obj" "PROFILES\peripheral.obj" "PROFILES\simple_gatt_profile.obj" "Startup\board.obj" "Startup\ccfg_app_ble.obj" "Startup\main.obj" 
-	-$(RM) "Application\simple_peripheral.d" "Application\util.d" "Drivers\Display\Display.d" "Drivers\Display\DisplayDogm1286.d" "Drivers\Display\DisplayUART.d" "Drivers\ECC\ECCROMCC26XX.d" "Drivers\PIN\PINCC26XX.d" "Drivers\RF\RFCC26XX_singleMode.d" "Drivers\SPI\SPI.d" "Drivers\SPI\SPICC26XXDMA.d" "Drivers\TRNG\TRNGCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "Drivers\UDMA\UDMACC26XX.d" "ICall\icall.d" "ICall\icall_cc2650.d" "ICallBLE\ble_user_config.d" "ICallBLE\icall_api.d" "Middleware\extflash\ExtFlash.d" "PROFILES\devinfoservice.d" "PROFILES\gatt_uuid.d" "PROFILES\gattservapp_util.d" "PROFILES\peripheral.d" "PROFILES\simple_gatt_profile.d" "Startup\board.d" "Startup\ccfg_app_ble.d" "Startup\main.d" 
+	-$(RM) "Application\util.obj" "Drivers\Display\Display.obj" "Drivers\Display\DisplayDogm1286.obj" "Drivers\Display\DisplayUart.obj" "Drivers\ECC\ECCROMCC26XX.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\RF\RFCC26XX_singleMode.obj" "Drivers\SPI\SPI.obj" "Drivers\SPI\SPICC26XXDMA.obj" "Drivers\TRNG\TRNGCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "Drivers\UDMA\UDMACC26XX.obj" "ICall\icall.obj" "ICall\icall_cc2650.obj" "ICallBLE\ble_user_config.obj" "ICallBLE\icall_api.obj" "Middleware\extflash\ExtFlash.obj" "PROFILES\devinfoservice.obj" "PROFILES\gatt_uuid.obj" "PROFILES\gattservapp_util.obj" "PROFILES\peripheral.obj" "PROFILES\simple_gatt_profile.obj" "Startup\board.obj" "Startup\ccfg_app_ble.obj" "src\main.obj" "src\simple_peripheral.obj" 
+	-$(RM) "Application\util.d" "Drivers\Display\Display.d" "Drivers\Display\DisplayDogm1286.d" "Drivers\Display\DisplayUART.d" "Drivers\ECC\ECCROMCC26XX.d" "Drivers\PIN\PINCC26XX.d" "Drivers\RF\RFCC26XX_singleMode.d" "Drivers\SPI\SPI.d" "Drivers\SPI\SPICC26XXDMA.d" "Drivers\TRNG\TRNGCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "Drivers\UDMA\UDMACC26XX.d" "ICall\icall.d" "ICall\icall_cc2650.d" "ICallBLE\ble_user_config.d" "ICallBLE\icall_api.d" "Middleware\extflash\ExtFlash.d" "PROFILES\devinfoservice.d" "PROFILES\gatt_uuid.d" "PROFILES\gattservapp_util.d" "PROFILES\peripheral.d" "PROFILES\simple_gatt_profile.d" "Startup\board.d" "Startup\ccfg_app_ble.d" "src\main.d" "src\simple_peripheral.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
