@@ -455,19 +455,19 @@
 		</variable>
 		<variable>
 			<name>ROM</name>
-			<value>${PARENT-5-ORG_PROJ_DIR}/src/rom</value>
+			<value>$%7BPARENT-5-ORG_PROJ_DIR%7D/src/rom</value>
 		</variable>
 		<variable>
 			<name>SRC_BLE_CORE</name>
-			<value>${PARENT-5-ORG_PROJ_DIR}/src</value>
+			<value>$%7BPARENT-5-ORG_PROJ_DIR%7D/src</value>
 		</variable>
 		<variable>
 			<name>SRC_COMMON</name>
-			<value>${PARENT-5-ORG_PROJ_DIR}/src/components</value>
+			<value>$%7BPARENT-5-ORG_PROJ_DIR%7D/src/components</value>
 		</variable>
 		<variable>
 			<name>SRC_EX</name>
-			<value>${PARENT-5-ORG_PROJ_DIR}/src</value>
+			<value>$%7BPARENT-5-ORG_PROJ_DIR%7D/src</value>
 		</variable>
 		<variable>
 			<name>TI_RTOS_DRIVERS_BASE</name>
@@ -475,7 +475,7 @@
 		</variable>
 		<variable>
 			<name>TOOLS_BLE</name>
-			<value>${PARENT-5-ORG_PROJ_DIR}/tools</value>
+			<value>$%7BPARENT-5-ORG_PROJ_DIR%7D/tools</value>
 		</variable>
 	</variableList>
 </projectDescription>
