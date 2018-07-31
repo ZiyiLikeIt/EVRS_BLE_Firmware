@@ -77,6 +77,7 @@
 
 #include <ti/mw/display/Display.h>
 #include "board_key.h"
+#include "board_led.h"
 
 #include "board.h"
 
@@ -334,6 +335,7 @@ static void SimpleBLEPeripheral_init(void) {
 	SBP_PERIODIC_EVT_PERIOD, 0, false, SBP_PERIODIC_EVT);
 
 	Board_initKeys(SimpleBLEPeripheral_keyChangeHandler);
+	Board_initLEDs();
 
 	dispHandle = Display_open(Display_Type_UART, NULL);
 	Display_print0(dispHandle, 0, 0, "\f");
@@ -397,10 +399,10 @@ static void SimpleBLEPeripheral_init(void) {
 	// Setup the GAP Bond Manager
 	{
 		uint32_t passkey = 0; // passkey "000000"
-		uint8_t pairMode = GAPBOND_PAIRING_MODE_WAIT_FOR_REQ;
-		uint8_t mitm = TRUE;
-		uint8_t ioCap = GAPBOND_IO_CAP_DISPLAY_ONLY;
-		uint8_t bonding = TRUE;
+		uint8_t pairMode = GAPBOND_PAIRING_MODE_INITIATE;
+		uint8_t mitm = FALSE;
+		uint8_t ioCap = GAPBOND_IO_CAP_NO_INPUT_NO_OUTPUT;
+		uint8_t bonding = FALSE;
 
 		GAPBondMgr_SetParameter(GAPBOND_DEFAULT_PASSCODE, sizeof(uint32_t),
 				&passkey);
@@ -459,6 +461,8 @@ static void SimpleBLEPeripheral_init(void) {
 	HCI_LE_ReadMaxDataLenCmd();
 
 	Display_print0(dispHandle, 0, 0, "\fBLE Peripheral test");
+	Board_ledControl(BOARD_LED_ID_G, BOARD_LED_STATE_FLASH, 300);
+	//Board_ledControl(BOARD_LED_ID_R, BOARD_LED_STATE_ON, 0);
 }
 
 /*********************************************************************
@@ -805,6 +809,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 			Display_print0(dispHandle, 0, 0,
 					Util_convertBdAddr2Str(ownAddress));
 			Display_print0(dispHandle, 0, 0, "Initialized");
+			Board_ledControl(BOARD_LED_ID_R, BOARD_LED_STATE_OFF, 0);
 
 		}
 			break;
@@ -812,6 +817,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 		case GAPROLE_ADVERTISING:
 			appState = APP_STATE_ADVERT;
 			Display_print0(dispHandle, 0, 0, "Advertising");
+			Board_ledControl(BOARD_LED_ID_R, BOARD_LED_STATE_FLASH, 100);
 			break;
 
 #ifdef PLUS_BROADCASTER
@@ -869,6 +875,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 				Display_print0(dispHandle, 0, 0,
 						Util_convertBdAddr2Str(peerAddress));
 			}
+			Board_ledControl(BOARD_LED_ID_R, BOARD_LED_STATE_FLASH, 500);
 
 #ifdef PLUS_BROADCASTER
 			// Only turn advertising on for this state when we first connect
@@ -903,6 +910,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 			SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
 
 			Display_print0(dispHandle, 0, 0, "Disconnected");
+			Board_ledControl(BOARD_LED_ID_R, BOARD_LED_STATE_OFF, 0);
 
 			// Clear remaining lines
 			//Display_clearLines(dispHandle, 3, 5);

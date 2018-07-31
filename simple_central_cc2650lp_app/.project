@@ -77,6 +77,16 @@
 			<locationURI>SRC_EX/common/cc26xx/board_key.h</locationURI>
 		</link>
 		<link>
+			<name>Application/board_led.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/ble_board_driver/board_led.c</locationURI>
+		</link>
+		<link>
+			<name>Application/board_led.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/ble_board_driver/board_led.h</locationURI>
+		</link>
+		<link>
 			<name>Application/util.c</name>
 			<type>1</type>
 			<locationURI>SRC_EX/common/cc26xx/util.c</locationURI>
