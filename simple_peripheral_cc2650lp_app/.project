@@ -297,16 +297,6 @@
 			<locationURI>SRC_EX/profiles/roles/cc26xx/peripheral.h</locationURI>
 		</link>
 		<link>
-			<name>PROFILES/simple_gatt_profile.c</name>
-			<type>1</type>
-			<locationURI>SRC_EX/profiles/simple_profile/cc26xx/simple_gatt_profile.c</locationURI>
-		</link>
-		<link>
-			<name>PROFILES/simple_gatt_profile.h</name>
-			<type>1</type>
-			<locationURI>SRC_EX/profiles/simple_profile/simple_gatt_profile.h</locationURI>
-		</link>
-		<link>
 			<name>PROFILES/simplekeys.c</name>
 			<type>1</type>
 			<locationURI>SRC_EX/profiles/keys/cc26xx/simplekeys.c</locationURI>

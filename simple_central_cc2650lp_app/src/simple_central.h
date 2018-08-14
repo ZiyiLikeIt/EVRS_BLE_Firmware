@@ -69,6 +69,11 @@ extern "C"
  * MACROS
  */
 
+// GATT Params
+// Simple Profile Service UUID
+#define SIMPLEPROFILE_SERV_UUID 0xFFF0
+#define SIMPLEPROFILE_CHAR1_UUID            0xFFF1
+
 /*********************************************************************
  * FUNCTIONS
  */

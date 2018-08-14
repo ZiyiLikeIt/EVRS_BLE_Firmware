@@ -399,7 +399,7 @@ static void SimpleBLEPeripheral_init(void) {
 	// Setup the GAP Bond Manager
 	{
 		uint32_t passkey = 0; // passkey "000000"
-		uint8_t pairMode = GAPBOND_PAIRING_MODE_INITIATE;
+		uint8_t pairMode = GAPBOND_PAIRING_MODE_NO_PAIRING;
 		uint8_t mitm = FALSE;
 		uint8_t ioCap = GAPBOND_IO_CAP_NO_INPUT_NO_OUTPUT;
 		uint8_t bonding = FALSE;
