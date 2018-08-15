@@ -218,7 +218,7 @@ pre-build:
 
 post-build:
 	-C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armhex -order MS --memwidth=8 --romwidth=8 --intel -o simple_peripheral_cc2650lp_stack.hex simple_peripheral_cc2650lp_stack.out
-	-C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../../../../tools/frontier/frontier.exe ccs E:/git/EVRS_TX_PROTOTYPE/simple_peripheral_cc2650lp_stack/FlashROM/simple_peripheral_cc2650lp_stack_linkInfo.xml C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../ccs/config/ccs_compiler_defines.bcfg C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../ccs/config/ccs_linker_defines.cmd
+	-C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../../../../tools/frontier/frontier.exe ccs E:/workbench/git/EVRS_BLE_Firmware/simple_peripheral_cc2650lp_stack/FlashROM/simple_peripheral_cc2650lp_stack_linkInfo.xml C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../ccs/config/ccs_compiler_defines.bcfg C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../ccs/config/ccs_linker_defines.cmd
 	-@echo ' '
 
 .PHONY: all clean dependents
