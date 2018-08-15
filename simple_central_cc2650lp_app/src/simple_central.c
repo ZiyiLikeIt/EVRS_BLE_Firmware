@@ -69,9 +69,11 @@
 #include "osal_snv.h"
 #include "icall_apimsg.h"
 
+#include "evrs_bs_typedefs.h"
 #include "util.h"
 #include "board_key.h"
 #include "board_led.h"
+#include "evrs_bs_rssi.h"
 #include <ti/mw/display/Display.h>
 #include "board.h"
 
@@ -86,15 +88,6 @@
 /*********************************************************************
  * CONSTANTS
  */
-
-// Simple BLE Central Task Events
-#define SBC_START_DISCOVERY_EVT               0x0001
-#define SBC_PAIRING_STATE_EVT                 0x0002
-#define SBC_PASSCODE_NEEDED_EVT               0x0004
-#define SBC_RSSI_READ_EVT                     0x0008
-#define SBC_KEY_CHANGE_EVT                    0x0010
-#define SBC_STATE_CHANGE_EVT                  0x0020
-#define SBC_CONNECTING_TIMEOUT_EVT	      	  0x0040
 
 // Maximum number of scan responses
 #define DEFAULT_MAX_SCAN_RES                  8
@@ -221,12 +214,6 @@ typedef struct {
 	uint8_t *pData;  // event data
 } sbcEvt_t;
 
-// RSSI read data structure
-typedef struct {
-	Clock_Struct *pClock; // pointer to clock struct
-	uint16_t period;      // how often to read RSSI
-	uint16_t connHandle;  // connection handle
-} readRssi_t;
 
 /**
  * Type of device discovery (Scan) to perform.
@@ -324,7 +311,7 @@ static bool procedureInProgress = FALSE;
 static uint16_t maxPduSize;
 
 // Array of RSSI read structures
-static readRssi_t readRssi[MAX_NUM_BLE_CONNS];
+readRssi_t readRssi[MAX_NUM_BLE_CONNS];
 
 // counter for profile found
 int profileCounter = 0;
@@ -358,12 +345,14 @@ static void SimpleBLECentral_processPasscode(uint16_t connectionHandle,
 		uint8_t uiOutputs);
 
 static void SimpleBLECentral_processCmdCompleteEvt(hciEvt_CmdComplete_t *pMsg);
+/*
 static bStatus_t SimpleBLECentral_StartRssi(uint16_t connHandle,
 		uint16_t period);
 static bStatus_t SimpleBLECentral_CancelRssi(uint16_t connHandle);
 static readRssi_t *SimpleBLECentral_RssiAlloc(uint16_t connHandle);
 static readRssi_t *SimpleBLECentral_RssiFind(uint16_t connHandle);
 static void SimpleBLECentral_RssiFree(uint16_t connHandle);
+*/
 
 static uint8_t SimpleBLECentral_eventCB(gapCentralRoleEvent_t *pEvent);
 static void SimpleBLECentral_passcodeCB(uint8_t *deviceAddr,
@@ -373,10 +362,6 @@ static void SimpleBLECentral_pairStateCB(uint16_t connHandle, uint8_t pairState,
 
 void SimpleBLECentral_startDiscHandler(UArg a0);
 void SimpleBLECentral_keyChangeHandler(uint8_t keys);
-void SimpleBLECentral_readRssiHandler(UArg a0);
-
-static uint8_t SimpleBLECentral_enqueueMsg(uint8_t event, uint8_t status,
-		uint8_t *pData);
 
 /*********************************************************************
  * PROFILE CALLBACKS
@@ -1279,163 +1264,6 @@ static void SimpleBLECentral_processCmdCompleteEvt(hciEvt_CmdComplete_t *pMsg) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_StartRssi
- *
- * @brief   Start periodic RSSI reads on a link.
- *
- * @param   connHandle - connection handle of link
- * @param   period - RSSI read period in ms
- *
- * @return  SUCCESS: Terminate started
- *          bleIncorrectMode: No link
- *          bleNoResources: No resources
- */
-static bStatus_t SimpleBLECentral_StartRssi(uint16_t connHandle,
-		uint16_t period) {
-	readRssi_t *pRssi;
-
-	// Verify link is up
-	if (!linkDB_Up(connHandle))
-	{
-		return bleIncorrectMode;
-	}
-
-	// If already allocated
-	if ((pRssi = SimpleBLECentral_RssiFind(connHandle)) != NULL)
-	{
-		// Stop timer
-		Util_stopClock(pRssi->pClock);
-		pRssi->period = period;
-	}
-
-	// Allocate structure
-	else if ((pRssi = SimpleBLECentral_RssiAlloc(connHandle)) != NULL)
-	{
-		pRssi->period = period;
-	}
-	// Allocate failed
-	else
-	{
-		return bleNoResources;
-	}
-	// Start timer
-	Util_restartClock(pRssi->pClock, period);
-	return SUCCESS;
-}
-
-/*********************************************************************
- * @fn      SimpleBLECentral_CancelRssi
- *
- * @brief   Cancel periodic RSSI reads on a link.
- *
- * @param   connHandle - connection handle of link
- *
- * @return  SUCCESS: Operation successful
- *          bleIncorrectMode: No link
- */
-static bStatus_t SimpleBLECentral_CancelRssi(uint16_t connHandle) {
-	readRssi_t *pRssi;
-	if ((pRssi = SimpleBLECentral_RssiFind(connHandle)) != NULL)
-	{
-		// Stop timer
-		Util_stopClock(pRssi->pClock);
-
-		// Free RSSI structure
-		SimpleBLECentral_RssiFree(connHandle);
-		return SUCCESS;
-	}
-	// Not found
-	return bleIncorrectMode;
-}
-
-/*********************************************************************
- * @fn      gapCentralRole_RssiAlloc
- *
- * @brief   Allocate an RSSI structure.
- *
- * @param   connHandle - Connection handle
- *
- * @return  pointer to structure or NULL if allocation failed.
- */
-static readRssi_t *SimpleBLECentral_RssiAlloc(uint16_t connHandle) {
-	uint8_t i;
-
-	// Find free RSSI structure
-	for (i = 0; i < MAX_NUM_BLE_CONNS; i++)
-	{
-		if (readRssi[i].connHandle == GAP_CONNHANDLE_ALL)
-		{
-			readRssi_t *pRssi = &readRssi[i];
-			pRssi->pClock = (Clock_Struct *) ICall_malloc(sizeof(Clock_Struct));
-			if (pRssi->pClock)
-			{
-				Util_constructClock(pRssi->pClock,
-						SimpleBLECentral_readRssiHandler, 0, 0, false, i);
-				pRssi->connHandle = connHandle;
-				return pRssi;
-			}
-		}
-	}
-	// No free structure found
-	return NULL;
-}
-
-/*********************************************************************
- * @fn      gapCentralRole_RssiFind
- *
- * @brief   Find an RSSI structure.
- *
- * @param   connHandle - Connection handle
- *
- * @return  pointer to structure or NULL if not found.
- */
-static readRssi_t *SimpleBLECentral_RssiFind(uint16_t connHandle) {
-	uint8_t i;
-	// Find free RSSI structure
-	for (i = 0; i < MAX_NUM_BLE_CONNS; i++)
-	{
-		if (readRssi[i].connHandle == connHandle)
-		{
-			return &readRssi[i];
-		}
-	}
-	// Not found
-	return NULL;
-}
-
-/*********************************************************************
- * @fn      gapCentralRole_RssiFree
- *
- * @brief   Free an RSSI structure.
- *
- * @param   connHandle - Connection handle
- *
- * @return  none
- */
-static void SimpleBLECentral_RssiFree(uint16_t connHandle) {
-	uint8_t i;
-
-	// Find RSSI structure
-	for (i = 0; i < MAX_NUM_BLE_CONNS; i++)
-	{
-		if (readRssi[i].connHandle == connHandle)
-		{
-			readRssi_t *pRssi = &readRssi[i];
-			if (pRssi->pClock)
-			{
-				Clock_destruct(pRssi->pClock);
-
-				// Free clock struct
-				ICall_free(pRssi->pClock);
-				pRssi->pClock = NULL;
-			}
-			pRssi->connHandle = GAP_CONNHANDLE_ALL;
-			break;
-		}
-	}
-}
-
-/*********************************************************************
  * @fn      SimpleBLECentral_processPairState
  *
  * @brief   Process the new paring state.
@@ -1565,7 +1393,7 @@ static void SimpleBLECentral_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 		{
 			if (svcStartHdl != 0)
 			{
-/*
+				/*
 				attReadByTypeReq_t req;
 
 				// Discover characteristic
@@ -1577,7 +1405,7 @@ static void SimpleBLECentral_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 				req.type.uuid[1] = HI_UINT16(EVRSPROFILE_SYSID_UUID);
 
 				VOID GATT_ReadUsingCharUUID(connHandle, &req, selfEntity);
-*/
+				 */
 				VOID GATT_DiscAllChars(connHandle, svcStartHdl, svcEndHdl,
 					selfEntity);
 				discState = BLE_DISC_STATE_CHAR;
@@ -1969,20 +1797,6 @@ void SimpleBLECentral_keyChangeHandler(uint8_t keys) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_readRssiHandler
- *
- * @brief   Read RSSI handler function
- *
- * @param   a0 - read RSSI index
- *
- * @return  none
- */
-void SimpleBLECentral_readRssiHandler(UArg a0) {
-	SimpleBLECentral_enqueueMsg(SBC_RSSI_READ_EVT, SUCCESS,
-			(uint8_t *) &readRssi[a0]);
-}
-
-/*********************************************************************
  * @fn      SimpleBLECentral_enqueueMsg
  *
  * @brief   Creates a message and puts the message in RTOS queue.
@@ -1993,7 +1807,7 @@ void SimpleBLECentral_readRssiHandler(UArg a0) {
  *
  * @return  TRUE or FALSE
  */
-static uint8_t SimpleBLECentral_enqueueMsg(uint8_t event, uint8_t status,
+uint8_t SimpleBLECentral_enqueueMsg(uint8_t event, uint8_t status,
 		uint8_t *pData) {
 	sbcEvt_t *pMsg = ICall_malloc(sizeof(sbcEvt_t));
 

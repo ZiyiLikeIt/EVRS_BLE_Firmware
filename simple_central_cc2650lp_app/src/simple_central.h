@@ -89,6 +89,8 @@ extern "C"
  * Task creation function for the Simple BLE Central.
  */
 extern void SimpleBLECentral_createTask(void);
+extern uint8_t SimpleBLECentral_enqueueMsg(uint8_t event, uint8_t status,
+		uint8_t *pData);
 
 /*********************************************************************
 *********************************************************************/
