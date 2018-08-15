@@ -827,7 +827,7 @@ static void SimpleBLECentral_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 			connHandle = GAP_CONNHANDLE_INIT;
 			discState = BLE_DISC_STATE_IDLE;
 			memset(charHdl,0x00,4);
-			//charHdl = 0;
+			profileCounter = 0;
 			procedureInProgress = FALSE;
 
 			// Cancel RSSI reads
