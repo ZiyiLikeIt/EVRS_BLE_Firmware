@@ -309,7 +309,7 @@ static uint16_t svcStartHdl = 0;
 static uint16_t svcEndHdl = 0;
 
 // Discovered characteristic handle
-static uint16_t charHdl = 0;
+static uint16_t charHdl[4] = {0,0,0,0};
 
 // Value to write
 static uint8_t charVal = 0;
@@ -325,6 +325,12 @@ static uint16_t maxPduSize;
 
 // Array of RSSI read structures
 static readRssi_t readRssi[MAX_NUM_BLE_CONNS];
+
+// counter for profile found
+int profileCounter = 0;
+
+// test
+int i = 0;
 
 /*********************************************************************
  * LOCAL FUNCTIONS
@@ -733,7 +739,7 @@ static void SimpleBLECentral_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 		{
 			//Find peer device address by UUID
 			if ((DEFAULT_DEV_DISC_BY_SVC_UUID == FALSE)
-					|| SimpleBLECentral_findSvcUuid(SIMPLEPROFILE_SERV_UUID,
+					|| SimpleBLECentral_findSvcUuid(EVRSPROFILE_SERV_UUID,
 							pEvent->deviceInfo.pEvtData,
 							pEvent->deviceInfo.dataLen))
 			{
@@ -792,7 +798,7 @@ static void SimpleBLECentral_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 				procedureInProgress = TRUE;
 
 				// If service discovery not performed initiate service discovery
-				if (charHdl == 0)
+				if (charHdl[0] == 0)
 				{
 					Util_startClock(&startDiscClock);
 				}
@@ -835,7 +841,8 @@ static void SimpleBLECentral_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 			state = BLE_STATE_IDLE;
 			connHandle = GAP_CONNHANDLE_INIT;
 			discState = BLE_DISC_STATE_IDLE;
-			charHdl = 0;
+			memset(charHdl,0x00,4);
+			//charHdl = 0;
 			procedureInProgress = FALSE;
 
 			// Cancel RSSI reads
@@ -889,7 +896,7 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 	switch (state)
 	{
 		case BLE_STATE_IDLE:
-			Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_IDLE");
+			//Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_IDLE");
 			if (keys & KEY_RIGHT)
 			{
 				// Discover devices
@@ -899,7 +906,7 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 			break;
 
 		case BLE_STATE_DISCOVERED:
-			Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_DISCOVERED");
+			//Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_DISCOVERED");
 			if (keys & KEY_LEFT)
 			{
 				//Display Discovery Results
@@ -939,7 +946,7 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 			break;
 
 		case BLE_STATE_BROWSING:
-			Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_BROWSING");
+			//Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_BROWSING");
 			if (keys & KEY_LEFT)
 			{
 				//Navigate through discovery results
@@ -1011,12 +1018,12 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 			break;
 
 		case BLE_STATE_CONNECTING:
-			Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_CONNECTING");
+			//Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_CONNECTING");
 			//Nothing happens if buttons are pressed while the device is connecting.
 			break;
 
 		case BLE_STATE_CONNECTED:
-			Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_CONNECTED");
+			//Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_CONNECTED");
 			if (keys & KEY_LEFT) //Navigate though menu.
 			{
 				//Iterate through rows
@@ -1122,7 +1129,7 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 								{
 									Display_print0(dispHandle, ROW_SIX, 0,
 											"Write req sent");
-									req.handle = charHdl;
+									req.handle = charHdl[EVRSPROFILE_DATA];
 									req.len = 1;
 									req.pValue[0] = charVal;
 									req.sig = 0;
@@ -1142,7 +1149,7 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 							{
 								// Do a read
 								attReadReq_t req;
-								req.handle = charHdl;
+								req.handle = charHdl[EVRSPROFILE_DATA];
 								status = GATT_ReadCharValue(connHandle, &req,
 										selfEntity);
 								Display_print0(dispHandle, ROW_SIX, 0,
@@ -1192,12 +1199,12 @@ static void SimpleBLECentral_processGATTMsg(gattMsgEvent_t *pMsg) {
 		{
 			if (pMsg->method == ATT_ERROR_RSP)
 			{
-				Display_print1(dispHandle, ROW_SIX, 0, "Read Error %d",
+				Display_print1(dispHandle, ROW_SIX, 0, "Read Error 0x%02x",
 						pMsg->msg.errorRsp.errCode);
 			} else
 			{
 				// After a successful read, display the read value
-				Display_print1(dispHandle, ROW_SIX, 0, "Read rsp: %d",
+				Display_print1(dispHandle, ROW_SIX, 0, "Read rsp: 0x%02x",
 						pMsg->msg.readRsp.pValue[0]);
 			}
 
@@ -1208,13 +1215,13 @@ static void SimpleBLECentral_processGATTMsg(gattMsgEvent_t *pMsg) {
 		{
 			if (pMsg->method == ATT_ERROR_RSP)
 			{
-				Display_print1(dispHandle, ROW_SIX, 0, "Write Error %d",
+				Display_print1(dispHandle, ROW_SIX, 0, "Write Error 0x%02x",
 						pMsg->msg.errorRsp.errCode);
 			} else
 			{
 				// After a successful write, display the value that was written and
 				// increment value
-				Display_print1(dispHandle, ROW_SIX, 0, "Write sent: %d",
+				Display_print1(dispHandle, ROW_SIX, 0, "Write sent: 0x%02x",
 						charVal++);
 			}
 
@@ -1502,8 +1509,8 @@ static void SimpleBLECentral_startDiscovery(void) {
 	attExchangeMTUReq_t req;
 
 	// Initialize cached handles
-	svcStartHdl = svcEndHdl = charHdl = 0;
-
+	svcStartHdl = svcEndHdl = 0;
+	memset(charHdl, 0x00, 4);
 	discState = BLE_DISC_STATE_MTU;
 
 	// Discover GATT Server's Rx MTU size
@@ -1527,18 +1534,16 @@ static void SimpleBLECentral_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 		// MTU size response received, discover simple BLE service
 		if (pMsg->method == ATT_EXCHANGE_MTU_RSP)
 		{
-			uint8_t uuid[ATT_BT_UUID_SIZE] =
-					{ LO_UINT16(SIMPLEPROFILE_SERV_UUID), HI_UINT16(
-							SIMPLEPROFILE_SERV_UUID) };
-
 			// Just in case we're using the default MTU size (23 octets)
 			Display_print1(dispHandle, ROW_THREE, 0, "MTU Size: %d",
 					ATT_MTU_SIZE);
-			discState = BLE_DISC_STATE_SVC;
 
 			// Discovery simple BLE service
+			uint8_t uuid[ATT_BT_UUID_SIZE] = { LO_UINT16(EVRSPROFILE_SERV_UUID),
+								HI_UINT16(EVRSPROFILE_SERV_UUID) };
 			VOID GATT_DiscPrimaryServiceByUUID(connHandle, uuid,
-			ATT_BT_UUID_SIZE, selfEntity);
+						ATT_BT_UUID_SIZE, selfEntity);
+			discState = BLE_DISC_STATE_SVC;
 		}
 	} else if (discState == BLE_DISC_STATE_SVC)
 	{
@@ -1550,6 +1555,7 @@ static void SimpleBLECentral_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 					pMsg->msg.findByTypeValueRsp.pHandlesInfo, 0);
 			svcEndHdl = ATT_GRP_END_HANDLE(
 					pMsg->msg.findByTypeValueRsp.pHandlesInfo, 0);
+
 		}
 
 		// If procedure complete
@@ -1559,22 +1565,24 @@ static void SimpleBLECentral_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 		{
 			if (svcStartHdl != 0)
 			{
+/*
 				attReadByTypeReq_t req;
 
 				// Discover characteristic
-				discState = BLE_DISC_STATE_CHAR;
 
 				req.startHandle = svcStartHdl;
 				req.endHandle = svcEndHdl;
 				req.type.len = ATT_BT_UUID_SIZE;
-				req.type.uuid[0] = LO_UINT16(SIMPLEPROFILE_CHAR1_UUID);
-				req.type.uuid[1] = HI_UINT16(SIMPLEPROFILE_CHAR1_UUID);
-
-				Display_print2(dispHandle, ROW_FOUR, 0,
-						"start hdl: 0x%04x   end hdl: 0x%04x",
-						svcStartHdl, svcEndHdl);
+				req.type.uuid[0] = LO_UINT16(EVRSPROFILE_SYSID_UUID);
+				req.type.uuid[1] = HI_UINT16(EVRSPROFILE_SYSID_UUID);
 
 				VOID GATT_ReadUsingCharUUID(connHandle, &req, selfEntity);
+*/
+				VOID GATT_DiscAllChars(connHandle, svcStartHdl, svcEndHdl,
+					selfEntity);
+				discState = BLE_DISC_STATE_CHAR;
+
+
 			}
 		}
 	} else if (discState == BLE_DISC_STATE_CHAR)
@@ -1583,13 +1591,51 @@ static void SimpleBLECentral_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 		if ((pMsg->method == ATT_READ_BY_TYPE_RSP)
 				&& (pMsg->msg.readByTypeRsp.numPairs > 0))
 		{
-			charHdl = BUILD_UINT16(pMsg->msg.readByTypeRsp.pDataList[0],
-					pMsg->msg.readByTypeRsp.pDataList[1]);
-			Display_print2(dispHandle, ROW_THREE, 0, "%d Profile Found : 0x%08x",
-					sizeof(pMsg->msg.readByTypeRsp.pDataList), charHdl);
+			for (int counter = 0; counter < pMsg->msg.readByTypeRsp.numPairs; counter++)
+			{
+				switch(*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 5))
+				{
+					case LO_UINT16(EVRSPROFILE_SYSID_UUID):
+						charHdl[EVRSPROFILE_SYSID] = BUILD_UINT16(
+								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 3),
+								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 4));
+						profileCounter++;
+						break;
+
+					case LO_UINT16(EVRSPROFILE_DEVID_UUID):
+						charHdl[EVRSPROFILE_DEVID] = BUILD_UINT16(
+								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 3),
+								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 4));
+						profileCounter++;
+						break;
+
+					case LO_UINT16(EVRSPROFILE_DEST_UUID):
+						charHdl[EVRSPROFILE_DEST] = BUILD_UINT16(
+								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 3),
+								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 4));
+						profileCounter++;
+						break;
+
+					case LO_UINT16(EVRSPROFILE_DATA_UUID):
+						charHdl[EVRSPROFILE_DATA] = BUILD_UINT16(
+								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 3),
+								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 4));
+						profileCounter++;
+						break;
+				}
+			}
+		} else if ((pMsg->method == ATT_READ_BY_TYPE_RSP)
+				&& (pMsg->hdr.status == bleProcedureComplete)
+				|| (pMsg->method == ATT_ERROR_RSP))
+		{
+			Display_print1(dispHandle, ROW_FOUR, 0,
+					"%d Profile Found ", profileCounter);
+			Display_print4(dispHandle, ROW_FIVE, 0,"0x%04x,0x%04x,0x%04x,0x%04x",
+					charHdl[0],charHdl[1],charHdl[2],charHdl[3]);
 			procedureInProgress = FALSE;
+			discState = BLE_DISC_STATE_IDLE;
 		}
-		discState = BLE_DISC_STATE_IDLE;
+
 	}
 }
 

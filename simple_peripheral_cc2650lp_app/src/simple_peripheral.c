@@ -61,7 +61,7 @@
 #include "gapgattserver.h"
 #include "gattservapp.h"
 #include "devinfoservice.h"
-#include "simple_gatt_profile.h"
+#include "evrs_gatt_profile.h"
 
 #include "peripheral.h"
 #include "gapbondmgr.h"
@@ -128,9 +128,7 @@
 
 // Application state
 typedef enum {
-	APP_STATE_INIT,
-	APP_STATE_IDLE,
-	APP_STATE_ADVERT
+	APP_STATE_INIT, APP_STATE_IDLE, APP_STATE_ADVERT
 } appStates_t;
 
 // Internal Events for RTOS application
@@ -167,7 +165,7 @@ static ICall_EntityID selfEntity;
 static ICall_Semaphore sem;
 
 // Clock instances for internal periodic events.
-static Clock_Struct periodicClock;
+//static Clock_Struct periodicClock;
 
 // Queue object used for app messages
 static Queue_Struct appMsg;
@@ -217,7 +215,7 @@ static uint8_t advertData[] = {
 		// in this peripheral
 		0x03,// length of this data
 		GAP_ADTYPE_16BIT_MORE,      // some of the UUID's, but not all
-		LO_UINT16(SIMPLEPROFILE_SERV_UUID), HI_UINT16(SIMPLEPROFILE_SERV_UUID) };
+		LO_UINT16(EVRSPROFILE_SERV_UUID), HI_UINT16(EVRSPROFILE_SERV_UUID) };
 
 // GAP GATT Attributes
 static uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "Simple BLE Peripheral";
@@ -238,8 +236,8 @@ static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg);
 static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg);
 static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState);
 static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID);
-static void SimpleBLEPeripheral_performPeriodicTask(void);
-static void SimpleBLEPeripheral_clockHandler(UArg arg);
+//static void SimpleBLEPeripheral_performPeriodicTask(void);
+//static void SimpleBLEPeripheral_clockHandler(UArg arg);
 
 static void SimpleBLEPeripheral_sendAttRsp(void);
 static void SimpleBLEPeripheral_freeAttRsp(uint8_t status);
@@ -269,12 +267,12 @@ static gapRolesCBs_t SimpleBLEPeripheral_gapRoleCBs = {
 
 // GAP Bond Manager Callbacks
 static gapBondCBs_t simpleBLEPeripheral_BondMgrCBs = {
-NULL, // Passcode callback (not used by application)
+		NULL, // Passcode callback (not used by application)
 		NULL  // Pairing / Bonding state Callback (not used by application)
 		};
 
 // Simple GATT Profile Callbacks
-static simpleProfileCBs_t SimpleBLEPeripheral_simpleProfileCBs = {
+static EVRSProfileCBs_t SimpleBLEPeripheral_EVRSProfileCBs = {
 		SimpleBLEPeripheral_charValueChangeCB // Characteristic value change callback
 		};
 
@@ -329,10 +327,6 @@ static void SimpleBLEPeripheral_init(void) {
 
 	// Create an RTOS queue for message from profile to be sent to app.
 	appMsgQueue = Util_constructQueue(&appMsg);
-
-	// Create one-shot clocks for internal periodic events.
-	Util_constructClock(&periodicClock, SimpleBLEPeripheral_clockHandler,
-	SBP_PERIODIC_EVT_PERIOD, 0, false, SBP_PERIODIC_EVT);
 
 	Board_initKeys(SimpleBLEPeripheral_keyChangeHandler);
 	Board_initLEDs();
@@ -421,30 +415,27 @@ static void SimpleBLEPeripheral_init(void) {
 	GATTServApp_AddService(GATT_ALL_SERVICES);   // GATT attributes
 	DevInfo_AddService();                        // Device Information Service
 
-	SimpleProfile_AddService(GATT_ALL_SERVICES); // Simple GATT Profile
+	EVRSProfile_AddService(GATT_ALL_SERVICES); // EVRS GATT Profile
 
-	// Setup the SimpleProfile Characteristic Values
+	// Setup the EVRSProfile Characteristic Values
 	{
-		uint8_t charValue1 = 1;
-		uint8_t charValue2 = 2;
-		uint8_t charValue3 = 3;
-		uint8_t charValue4 = 4;
-		uint8_t charValue5[SIMPLEPROFILE_CHAR5_LEN] = { 1, 2, 3, 4, 5 };
+		uint8_t sysIdVal = 0xA1;
+		uint8_t devIdVal = 0xA2;
+		uint8_t destVal = 0xA3;
+		uint8_t dataVal = 0xA4;
 
-		SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR1, sizeof(uint8_t),
-				&charValue1);
-		SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR2, sizeof(uint8_t),
-				&charValue2);
-		SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR3, sizeof(uint8_t),
-				&charValue3);
-		SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR4, sizeof(uint8_t),
-				&charValue4);
-		SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR5, SIMPLEPROFILE_CHAR5_LEN,
-				charValue5);
+		EVRSProfile_SetParameter(EVRSPROFILE_SYSID, sizeof(sysIdVal),
+				&sysIdVal);
+		EVRSProfile_SetParameter(EVRSPROFILE_DEVID, sizeof(devIdVal),
+				&devIdVal);
+		EVRSProfile_SetParameter(EVRSPROFILE_DEST, sizeof(destVal),
+				&destVal);
+		EVRSProfile_SetParameter(EVRSPROFILE_DATA, sizeof(dataVal),
+				&dataVal);
 	}
 
 	// Register callback with SimpleGATTprofile
-	SimpleProfile_RegisterAppCBs(&SimpleBLEPeripheral_simpleProfileCBs);
+	EVRSProfile_RegisterAppCBs(&SimpleBLEPeripheral_EVRSProfileCBs);
 
 	// Start the Device
 	VOID GAPRole_StartDevice(&SimpleBLEPeripheral_gapRoleCBs);
@@ -543,10 +534,10 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 		{
 			events &= ~SBP_PERIODIC_EVT;
 
-			Util_startClock(&periodicClock);
+			//Util_startClock(&periodicClock);
 
 			// Perform periodic application task
-			SimpleBLEPeripheral_performPeriodicTask();
+			//SimpleBLEPeripheral_performPeriodicTask();
 		}
 
 	}
@@ -853,7 +844,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 			linkDBInfo_t linkInfo;
 			uint8_t numActive = 0;
 
-			Util_startClock(&periodicClock);
+			//Util_startClock(&periodicClock);
 
 			numActive = linkDB_NumActive();
 
@@ -906,7 +897,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 			break;
 
 		case GAPROLE_WAITING:
-			Util_stopClock(&periodicClock);
+			//Util_stopClock(&periodicClock);
 			SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
 
 			Display_print0(dispHandle, 0, 0, "Disconnected");
@@ -966,71 +957,35 @@ static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID) {
  * @return  None.
  */
 static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID) {
-	uint8_t newValue;
+	uint32_t newValue;
 
 	switch (paramID)
 	{
-		case SIMPLEPROFILE_CHAR1:
-			SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR1, &newValue);
+		case EVRSPROFILE_DEVID:
+			EVRSProfile_GetParameter(EVRSPROFILE_DEVID, &newValue);
 
-			Display_print1(dispHandle, 0, 0, "Char 1: %d", (uint16_t )newValue);
+			Display_print1(dispHandle, 0, 0, "Device Id: 0x%08x",
+					(uint32_t )newValue);
 			break;
 
-		case SIMPLEPROFILE_CHAR3:
-			SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &newValue);
+		case EVRSPROFILE_DEST:
+			EVRSProfile_GetParameter(EVRSPROFILE_DEST, &newValue);
 
-			Display_print1(dispHandle, 0, 0, "Char 3: %d", (uint16_t )newValue);
+			Display_print1(dispHandle, 0, 0, "Destiny BS: 0x%08x",
+					(uint32_t )newValue);
+			break;
+
+		case EVRSPROFILE_DATA:
+			EVRSProfile_GetParameter(EVRSPROFILE_DATA, &newValue);
+
+			Display_print1(dispHandle, 0, 0, "User Data: 0x%08x",
+					(uint32_t )newValue);
 			break;
 
 		default:
 			// should not reach here!
 			break;
 	}
-}
-
-/*********************************************************************
- * @fn      SimpleBLEPeripheral_performPeriodicTask
- *
- * @brief   Perform a periodic application task. This function gets called
- *          every five seconds (SBP_PERIODIC_EVT_PERIOD). In this example,
- *          the value of the third characteristic in the SimpleGATTProfile
- *          service is retrieved from the profile, and then copied into the
- *          value of the the fourth characteristic.
- *
- * @param   None.
- *
- * @return  None.
- */
-static void SimpleBLEPeripheral_performPeriodicTask(void) {
-	uint8_t valueToCopy;
-
-	// Call to retrieve the value of the third characteristic in the profile
-	if (SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &valueToCopy) == SUCCESS)
-	{
-		// Call to set that value of the fourth characteristic in the profile.
-		// Note that if notifications of the fourth characteristic have been
-		// enabled by a GATT client device, then a notification will be sent
-		// every time this function is called.
-		SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR4, sizeof(uint8_t),
-				&valueToCopy);
-	}
-}
-
-/*********************************************************************
- * @fn      SimpleBLEPeripheral_clockHandler
- *
- * @brief   Handler function for clock timeouts.
- *
- * @param   arg - event type
- *
- * @return  None.
- */
-static void SimpleBLEPeripheral_clockHandler(UArg arg) {
-	// Store the event.
-	events |= arg;
-
-	// Wake up the application.
-	Semaphore_post(sem);
 }
 
 /*********************************************************************
@@ -1095,7 +1050,7 @@ static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
 			{
 				advertEnable = TRUE;
 				GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
-								&advertEnable);
+						&advertEnable);
 				appState = APP_STATE_ADVERT;
 			}
 			break;
@@ -1104,7 +1059,15 @@ static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
 			{
 				advertEnable = FALSE;
 				GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
-												&advertEnable);
+						&advertEnable);
+				appState = APP_STATE_IDLE;
+			}
+			if (keys & KEY_RIGHT)
+			{
+				uint32 newValue = 0;
+				EVRSProfile_GetParameter(EVRSPROFILE_DATA, &newValue);
+				newValue += 1;
+				EVRSProfile_SetParameter(EVRSPROFILE_DATA, sizeof(uint32), &newValue );
 				appState = APP_STATE_IDLE;
 			}
 			break;
