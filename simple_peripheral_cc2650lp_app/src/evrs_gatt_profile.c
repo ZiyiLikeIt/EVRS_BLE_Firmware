@@ -483,6 +483,9 @@ static bStatus_t EVRSProfile_WriteAttrCB(uint16_t connHandle,
 				//Write the value
 				if (status == SUCCESS)
 				{
+					uint8 *pCurValue = (uint8 *)pAttr->pValue;
+					*pCurValue = pValue[0];
+
 					if (pAttr->pValue == &EVRSProfileDevId)
 						notifyApp = EVRSPROFILE_DEVID;
 					else if (pAttr->pValue == &EVRSProfileDest)

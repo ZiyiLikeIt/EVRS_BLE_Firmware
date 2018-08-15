@@ -957,29 +957,29 @@ static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID) {
  * @return  None.
  */
 static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID) {
-	uint32_t newValue;
+	uint8_t newValue;
 
 	switch (paramID)
 	{
 		case EVRSPROFILE_DEVID:
 			EVRSProfile_GetParameter(EVRSPROFILE_DEVID, &newValue);
 
-			Display_print1(dispHandle, 0, 0, "Device Id: 0x%08x",
-					(uint32_t )newValue);
+			Display_print1(dispHandle, 0, 0, "Device Id: 0x%02x",
+					(uint8_t )newValue);
 			break;
 
 		case EVRSPROFILE_DEST:
 			EVRSProfile_GetParameter(EVRSPROFILE_DEST, &newValue);
 
-			Display_print1(dispHandle, 0, 0, "Destiny BS: 0x%08x",
-					(uint32_t )newValue);
+			Display_print1(dispHandle, 0, 0, "Destiny BS: 0x%02x",
+					(uint8_t )newValue);
 			break;
 
 		case EVRSPROFILE_DATA:
 			EVRSProfile_GetParameter(EVRSPROFILE_DATA, &newValue);
 
-			Display_print1(dispHandle, 0, 0, "User Data: 0x%08x",
-					(uint32_t )newValue);
+			Display_print1(dispHandle, 0, 0, "User Data: 0x%02x",
+					(uint8_t )newValue);
 			break;
 
 		default:

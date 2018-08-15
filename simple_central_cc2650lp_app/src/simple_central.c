@@ -1116,11 +1116,12 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 											"Write req sent");
 									req.handle = charHdl[EVRSPROFILE_DATA];
 									req.len = 1;
-									req.pValue[0] = charVal;
+									req.pValue[0] = 0xaf;
 									req.sig = 0;
 									req.cmd = 0;
 									status = GATT_WriteCharValue(connHandle,
 											&req, selfEntity);
+									//Display_print1(dispHandle, 9, 0, "0x%04x",req.handle);
 									if (status != SUCCESS)
 									{
 										GATT_bm_free((gattMsg_t *) &req,
