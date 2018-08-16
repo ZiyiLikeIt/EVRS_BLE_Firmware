@@ -26,6 +26,8 @@ typedef struct {
 #define SBC_KEY_CHANGE_EVT                    0x0010
 #define SBC_STATE_CHANGE_EVT                  0x0020
 #define SBC_CONNECTING_TIMEOUT_EVT	      	  0x0040
+#define EBS_FIELD_WRITE_EVT					  0x0080
+#define EBS_FIELD_READ_EVT					  0x0081
 
 
 #endif /* EVRS_BS_TYPEDEFS_H_ */

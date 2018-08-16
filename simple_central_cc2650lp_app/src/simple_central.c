@@ -93,7 +93,7 @@
 #define DEFAULT_MAX_SCAN_RES                  8
 
 // Scan duration in ms
-#define DEFAULT_SCAN_DURATION                 4000
+#define DEFAULT_SCAN_DURATION                 2000
 
 // Discovery mode (limited, general, all)
 #define DEFAULT_DISCOVERY_MODE                DEVDISC_MODE_ALL
@@ -111,10 +111,10 @@
 #define DEFAULT_LINK_WHITE_LIST               FALSE
 
 // Initial minimum connection interval (units of 1.25 ms.)
-#define INITIAL_MIN_CONN_INTERVAL 	      	  160
+#define INITIAL_MIN_CONN_INTERVAL 	      	  16
 
 // Initial minimum connection interval (units of 1.25 ms.)
-#define INITIAL_MAX_CONN_INTERVAL             320
+#define INITIAL_MAX_CONN_INTERVAL             80
 
 // Initial slave latency
 #define INITIAL_SLAVE_LATENCY 		      	  0
@@ -131,11 +131,11 @@
 
 // Minimum connection interval (units of 1.25ms) if automatic parameter update
 // request is enabled
-#define DEFAULT_UPDATE_MIN_CONN_INTERVAL      80
+#define DEFAULT_UPDATE_MIN_CONN_INTERVAL      16
 
 // Maximum connection interval (units of 1.25ms) if automatic parameter update
 // request is enabled
-#define DEFAULT_UPDATE_MAX_CONN_INTERVAL      160
+#define DEFAULT_UPDATE_MAX_CONN_INTERVAL      80
 
 // Slave latency to use if automatic parameter update request is enabled
 #define DEFAULT_UPDATE_SLAVE_LATENCY          0
@@ -201,6 +201,7 @@ typedef enum {
 	MENU_ITEM_CONN_PARAM_UPDATE,
 	MENU_ITEM_RSSI,
 	MENU_ITEM_READ_WRITE,
+	MENU_ITEM_FIELD,
 	MENU_ITEM_DISCONNECT
 } MenuItem_t;
 
@@ -362,6 +363,37 @@ static void SimpleBLECentral_pairStateCB(uint16_t connHandle, uint8_t pairState,
 
 void SimpleBLECentral_startDiscHandler(UArg a0);
 void SimpleBLECentral_keyChangeHandler(uint8_t keys);
+
+/******************************************************************************/
+// Field test defs
+
+bool isRunning = false;
+bool isInProgress = false;
+bool isStop = FALSE;
+uint32 totalTestRound = 0;
+uint32 errorRound = 0;
+uint8_t testData = 0;
+Clock_Struct testClock;
+
+typedef enum{
+	FIELD_IDLE,
+	FIELD_INIT,
+	FIELD_WR_RSP,
+	FIELD_RD_RSP
+} FieldState_t;
+
+FieldState_t testState;
+
+static void EBS_startFieldTest();
+static void EBS_stopFieldTest();
+static void EBS_notifyFieldTest(bool isWrite, uint8 rsp);
+static void EBS_fieldClockTimeoutCB(UArg a0);
+static void EBS_fieldTestfunc(uint8 data);
+static void EBS_doWrite();
+static void EBS_doRead();
+
+
+/*****************************************************************************/
 
 /*********************************************************************
  * PROFILE CALLBACKS
@@ -691,6 +723,12 @@ static void SimpleBLECentral_processAppMsg(sbcEvt_t *pMsg) {
 			GAPCentralRole_TerminateLink(connHandle);
 		}
 
+		case EBS_FIELD_WRITE_EVT:
+			EBS_doWrite();
+			break;
+		case EBS_FIELD_READ_EVT:
+			EBS_doRead();
+			break;
 		default:
 			// Do nothing.
 			break;
@@ -1034,6 +1072,11 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 						break;
 
 					case MENU_ITEM_READ_WRITE:
+						selectedMenuItem = MENU_ITEM_FIELD;
+						Display_print0(dispHandle, ROW_SEVEN, 0, ">Field Test");
+						break;
+
+					case MENU_ITEM_FIELD:
 						selectedMenuItem = MENU_ITEM_DISCONNECT;
 						Display_print0(dispHandle, ROW_SEVEN, 0, ">Disconnect");
 						break;
@@ -1099,7 +1142,7 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 
 					case MENU_ITEM_READ_WRITE:
 						if (state == BLE_STATE_CONNECTED&&
-						charHdl != 0 &&
+						charHdl[0] != 0 &&
 						procedureInProgress == FALSE)
 						{
 							uint8_t status;
@@ -1150,6 +1193,22 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 						}
 						break;
 
+					case MENU_ITEM_FIELD:
+						if (state == BLE_STATE_CONNECTED && charHdl[0] != 0)
+						{
+							if(isStop)
+							{
+								EBS_stopFieldTest();
+								Display_print2(dispHandle,6,0,"%d/%d wrong",
+										errorRound,totalTestRound);
+							} else
+							{
+								EBS_startFieldTest();
+								Display_print0(dispHandle, ROW_SIX, 0, "Field test start");
+							}
+							isStop = !isStop;
+						}
+						break;
 					case MENU_ITEM_DISCONNECT:
 						GAPCentralRole_TerminateLink(connHandle);
 						state = BLE_STATE_DISCONNECTING;
@@ -1192,6 +1251,7 @@ static void SimpleBLECentral_processGATTMsg(gattMsgEvent_t *pMsg) {
 				// After a successful read, display the read value
 				Display_print1(dispHandle, ROW_SIX, 0, "Read rsp: 0x%02x",
 						pMsg->msg.readRsp.pValue[0]);
+				EBS_notifyFieldTest(false,pMsg->msg.readRsp.pValue[0]);
 			}
 
 			procedureInProgress = FALSE;
@@ -1209,6 +1269,7 @@ static void SimpleBLECentral_processGATTMsg(gattMsgEvent_t *pMsg) {
 				// increment value
 				Display_print1(dispHandle, ROW_SIX, 0, "Write sent: 0x%02x",
 						charVal++);
+				EBS_notifyFieldTest(true,0);
 			}
 
 			procedureInProgress = FALSE;
@@ -1823,4 +1884,123 @@ uint8_t SimpleBLECentral_enqueueMsg(uint8_t event, uint8_t status,
 		return Util_enqueueMsg(appMsgQueue, sem, (uint8_t *) pMsg);
 	}
 	return FALSE;
+}
+
+
+
+
+/*
+ * Field test functions
+ *
+ */
+
+
+static void EBS_startFieldTest()
+{
+	if (isRunning)
+		return;
+	isRunning = true;
+	totalTestRound = 0;
+	errorRound = 0;
+	testState = FIELD_INIT;
+	Util_constructClock(&testClock, EBS_fieldClockTimeoutCB,
+				100, 0, true, 0);
+	return;
+}
+
+
+static void EBS_stopFieldTest()
+{
+
+	if (!isInProgress){
+		Util_stopClock(&testClock);
+		testState = FIELD_IDLE;
+		isRunning = false;
+		return;
+	}
+
+}
+
+
+static void EBS_notifyFieldTest(bool isWrite, uint8 rsp)
+{
+	if(isWrite)
+		testState = FIELD_WR_RSP;
+	else
+		testState = FIELD_RD_RSP;
+	EBS_fieldTestfunc(rsp);
+	return;
+}
+
+
+static void EBS_fieldClockTimeoutCB(UArg a0)
+{
+	if (!isInProgress)
+	{
+		isInProgress = true;
+		testState = FIELD_INIT;
+		EBS_fieldTestfunc(0);
+	}
+	Util_startClock(&testClock);
+	return;
+}
+
+static void EBS_fieldTestfunc(uint8 data)
+{
+
+	switch(testState)
+	{
+		case FIELD_INIT:
+			testData = 0xaf;
+			SimpleBLECentral_enqueueMsg(EBS_FIELD_WRITE_EVT, NULL, NULL);
+			break;
+		case FIELD_WR_RSP:
+			SimpleBLECentral_enqueueMsg(EBS_FIELD_READ_EVT, NULL, NULL);
+			break;
+		case FIELD_RD_RSP:
+			totalTestRound++;
+			if (data != testData)
+				errorRound++;
+			isInProgress = false;
+			Display_print2(dispHandle,8,0,"%d/%d wrong",errorRound,totalTestRound);
+			break;
+
+	}
+}
+
+static void EBS_doWrite()
+{
+	// Do a write
+	attWriteReq_t req;
+	uint8_t status;
+	req.pValue = GATT_bm_alloc(connHandle,
+			ATT_WRITE_REQ, 1, NULL);
+	if (req.pValue != NULL)
+	{
+		req.handle = charHdl[EVRSPROFILE_DATA];
+		req.len = 1;
+		req.pValue[0] = 0xaf;
+		req.sig = 0;
+		req.cmd = 0;
+		status = GATT_WriteCharValue(connHandle,
+				&req, selfEntity);
+		//Display_print1(dispHandle, 8, 0, "0x%04x",req.handle);
+		if (status != SUCCESS)
+		{
+			GATT_bm_free((gattMsg_t *) &req, ATT_WRITE_REQ);
+			//Display_print1(dispHandle, 9, 0, "0x%02x",status);
+		}
+	} else
+	{
+		status = bleMemAllocError;
+	}
+}
+
+static void EBS_doRead()
+{
+	// Do a read
+	attReadReq_t req;
+	req.handle = charHdl[EVRSPROFILE_DATA];
+	GATT_ReadCharValue(connHandle, &req,
+			selfEntity);
 }
