@@ -111,10 +111,10 @@
 #define DEFAULT_LINK_WHITE_LIST               FALSE
 
 // Initial minimum connection interval (units of 1.25 ms.)
-#define INITIAL_MIN_CONN_INTERVAL 	      	  160
+#define INITIAL_MIN_CONN_INTERVAL 	      	  16
 
 // Initial minimum connection interval (units of 1.25 ms.)
-#define INITIAL_MAX_CONN_INTERVAL             320
+#define INITIAL_MAX_CONN_INTERVAL             400
 
 // Initial slave latency
 #define INITIAL_SLAVE_LATENCY 		      	  0
