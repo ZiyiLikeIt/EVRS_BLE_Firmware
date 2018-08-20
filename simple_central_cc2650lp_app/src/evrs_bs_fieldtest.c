@@ -71,7 +71,9 @@ void EBS_startFieldTest()
 void EBS_stopFieldTest()
 {
 	isRunning = false;
-	Display_print2(dispHandle,8,0,"%d/%d wrong, stopped",errorRound,totalTestRound);
+	//Util_stopClock(&testClock);
+	//while(isInProgress); // wait till this round done
+	//Display_print2(dispHandle,8,0,"%d/%d wrong, stopped",errorRound,totalTestRound);
 	return;
 }
 
@@ -98,40 +100,39 @@ static void EBS_fieldClockTimeoutCB(UArg a0)
 		}
 		Util_startClock(&testClock);
 	} else {
-		if (!isInProgress) { // safe to exit
-			Util_stopClock(&testClock);
-			testState = FIELD_IDLE;
-		} else { // wait another round till all work done
-			Util_startClock(&testClock);
-		}
-
+		Util_stopClock(&testClock);
+		testState = FIELD_IDLE;
 	}
 	return;
 }
 
 static void EBS_fieldTestfunc(uint8_t data)
 {
+	/*
 	if (!isRunning) {
 		Display_print2(dispHandle,8,0,"%d/%d wrong, stopped",errorRound,totalTestRound);
 		isInProgress = false;
 	}
+	*/
 	switch(testState)
 	{
 		case FIELD_INIT:
 			testData[0] = 1; // data value length
 			testData[1] = rand() % 0xFF; // data value
 			SimpleBLECentral_enqueueMsg(EBS_FIELD_WRITE_EVT, EVRSPROFILE_DATA, testData);
-			//Display_print2(dispHandle,8,0,"func testData [%d, 0x%02x]",testData[0],testData[1]);
+			Display_print0(dispHandle,10,0,"FIELD_INIT");
 			break;
 		case FIELD_WR_RSP:
 			SimpleBLECentral_enqueueMsg(EBS_FIELD_READ_EVT, EVRSPROFILE_DATA, NULL);
+			Display_print0(dispHandle,10,0,"FIELD_WR_RSP");
 			break;
 		case FIELD_RD_RSP:
 			totalTestRound++;
 			if (data != testData[1])
 				errorRound++;
+			Display_print0(dispHandle,10,0,"FIELD_RD_RSP");
+			Display_print2(dispHandle,8,0,"%d/%d wrong",errorRound,totalTestRound);
 			isInProgress = false;
-			Display_print2(dispHandle,8,0,"%d/%d wrong, running",errorRound,totalTestRound);
 			break;
 		default:
 			break;
