@@ -63,7 +63,7 @@ void EBS_startFieldTest()
 	errorRound = 0;
 	testState = FIELD_INIT;
 	Util_startClock(&testClock);
-	Display_print0(dispHandle, 6, 0, "Field test start");
+	Display_print2(dispHandle,8,0,"%d/%d wrong, running",errorRound,totalTestRound);
 	return;
 }
 
@@ -116,24 +116,29 @@ static void EBS_fieldTestfunc(uint8_t data)
 	*/
 	switch(testState)
 	{
-		case FIELD_INIT:
+		case FIELD_INIT: {
 			testData[0] = 1; // data value length
 			testData[1] = rand() % 0xFF; // data value
 			SimpleBLECentral_enqueueMsg(EBS_FIELD_WRITE_EVT, EVRSPROFILE_DATA, testData);
-			Display_print0(dispHandle,10,0,"FIELD_INIT");
+			//Display_print0(dispHandle,10,0,"FIELD_INIT");
 			break;
-		case FIELD_WR_RSP:
+		}
+
+		case FIELD_WR_RSP: {
 			SimpleBLECentral_enqueueMsg(EBS_FIELD_READ_EVT, EVRSPROFILE_DATA, NULL);
-			Display_print0(dispHandle,10,0,"FIELD_WR_RSP");
 			break;
-		case FIELD_RD_RSP:
+		}
+
+		case FIELD_RD_RSP: {
 			totalTestRound++;
 			if (data != testData[1])
 				errorRound++;
-			Display_print0(dispHandle,10,0,"FIELD_RD_RSP");
-			Display_print2(dispHandle,8,0,"%d/%d wrong",errorRound,totalTestRound);
+			String sState = isRunning?("running"):("stopped");
+			Display_print3(dispHandle,8,0,"%d/%d wrong, %s",errorRound,totalTestRound,sState);
 			isInProgress = false;
 			break;
+		}
+
 		default:
 			break;
 
