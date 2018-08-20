@@ -100,7 +100,7 @@
 
 // Maximum connection interval (units of 1.25ms, 800=1000ms) if automatic
 // parameter update request is enabled
-#define DEFAULT_DESIRED_MAX_CONN_INTERVAL     400
+#define DEFAULT_DESIRED_MAX_CONN_INTERVAL     80
 
 // Slave latency to use if automatic parameter update request is enabled
 #define DEFAULT_DESIRED_SLAVE_LATENCY         0
@@ -341,7 +341,7 @@ static void SimpleBLEPeripheral_init(void) {
 	// Setup the GAP Peripheral Role Profile
 	{
 		// For all hardware platforms, device starts advertising upon initialization
-		uint8_t initialAdvertEnable = FALSE;
+		uint8_t initialAdvertEnable = TRUE;
 
 		// By setting this to zero, the device will go into the waiting state after
 		// being discoverable for 30.72 second, and will not being advertising again
@@ -1064,10 +1064,10 @@ static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
 			}
 			if (keys & KEY_RIGHT)
 			{
-				uint32 newValue = 0;
+				uint8_t newValue = 0;
 				EVRSProfile_GetParameter(EVRSPROFILE_DATA, &newValue);
 				newValue += 1;
-				EVRSProfile_SetParameter(EVRSPROFILE_DATA, sizeof(uint32), &newValue );
+				EVRSProfile_SetParameter(EVRSPROFILE_DATA, sizeof(uint8_t), &newValue );
 				appState = APP_STATE_IDLE;
 			}
 			break;

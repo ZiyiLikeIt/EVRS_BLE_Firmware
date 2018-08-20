@@ -1,17 +1,18 @@
-/*****************************************************************************
+/****************************************
+ *
+ * @filename 	evrs_gatt_profile.c
+ *
+ * @project 	EVRS
+ *
+ * @brief 		his is the source file of gatt profile configuration of the
+ 	 	 	 	 transmitter using cc2650lp.
+ *
+ * @date 		14 Aug. 2018
+ *
+ * @author		Ziyi@outlook.com.au
+ *
+ ****************************************/
 
- file	evrs_gatt_profile.c
-
- brief	This is the source file of gatt profile configuration of the
- transmitter using cc2650lp.
-
- proj	EVRS
-
- date	0351pm 14 Aug 2018
-
- author	Ziyi
-
- *****************************************************************************/
 
 /*********************************************************************
  * INCLUDES

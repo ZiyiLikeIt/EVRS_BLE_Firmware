@@ -1,7 +1,7 @@
 ******************************************************************************
                   TI ARM Linker PC v16.9.4                     
 ******************************************************************************
->> Linked Thu Aug 16 02:28:19 2018
+>> Linked Fri Aug 17 13:08:57 2018
 
 OUTPUT FILE NAME:   <simple_central_cc2650lp_stack.out>
 ENTRY POINT SYMBOL: "startup_entry"  address: 0000b001
@@ -437,7 +437,7 @@ MODULE SUMMARY
        Total:                                   2       0         0      
                                                                          
     C:\Users\ziyix\AppData\Local\Temp\
-       {158CC7F5-C60E-4677-9256-72F65EC6854D}   104     0         4      
+       {CBAB67D1-1DC6-44EE-AF29-F90D2CFE1E8E}   104     0         4      
     +--+----------------------------------------+-------+---------+---------+
        Total:                                   104     0         4      
                                                                          

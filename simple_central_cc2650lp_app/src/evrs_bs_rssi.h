@@ -25,7 +25,6 @@ author	Ziyi
 #include "simple_central.h"
 
 
-
 extern readRssi_t readRssi[MAX_NUM_BLE_CONNS];
 
 

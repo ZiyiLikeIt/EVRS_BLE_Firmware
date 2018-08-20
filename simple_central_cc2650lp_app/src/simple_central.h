@@ -77,10 +77,6 @@ extern "C"
 #define EVRSPROFILE_DEST_UUID        	0xAFF8
 #define EVRSPROFILE_DATA_UUID         	0xAFFE
 
-#define EVRSPROFILE_SYSID				0x00  // RW uint8
-#define EVRSPROFILE_DEVID				0x01  // RW uint8
-#define EVRSPROFILE_DEST				0x02  // RW uint8
-#define EVRSPROFILE_DATA				0x03  // RW uint8
 
 /*********************************************************************
  * FUNCTIONS
@@ -89,6 +85,7 @@ extern "C"
  * Task creation function for the Simple BLE Central.
  */
 extern void SimpleBLECentral_createTask(void);
+
 extern uint8_t SimpleBLECentral_enqueueMsg(uint8_t event, uint8_t status,
 		uint8_t *pData);
 

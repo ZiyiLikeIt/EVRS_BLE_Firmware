@@ -74,8 +74,9 @@
 #include "board_key.h"
 #include "board_led.h"
 #include "evrs_bs_rssi.h"
-#include <ti/mw/display/Display.h>
+// #include <ti/mw/display/Display.h>
 #include "board.h"
+#include "evrs_bs_fieldtest.h"
 
 #include "simple_central.h"
 
@@ -317,6 +318,9 @@ readRssi_t readRssi[MAX_NUM_BLE_CONNS];
 // counter for profile found
 int profileCounter = 0;
 
+// Field test menu flag
+bool isStop = FALSE;
+
 // test
 int i = 0;
 
@@ -346,14 +350,6 @@ static void SimpleBLECentral_processPasscode(uint16_t connectionHandle,
 		uint8_t uiOutputs);
 
 static void SimpleBLECentral_processCmdCompleteEvt(hciEvt_CmdComplete_t *pMsg);
-/*
-static bStatus_t SimpleBLECentral_StartRssi(uint16_t connHandle,
-		uint16_t period);
-static bStatus_t SimpleBLECentral_CancelRssi(uint16_t connHandle);
-static readRssi_t *SimpleBLECentral_RssiAlloc(uint16_t connHandle);
-static readRssi_t *SimpleBLECentral_RssiFind(uint16_t connHandle);
-static void SimpleBLECentral_RssiFree(uint16_t connHandle);
-*/
 
 static uint8_t SimpleBLECentral_eventCB(gapCentralRoleEvent_t *pEvent);
 static void SimpleBLECentral_passcodeCB(uint8_t *deviceAddr,
@@ -364,36 +360,9 @@ static void SimpleBLECentral_pairStateCB(uint16_t connHandle, uint8_t pairState,
 void SimpleBLECentral_startDiscHandler(UArg a0);
 void SimpleBLECentral_keyChangeHandler(uint8_t keys);
 
-/******************************************************************************/
-// Field test defs
-
-bool isRunning = false;
-bool isInProgress = false;
-bool isStop = FALSE;
-uint32 totalTestRound = 0;
-uint32 errorRound = 0;
-uint8_t testData = 0;
-Clock_Struct testClock;
-
-typedef enum{
-	FIELD_IDLE,
-	FIELD_INIT,
-	FIELD_WR_RSP,
-	FIELD_RD_RSP
-} FieldState_t;
-
-FieldState_t testState;
-
-static void EBS_startFieldTest();
-static void EBS_stopFieldTest();
-static void EBS_notifyFieldTest(bool isWrite, uint8 rsp);
-static void EBS_fieldClockTimeoutCB(UArg a0);
-static void EBS_fieldTestfunc(uint8 data);
-static void EBS_doWrite();
-static void EBS_doRead();
-
-
-/*****************************************************************************/
+static uint8_t EBS_writeCharbyHandle(uint16_t connHandle, ProfileId_t charHdlId,
+		uint8_t* pData, uint8_t len);
+static uint8_t EBS_readCharbyHandle(uint16_t connHandle, ProfileId_t charHdlId);
 
 /*********************************************************************
  * PROFILE CALLBACKS
@@ -546,6 +515,8 @@ static void SimpleBLECentral_init(void) {
 
 	// Register for GATT local events and ATT Responses pending for transmission
 	GATT_RegisterForMsgs(selfEntity);
+
+	EBS_initFieldTest();
 
 	Display_print0(dispHandle, ROW_ZERO, 0, "BLE Central test");
 	Board_ledControl(BOARD_LED_ID_G, BOARD_LED_STATE_FLASH, 300);
@@ -724,10 +695,11 @@ static void SimpleBLECentral_processAppMsg(sbcEvt_t *pMsg) {
 		}
 
 		case EBS_FIELD_WRITE_EVT:
-			EBS_doWrite();
+			EBS_writeCharbyHandle(connHandle, (ProfileId_t) pMsg->hdr.state,
+					pMsg->pData+1, *pMsg->pData);
 			break;
 		case EBS_FIELD_READ_EVT:
-			EBS_doRead();
+			EBS_readCharbyHandle(connHandle, (ProfileId_t) pMsg->hdr.state);
 			break;
 		default:
 			// Do nothing.
@@ -801,7 +773,7 @@ static void SimpleBLECentral_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 			Display_clearLines(dispHandle, ROW_ONE, ROW_SEVEN);
 			Display_print1(dispHandle, ROW_ONE, 0, "Devices found %d", scanRes);
 			state = BLE_STATE_DISCOVERED;
-			Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_DISCOVERED");
+			//Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_DISCOVERED");
 
 			if (scanRes > 0)
 			{
@@ -1146,10 +1118,15 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 						procedureInProgress == FALSE)
 						{
 							uint8_t status;
+							uint8_t tdata = rand() % 0xFF;
 							// Do a read or write as long as no other read or write is in progress
 							if (doWrite)
 							{
-								// Do a write
+
+								status = EBS_writeCharbyHandle(connHandle, EVRSPROFILE_DATA,
+									&tdata, 1);
+								Display_print1(dispHandle, 9, 0, "0x%02x",status);
+								/*// Do a write
 								attWriteReq_t req;
 								req.pValue = GATT_bm_alloc(connHandle,
 								ATT_WRITE_REQ, 1, NULL);
@@ -1157,7 +1134,7 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 								{
 									Display_print0(dispHandle, ROW_SIX, 0,
 											"Write req sent");
-									req.handle = charHdl[EVRSPROFILE_DATA];
+									req.handle = charHdl[];
 									req.len = 1;
 									req.pValue[0] = 0xaf;
 									req.sig = 0;
@@ -1174,6 +1151,7 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 								{
 									status = bleMemAllocError;
 								}
+								*/
 							} else
 							{
 								// Do a read
@@ -1199,12 +1177,10 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 							if(isStop)
 							{
 								EBS_stopFieldTest();
-								Display_print2(dispHandle,6,0,"%d/%d wrong",
-										errorRound,totalTestRound);
 							} else
 							{
 								EBS_startFieldTest();
-								Display_print0(dispHandle, ROW_SIX, 0, "Field test start");
+
 							}
 							isStop = !isStop;
 						}
@@ -1455,19 +1431,6 @@ static void SimpleBLECentral_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 		{
 			if (svcStartHdl != 0)
 			{
-				/*
-				attReadByTypeReq_t req;
-
-				// Discover characteristic
-
-				req.startHandle = svcStartHdl;
-				req.endHandle = svcEndHdl;
-				req.type.len = ATT_BT_UUID_SIZE;
-				req.type.uuid[0] = LO_UINT16(EVRSPROFILE_SYSID_UUID);
-				req.type.uuid[1] = HI_UINT16(EVRSPROFILE_SYSID_UUID);
-
-				VOID GATT_ReadUsingCharUUID(connHandle, &req, selfEntity);
-				 */
 				VOID GATT_DiscAllChars(connHandle, svcStartHdl, svcEndHdl,
 					selfEntity);
 				discState = BLE_DISC_STATE_CHAR;
@@ -1889,118 +1852,42 @@ uint8_t SimpleBLECentral_enqueueMsg(uint8_t event, uint8_t status,
 
 
 
-/*
- * Field test functions
- *
- */
-
-
-static void EBS_startFieldTest()
-{
-	if (isRunning)
-		return;
-	isRunning = true;
-	totalTestRound = 0;
-	errorRound = 0;
-	testState = FIELD_INIT;
-	Util_constructClock(&testClock, EBS_fieldClockTimeoutCB,
-				100, 0, true, 0);
-	return;
-}
-
-
-static void EBS_stopFieldTest()
+static uint8_t EBS_writeCharbyHandle(uint16_t connHandle, ProfileId_t charHdlId,
+		uint8_t* pData, uint8_t len)
 {
 
-	if (!isInProgress){
-		Util_stopClock(&testClock);
-		testState = FIELD_IDLE;
-		isRunning = false;
-		return;
-	}
-
-}
-
-
-static void EBS_notifyFieldTest(bool isWrite, uint8 rsp)
-{
-	if(isWrite)
-		testState = FIELD_WR_RSP;
-	else
-		testState = FIELD_RD_RSP;
-	EBS_fieldTestfunc(rsp);
-	return;
-}
-
-
-static void EBS_fieldClockTimeoutCB(UArg a0)
-{
-	if (!isInProgress)
-	{
-		isInProgress = true;
-		testState = FIELD_INIT;
-		EBS_fieldTestfunc(0);
-	}
-	Util_startClock(&testClock);
-	return;
-}
-
-static void EBS_fieldTestfunc(uint8 data)
-{
-
-	switch(testState)
-	{
-		case FIELD_INIT:
-			testData = 0xaf;
-			SimpleBLECentral_enqueueMsg(EBS_FIELD_WRITE_EVT, NULL, NULL);
-			break;
-		case FIELD_WR_RSP:
-			SimpleBLECentral_enqueueMsg(EBS_FIELD_READ_EVT, NULL, NULL);
-			break;
-		case FIELD_RD_RSP:
-			totalTestRound++;
-			if (data != testData)
-				errorRound++;
-			isInProgress = false;
-			Display_print2(dispHandle,8,0,"%d/%d wrong",errorRound,totalTestRound);
-			break;
-
-	}
-}
-
-static void EBS_doWrite()
-{
-	// Do a write
+	if (len > 23)
+		return FAILURE;
+	// Do a write using char handle
 	attWriteReq_t req;
 	uint8_t status;
-	req.pValue = GATT_bm_alloc(connHandle,
-			ATT_WRITE_REQ, 1, NULL);
+	req.pValue = GATT_bm_alloc(connHandle, ATT_WRITE_REQ, len, NULL);
 	if (req.pValue != NULL)
 	{
-		req.handle = charHdl[EVRSPROFILE_DATA];
-		req.len = 1;
-		req.pValue[0] = 0xaf;
+		req.handle = charHdl[charHdlId];
+		req.len = len;
+		//memcpy(req.pValue, pData, len);
+		for (int i = 0; i < len; i++)
+			req.pValue[i] = pData[i];
 		req.sig = 0;
 		req.cmd = 0;
-		status = GATT_WriteCharValue(connHandle,
-				&req, selfEntity);
-		//Display_print1(dispHandle, 8, 0, "0x%04x",req.handle);
+		status = GATT_WriteCharValue(connHandle, &req, selfEntity);
+		//Display_print2(dispHandle,ROW_SIX,0,"Write req sent [%d,0x%02x]", req.len, *(req.pValue));
 		if (status != SUCCESS)
-		{
 			GATT_bm_free((gattMsg_t *) &req, ATT_WRITE_REQ);
-			//Display_print1(dispHandle, 9, 0, "0x%02x",status);
-		}
 	} else
 	{
 		status = bleMemAllocError;
 	}
+	return status;
 }
 
-static void EBS_doRead()
+static uint8_t EBS_readCharbyHandle(uint16_t connHandle, ProfileId_t charHdlId)
 {
 	// Do a read
 	attReadReq_t req;
-	req.handle = charHdl[EVRSPROFILE_DATA];
-	GATT_ReadCharValue(connHandle, &req,
-			selfEntity);
+	uint8_t status;
+	req.handle = charHdl[charHdlId];
+	status = GATT_ReadCharValue(connHandle, &req, selfEntity);
+	return status;
 }
