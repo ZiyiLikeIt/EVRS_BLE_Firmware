@@ -15,7 +15,7 @@
 
 #include "evrs_bs_fieldtest.h"
 
-
+#define ROUND_INTERVAL 50
 
 typedef enum{
 	FIELD_IDLE,
@@ -30,7 +30,7 @@ bool isInProgress = false;
 uint32_t totalTestRound = 0;
 uint32_t errorRound = 0;
 uint8_t testData[2];
-uint8_t randData;
+uint32_t testTime = 0;
 Clock_Struct testClock;
 extern Display_Handle dispHandle;
 FieldState_t testState;
@@ -45,11 +45,12 @@ void EBS_initFieldTest()
 {
 	isRunning = false;
 	isInProgress = false;
+	testTime = 0;
 	totalTestRound = 0;
 	errorRound = 0;
 	testState = FIELD_IDLE;
 	Util_constructClock(&testClock, EBS_fieldClockTimeoutCB,
-					100, 0, false, 0);
+			ROUND_INTERVAL, 0, false, 0);
 	return;
 }
 
@@ -59,8 +60,10 @@ void EBS_startFieldTest()
 		return;
 	isRunning = true;
 	isInProgress = false;
+	testTime = 0;
 	totalTestRound = 0;
 	errorRound = 0;
+	Display_clearLines(dispHandle, 8,9);
 	testState = FIELD_INIT;
 	Util_startClock(&testClock);
 	Display_print2(dispHandle,8,0,"%d/%d wrong, running",errorRound,totalTestRound);
@@ -73,7 +76,9 @@ void EBS_stopFieldTest()
 	isRunning = false;
 	//Util_stopClock(&testClock);
 	//while(isInProgress); // wait till this round done
-	//Display_print2(dispHandle,8,0,"%d/%d wrong, stopped",errorRound,totalTestRound);
+	//float testRate = totalTestRound/testTime/50.0;
+
+
 	return;
 }
 
@@ -91,6 +96,7 @@ void EBS_notifyFieldTest(bool isWrite, uint8_t rsp)
 
 static void EBS_fieldClockTimeoutCB(UArg a0)
 {
+	testTime++;
 	if (isRunning) {
 		if (!isInProgress) // run a new test
 		{
@@ -135,6 +141,7 @@ static void EBS_fieldTestfunc(uint8_t data)
 				errorRound++;
 			String sState = isRunning?("running"):("stopped");
 			Display_print3(dispHandle,8,0,"%d/%d wrong, %s",errorRound,totalTestRound,sState);
+			Display_print1(dispHandle,9,0,"%dms per package",testTime*50/totalTestRound);
 			isInProgress = false;
 			break;
 		}
