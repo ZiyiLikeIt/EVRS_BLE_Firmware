@@ -174,35 +174,35 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXE_OUTPUTS += \
-_evrs_bs_cc2650lp_app.out \
+evrs_bs_cc2650lp_app.out \
 
 EXE_OUTPUTS__QUOTED += \
-"_evrs_bs_cc2650lp_app.out" \
+"evrs_bs_cc2650lp_app.out" \
 
 BIN_OUTPUTS += \
-_evrs_bs_cc2650lp_app.hex \
+evrs_bs_cc2650lp_app.hex \
 
 BIN_OUTPUTS__QUOTED += \
-"_evrs_bs_cc2650lp_app.hex" \
+"evrs_bs_cc2650lp_app.hex" \
 
 
 # All Target
 all: $(OBJS) $(GEN_CMDS)
-	@$(MAKE) --no-print-directory -Onone "_evrs_bs_cc2650lp_app.out"
+	@$(MAKE) --no-print-directory -Onone "evrs_bs_cc2650lp_app.out"
 
 # Tool invocations
-_evrs_bs_cc2650lp_app.out: $(OBJS) $(GEN_CMDS)
+evrs_bs_cc2650lp_app.out: $(OBJS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: ARM Linker'
-	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armcl" --cmd_file="C:/ti/ble_sdk_2_02_02_25/src/config/build_components.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/app/../../iar/stack/build_config.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/app/../config/ccs_compiler_defines.bcfg"  -mv7M3 --code_state=16 --float_support=vfplib -me -O4 --opt_for_speed=0 --define=USE_ICALL --define=MAX_PDU_SIZE=162 --define=POWER_SAVING --define=GAPCENTRALROLE_TASK_STACK_SIZE=510 --define=HEAPMGR_SIZE=0 --define=xDisplay_DISABLE_ALL --define=xBOARD_DISPLAY_EXCLUDE_UART --define=BOARD_DISPLAY_EXCLUDE_LCD --define=GAPCENTRALROLE_NUM_RSSI_LINKS=1 --define=ICALL_MAX_NUM_TASKS=3 --define=ICALL_MAX_NUM_ENTITIES=6 --define=xdc_runtime_Assert_DISABLE_ALL --define=xdc_runtime_Log_DISABLE_ALL --define=CC26XX --define=CC2650_LAUNCHXL -g --c99 --relaxed_ansi --plain_char=unsigned --diag_suppress=48 --diag_warning=225 --diag_wrap=off --display_error_number --gen_func_subsections=on --embedded_constants=on --unaligned_access=on --enum_type=packed --wchar_t=16 --abi=eabi --common=on --fp_reassoc=off --sat_reassoc=off -z -m"_evrs_bs_cc2650lp_app.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/lib" -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/include" --reread_libs --diag_suppress=10247-D --diag_suppress=16002-D --diag_wrap=off --display_error_number --warn_sections --xml_link_info="_evrs_bs_cc2650lp_app_linkInfo.xml" --rom_model --unused_section_elimination=on -o "_evrs_bs_cc2650lp_app.out" $(ORDERED_OBJS)
+	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armcl" --cmd_file="C:/ti/ble_sdk_2_02_02_25/src/config/build_components.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/app/../../iar/stack/build_config.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/ble_examples/examples/cc2650lp/simple_central/ccs/app/../config/ccs_compiler_defines.bcfg"  -mv7M3 --code_state=16 --float_support=vfplib -me -O4 --opt_for_speed=0 --define=USE_ICALL --define=MAX_PDU_SIZE=162 --define=POWER_SAVING --define=GAPCENTRALROLE_TASK_STACK_SIZE=510 --define=HEAPMGR_SIZE=0 --define=xDisplay_DISABLE_ALL --define=xBOARD_DISPLAY_EXCLUDE_UART --define=BOARD_DISPLAY_EXCLUDE_LCD --define=GAPCENTRALROLE_NUM_RSSI_LINKS=1 --define=ICALL_MAX_NUM_TASKS=3 --define=ICALL_MAX_NUM_ENTITIES=6 --define=xdc_runtime_Assert_DISABLE_ALL --define=xdc_runtime_Log_DISABLE_ALL --define=CC26XX --define=CC2650_LAUNCHXL -g --c99 --relaxed_ansi --plain_char=unsigned --diag_suppress=48 --diag_warning=225 --diag_wrap=off --display_error_number --gen_func_subsections=on --embedded_constants=on --unaligned_access=on --enum_type=packed --wchar_t=16 --abi=eabi --common=on --fp_reassoc=off --sat_reassoc=off -z -m"evrs_bs_cc2650lp_app.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/lib" -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/include" --reread_libs --diag_suppress=10247-D --diag_suppress=16002-D --diag_wrap=off --display_error_number --warn_sections --xml_link_info="evrs_bs_cc2650lp_app_linkInfo.xml" --rom_model --unused_section_elimination=on -o "evrs_bs_cc2650lp_app.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
 
-_evrs_bs_cc2650lp_app.hex: $(EXE_OUTPUTS)
+evrs_bs_cc2650lp_app.hex: $(EXE_OUTPUTS)
 	@echo 'Building files: $(strip $(EXE_OUTPUTS__QUOTED))'
 	@echo 'Invoking: ARM Hex Utility'
-	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armhex" --memwidth=8 --romwidth=8 --intel -o "_evrs_bs_cc2650lp_app.hex" $(EXE_OUTPUTS__QUOTED)
+	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armhex" --memwidth=8 --romwidth=8 --intel -o "evrs_bs_cc2650lp_app.hex" $(EXE_OUTPUTS__QUOTED)
 	@echo 'Finished building: $(strip $(EXE_OUTPUTS__QUOTED))'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
@@ -217,7 +217,7 @@ clean:
 	-@echo ' '
 
 post-build:
-	-C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armhex -order MS --memwidth=8 --romwidth=8 --intel -o _evrs_bs_cc2650lp_app.hex _evrs_bs_cc2650lp_app.out
+	-C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armhex -order MS --memwidth=8 --romwidth=8 --intel -o evrs_bs_cc2650lp_app.hex evrs_bs_cc2650lp_app.out
 	-@echo ' '
 
 .PHONY: all clean dependents

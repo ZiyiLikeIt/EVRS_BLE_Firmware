@@ -166,16 +166,16 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXE_OUTPUTS += \
-simple_peripheral_cc2650lp_stack.out \
+evrs_tx_ble_stack.out \
 
 EXE_OUTPUTS__QUOTED += \
-"simple_peripheral_cc2650lp_stack.out" \
+"evrs_tx_ble_stack.out" \
 
 BIN_OUTPUTS += \
-simple_peripheral_cc2650lp_stack.hex \
+evrs_tx_ble_stack.hex \
 
 BIN_OUTPUTS__QUOTED += \
-"simple_peripheral_cc2650lp_stack.hex" \
+"evrs_tx_ble_stack.hex" \
 
 
 # All Target
@@ -185,21 +185,21 @@ all:
 
 # Main-build Target
 main-build: $(OBJS) $(GEN_CMDS)
-	@$(MAKE) --no-print-directory -Onone "simple_peripheral_cc2650lp_stack.out"
+	@$(MAKE) --no-print-directory -Onone "evrs_tx_ble_stack.out"
 
 # Tool invocations
-simple_peripheral_cc2650lp_stack.out: $(OBJS) $(GEN_CMDS)
+evrs_tx_ble_stack.out: $(OBJS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: ARM Linker'
-	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armcl" --cmd_file="C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../../../../src/config/build_components.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/build_config.opt"  -mv7M3 --code_state=16 -me -O4 --opt_for_speed=0 --define=BLE_NO_SECURITY --define=CC26XX --define=CC26XXWARE --define=DATA= --define=EXT_HAL_ASSERT --define=FLASH_ROM_BUILD --define=GATT_NO_CLIENT --define=INCLUDE_AES_DECRYPT --define=NEAR_FUNC= --define=OSAL_CBTIMER_NUM_TASKS=1 --define=OSAL_SNV=1 --define=POWER_SAVING --define=USE_ICALL --define=xDEBUG --define=xDEBUG_ENC --define=xDEBUG_GPIO --define=xDEBUG_SW_TRACE --define=xPM_DISABLE_PWRDOWN --define=xTESTMODES --define=xTEST_BLEBOARD --c99 --diag_suppress=48 --diag_suppress=16004 --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi -z -m"simple_peripheral_cc2650lp_stack.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/lib" -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/include" --reread_libs --diag_suppress=16002-D --diag_suppress=10247-D --diag_suppress=10325-D --diag_suppress=10229-D --diag_wrap=off --display_error_number --warn_sections --xml_link_info="simple_peripheral_cc2650lp_stack_linkInfo.xml" --entry_point=startup_entry --rom_model --compress_dwarf=on --unused_section_elimination=on -o "simple_peripheral_cc2650lp_stack.out" $(ORDERED_OBJS)
+	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armcl" --cmd_file="C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../../../../src/config/build_components.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/build_config.opt"  -mv7M3 --code_state=16 -me -O4 --opt_for_speed=0 --define=BLE_NO_SECURITY --define=CC26XX --define=CC26XXWARE --define=DATA= --define=EXT_HAL_ASSERT --define=FLASH_ROM_BUILD --define=GATT_NO_CLIENT --define=INCLUDE_AES_DECRYPT --define=NEAR_FUNC= --define=OSAL_CBTIMER_NUM_TASKS=1 --define=OSAL_SNV=1 --define=POWER_SAVING --define=USE_ICALL --define=xDEBUG --define=xDEBUG_ENC --define=xDEBUG_GPIO --define=xDEBUG_SW_TRACE --define=xPM_DISABLE_PWRDOWN --define=xTESTMODES --define=xTEST_BLEBOARD --c99 --diag_suppress=48 --diag_suppress=16004 --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi -z -m"evrs_tx_ble_stack.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/lib" -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/include" --reread_libs --diag_suppress=16002-D --diag_suppress=10247-D --diag_suppress=10325-D --diag_suppress=10229-D --diag_wrap=off --display_error_number --warn_sections --xml_link_info="evrs_tx_ble_stack_linkInfo.xml" --entry_point=startup_entry --rom_model --compress_dwarf=on --unused_section_elimination=on -o "evrs_tx_ble_stack.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
 
-simple_peripheral_cc2650lp_stack.hex: $(EXE_OUTPUTS)
+evrs_tx_ble_stack.hex: $(EXE_OUTPUTS)
 	@echo 'Building files: $(strip $(EXE_OUTPUTS__QUOTED))'
 	@echo 'Invoking: ARM Hex Utility'
-	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armhex" --memwidth=8 --romwidth=8 --intel -o "simple_peripheral_cc2650lp_stack.hex" $(EXE_OUTPUTS__QUOTED)
+	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armhex" --memwidth=8 --romwidth=8 --intel -o "evrs_tx_ble_stack.hex" $(EXE_OUTPUTS__QUOTED)
 	@echo 'Finished building: $(strip $(EXE_OUTPUTS__QUOTED))'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
@@ -217,8 +217,8 @@ pre-build:
 	-@echo ' '
 
 post-build:
-	-C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armhex -order MS --memwidth=8 --romwidth=8 --intel -o simple_peripheral_cc2650lp_stack.hex simple_peripheral_cc2650lp_stack.out
-	-C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../../../../tools/frontier/frontier.exe ccs E:/workbench/git/EVRS_BLE_Firmware/simple_peripheral_cc2650lp_stack/FlashROM/simple_peripheral_cc2650lp_stack_linkInfo.xml C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../ccs/config/ccs_compiler_defines.bcfg C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../ccs/config/ccs_linker_defines.cmd
+	-C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armhex -order MS --memwidth=8 --romwidth=8 --intel -o evrs_tx_ble_stack.hex evrs_tx_ble_stack.out
+	-C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../../../../tools/frontier/frontier.exe ccs E:/workbench/git/EVRS_BLE_Firmware/evrs_tx_ble_stack/FlashROM/evrs_tx_ble_stack_linkInfo.xml C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../ccs/config/ccs_compiler_defines.bcfg C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack/../../iar/stack/../../ccs/config/ccs_linker_defines.cmd
 	-@echo ' '
 
 .PHONY: all clean dependents

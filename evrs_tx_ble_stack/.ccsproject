@@ -10,6 +10,6 @@
 	<rts value="libc.a"/>
 	<createSlaveProjects value=""/>
 	<connection value="common/targetdb/connections/TIXDS110_Connection.xml"/>
-	<isTargetManual value="false"/>
+	<isTargetManual value="true"/>
 	<origin value="C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/stack"/>
 </projectOptions>
