@@ -77,8 +77,6 @@
 #include <ti/mw/display/Display.h>
 #include "board.h"
 
-#include "simple_central.h"
-
 #include "ble_user_config.h"
 
 /*********************************************************************
@@ -148,16 +146,16 @@
 #define DEFAULT_SVC_DISCOVERY_DELAY           1000
 
 // TRUE to filter discovery results on desired service UUID
-#define DEFAULT_DEV_DISC_BY_SVC_UUID          TRUE
+#define DEV_DISC_BY_SVC_UUID          TRUE
 
 // Length of bd addr as a string
 #define B_ADDR_STR_LEN                        15
 
 // Task configuration
-#define SBC_TASK_PRIORITY                     1
+#define EBS_TASK_PRIORITY                     1
 
-#ifndef SBC_TASK_STACK_SIZE
-#define SBC_TASK_STACK_SIZE                   864
+#ifndef EBS_TASK_STACK_SIZE
+#define EBS_TASK_STACK_SIZE                   864
 #endif
 
 // Application states
@@ -212,7 +210,7 @@ typedef enum {
 typedef struct {
 	appEvtHdr_t hdr; // event header
 	uint8_t *pData;  // event data
-} sbcEvt_t;
+} ebsEvt_t;
 
 
 /**
@@ -260,8 +258,8 @@ static Queue_Handle appMsgQueue;
 static uint16_t events = 0;
 
 // Task configuration
-Task_Struct sbcTask;
-Char sbcTaskStack[SBC_TASK_STACK_SIZE];
+Task_Struct ebsTask;
+Char ebsTaskStack[EBS_TASK_STACK_SIZE];
 
 // GAP GATT Attributes
 static const uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "Simple BLE Central";
@@ -322,59 +320,59 @@ int i = 0;
 /*********************************************************************
  * LOCAL FUNCTIONS
  */
-static void SimpleBLECentral_init(void);
-static void SimpleBLECentral_taskFxn(UArg a0, UArg a1);
+static void EBS_init(void);
+static void EBS_taskFxn(UArg a0, UArg a1);
 
-static void SimpleBLECentral_processGATTMsg(gattMsgEvent_t *pMsg);
-static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys);
-static void SimpleBLECentral_processStackMsg(ICall_Hdr *pMsg);
-static void SimpleBLECentral_processAppMsg(sbcEvt_t *pMsg);
-static void SimpleBLECentral_processRoleEvent(gapCentralRoleEvent_t *pEvent);
-static void SimpleBLECentral_processGATTDiscEvent(gattMsgEvent_t *pMsg);
-static void SimpleBLECentral_startDiscovery(void);
-static bool SimpleBLECentral_findSvcUuid(uint16_t uuid, uint8_t *pData,
+static void EBS_processGATTMsg(gattMsgEvent_t *pMsg);
+static void EBS_handleKeys(uint8_t shift, uint8_t keys);
+static void EBS_processStackMsg(ICall_Hdr *pMsg);
+static void EBS_processAppMsg(ebsEvt_t *pMsg);
+static void EBS_processRoleEvent(gapCentralRoleEvent_t *pEvent);
+static void EBS_processGATTDiscEvent(gattMsgEvent_t *pMsg);
+static void EBS_startDiscovery(void);
+static bool EBS_findSvcUuid(uint16_t uuid, uint8_t *pData,
 		uint8_t dataLen);
-static void SimpleBLECentral_discoverDevices(void);
-void SimpleBLECentral_timeoutConnecting(UArg arg0);
-static void SimpleBLECentral_addDeviceInfo(uint8_t *pAddr, uint8_t addrType);
-static bool SimpleBLECentral_findLocalName(uint8_t *pEvtData, uint8_t dataLen);
-static void SimpleBLECentral_addDeviceName(uint8_t i, uint8_t *pEvtData,
+static void EBS_discoverDevices(void);
+void EBS_timeoutConnecting(UArg arg0);
+static void EBS_addDeviceInfo(uint8_t *pAddr, uint8_t addrType);
+static bool EBS_findLocalName(uint8_t *pEvtData, uint8_t dataLen);
+static void EBS_addDeviceName(uint8_t i, uint8_t *pEvtData,
 		uint8_t dataLen);
-static void SimpleBLECentral_processPairState(uint8_t pairState, uint8_t status);
-static void SimpleBLECentral_processPasscode(uint16_t connectionHandle,
+static void EBS_processPairState(uint8_t pairState, uint8_t status);
+static void EBS_processPasscode(uint16_t connectionHandle,
 		uint8_t uiOutputs);
 
-static void SimpleBLECentral_processCmdCompleteEvt(hciEvt_CmdComplete_t *pMsg);
+static void EBS_processCmdCompleteEvt(hciEvt_CmdComplete_t *pMsg);
 /*
-static bStatus_t SimpleBLECentral_StartRssi(uint16_t connHandle,
+static bStatus_t EBS_StartRssi(uint16_t connHandle,
 		uint16_t period);
-static bStatus_t SimpleBLECentral_CancelRssi(uint16_t connHandle);
-static readRssi_t *SimpleBLECentral_RssiAlloc(uint16_t connHandle);
-static readRssi_t *SimpleBLECentral_RssiFind(uint16_t connHandle);
-static void SimpleBLECentral_RssiFree(uint16_t connHandle);
+static bStatus_t EBS_CancelRssi(uint16_t connHandle);
+static readRssi_t *EBS_RssiAlloc(uint16_t connHandle);
+static readRssi_t *EBS_RssiFind(uint16_t connHandle);
+static void EBS_RssiFree(uint16_t connHandle);
 */
 
-static uint8_t SimpleBLECentral_eventCB(gapCentralRoleEvent_t *pEvent);
-static void SimpleBLECentral_passcodeCB(uint8_t *deviceAddr,
+static uint8_t EBS_eventCB(gapCentralRoleEvent_t *pEvent);
+static void EBS_passcodeCB(uint8_t *deviceAddr,
 		uint16_t connHandle, uint8_t uiInputs, uint8_t uiOutputs);
-static void SimpleBLECentral_pairStateCB(uint16_t connHandle, uint8_t pairState,
+static void EBS_pairStateCB(uint16_t connHandle, uint8_t pairState,
 		uint8_t status);
 
-void SimpleBLECentral_startDiscHandler(UArg a0);
-void SimpleBLECentral_keyChangeHandler(uint8_t keys);
+void EBS_startDiscHandler(UArg a0);
+void EBS_keyChangeHandler(uint8_t keys);
 
 /*********************************************************************
  * PROFILE CALLBACKS
  */
 
 // GAP Role Callbacks
-static gapCentralRoleCB_t SimpleBLECentral_roleCB = { SimpleBLECentral_eventCB // Event callback
+static gapCentralRoleCB_t EBS_roleCB = { EBS_eventCB // Event callback
 		};
 
 // Bond Manager Callbacks
-static gapBondCBs_t SimpleBLECentral_bondCB = {
-		(pfnPasscodeCB_t) SimpleBLECentral_passcodeCB, // Passcode callback
-		SimpleBLECentral_pairStateCB                  // Pairing state callback
+static gapBondCBs_t EBS_bondCB = {
+		(pfnPasscodeCB_t) EBS_passcodeCB, // Passcode callback
+		EBS_pairStateCB                  // Pairing state callback
 		};
 
 /*********************************************************************
@@ -390,20 +388,20 @@ static gapBondCBs_t SimpleBLECentral_bondCB = {
  *
  * @return  none
  */
-void SimpleBLECentral_createTask(void) {
+void EBS_createTask(void) {
 	Task_Params taskParams;
 
 	// Configure task
 	Task_Params_init(&taskParams);
-	taskParams.stack = sbcTaskStack;
-	taskParams.stackSize = SBC_TASK_STACK_SIZE;
-	taskParams.priority = SBC_TASK_PRIORITY;
+	taskParams.stack = ebsTaskStack;
+	taskParams.stackSize = EBS_TASK_STACK_SIZE;
+	taskParams.priority = EBS_TASK_PRIORITY;
 
-	Task_construct(&sbcTask, SimpleBLECentral_taskFxn, &taskParams, NULL);
+	Task_construct(&ebsTask, EBS_taskFxn, &taskParams, NULL);
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_Init
+ * @fn      EBS_Init
  *
  * @brief   Initialization function for the Simple BLE Central App Task.
  *          This is called during initialization and should contain
@@ -415,7 +413,7 @@ void SimpleBLECentral_createTask(void) {
  *
  * @return  none
  */
-static void SimpleBLECentral_init(void) {
+static void EBS_init(void) {
 	uint8_t i;
 
 	// ******************************************************************
@@ -429,7 +427,7 @@ static void SimpleBLECentral_init(void) {
 	appMsgQueue = Util_constructQueue(&appMsg);
 
 	// Setup discovery delay as a one-shot timer
-	Util_constructClock(&startDiscClock, SimpleBLECentral_startDiscHandler,
+	Util_constructClock(&startDiscClock, EBS_startDiscHandler,
 	DEFAULT_SVC_DISCOVERY_DELAY, 0, false, 0);
 
 	// Set initial connection parameter values
@@ -439,10 +437,10 @@ static void SimpleBLECentral_init(void) {
 	GAP_SetParamValue(TGAP_CONN_EST_LATENCY, INITIAL_SLAVE_LATENCY);
 
 	// Construct clock for connecting timeout
-	Util_constructClock(&connectingClock, SimpleBLECentral_timeoutConnecting,
+	Util_constructClock(&connectingClock, EBS_timeoutConnecting,
 	DEFAULT_SCAN_DURATION, 0, false, 0);
 
-	Board_initKeys(SimpleBLECentral_keyChangeHandler);
+	Board_initKeys(EBS_keyChangeHandler);
 	Board_initLEDs();
 
 	//In the project predefines, UART is disabled by default. Thus LCD display will be used.
@@ -504,10 +502,10 @@ static void SimpleBLECentral_init(void) {
 	GATTServApp_AddService(GATT_ALL_SERVICES); // GATT attributes
 
 	// Start the Device
-	VOID GAPCentralRole_StartDevice(&SimpleBLECentral_roleCB);
+	VOID GAPCentralRole_StartDevice(&EBS_roleCB);
 
 	// Register with bond manager after starting device
-	GAPBondMgr_Register(&SimpleBLECentral_bondCB);
+	GAPBondMgr_Register(&EBS_bondCB);
 
 	// Register with GAP for HCI/Host messages (for RSSI)
 	GAP_RegisterForMsgs(selfEntity);
@@ -520,7 +518,7 @@ static void SimpleBLECentral_init(void) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_taskFxn
+ * @fn      EBS_taskFxn
  *
  * @brief   Application task entry point for the Simple BLE Central.
  *
@@ -528,9 +526,9 @@ static void SimpleBLECentral_init(void) {
  *
  * @return  events not processed
  */
-static void SimpleBLECentral_taskFxn(UArg a0, UArg a1) {
+static void EBS_taskFxn(UArg a0, UArg a1) {
 	// Initialize application
-	SimpleBLECentral_init();
+	EBS_init();
 
 	// Application main loop
 	for (;;)
@@ -553,7 +551,7 @@ static void SimpleBLECentral_taskFxn(UArg a0, UArg a1) {
 				if ((src == ICALL_SERVICE_CLASS_BLE) && (dest == selfEntity))
 				{
 					// Process inter-task message
-					SimpleBLECentral_processStackMsg((ICall_Hdr *) pMsg);
+					EBS_processStackMsg((ICall_Hdr *) pMsg);
 				}
 
 				if (pMsg)
@@ -566,28 +564,28 @@ static void SimpleBLECentral_taskFxn(UArg a0, UArg a1) {
 		// If RTOS queue is not empty, process app message
 		while (!Queue_empty(appMsgQueue))
 		{
-			sbcEvt_t *pMsg = (sbcEvt_t *) Util_dequeueMsg(appMsgQueue);
+			ebsEvt_t *pMsg = (ebsEvt_t *) Util_dequeueMsg(appMsgQueue);
 			if (pMsg)
 			{
 				// Process message
-				SimpleBLECentral_processAppMsg(pMsg);
+				EBS_processAppMsg(pMsg);
 
 				// Free the space from the message
 				ICall_free(pMsg);
 			}
 		}
 
-		if (events & SBC_START_DISCOVERY_EVT)
+		if (events & EBS_START_DISCOVERY_EVT)
 		{
-			events &= ~SBC_START_DISCOVERY_EVT;
+			events &= ~EBS_START_DISCOVERY_EVT;
 
-			SimpleBLECentral_startDiscovery();
+			EBS_startDiscovery();
 		}
 	}
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_processStackMsg
+ * @fn      EBS_processStackMsg
  *
  * @brief   Process an incoming task message.
  *
@@ -595,15 +593,15 @@ static void SimpleBLECentral_taskFxn(UArg a0, UArg a1) {
  *
  * @return  none
  */
-static void SimpleBLECentral_processStackMsg(ICall_Hdr *pMsg) {
+static void EBS_processStackMsg(ICall_Hdr *pMsg) {
 	switch (pMsg->event)
 	{
 		case GAP_MSG_EVENT:
-			SimpleBLECentral_processRoleEvent((gapCentralRoleEvent_t *) pMsg);
+			EBS_processRoleEvent((gapCentralRoleEvent_t *) pMsg);
 			break;
 
 		case GATT_MSG_EVENT:
-			SimpleBLECentral_processGATTMsg((gattMsgEvent_t *) pMsg);
+			EBS_processGATTMsg((gattMsgEvent_t *) pMsg);
 			break;
 
 		case HCI_GAP_EVENT_EVENT:
@@ -612,7 +610,7 @@ static void SimpleBLECentral_processStackMsg(ICall_Hdr *pMsg) {
 			switch (pMsg->status)
 			{
 				case HCI_COMMAND_COMPLETE_EVENT_CODE:
-					SimpleBLECentral_processCmdCompleteEvt(
+					EBS_processCmdCompleteEvt(
 							(hciEvt_CmdComplete_t *) pMsg);
 					break;
 
@@ -628,7 +626,7 @@ static void SimpleBLECentral_processStackMsg(ICall_Hdr *pMsg) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_processAppMsg
+ * @fn      EBS_processAppMsg
  *
  * @brief   Central application event processing function.
  *
@@ -636,21 +634,21 @@ static void SimpleBLECentral_processStackMsg(ICall_Hdr *pMsg) {
  *
  * @return  none
  */
-static void SimpleBLECentral_processAppMsg(sbcEvt_t *pMsg) {
+static void EBS_processAppMsg(ebsEvt_t *pMsg) {
 	switch (pMsg->hdr.event)
 	{
-		case SBC_STATE_CHANGE_EVT:
-			SimpleBLECentral_processStackMsg((ICall_Hdr *) pMsg->pData);
+		case EBS_STATE_CHANGE_EVT:
+			EBS_processStackMsg((ICall_Hdr *) pMsg->pData);
 
 			// Free the stack message
 			ICall_freeMsg(pMsg->pData);
 			break;
 
-		case SBC_KEY_CHANGE_EVT:
-			SimpleBLECentral_handleKeys(0, pMsg->hdr.state);
+		case EBS_KEY_CHANGE_EVT:
+			EBS_handleKeys(0, pMsg->hdr.state);
 			break;
 
-		case SBC_RSSI_READ_EVT:
+		case EBS_RSSI_READ_EVT:
 		{
 			readRssi_t *pRssi = (readRssi_t *) pMsg->pData;
 
@@ -668,25 +666,25 @@ static void SimpleBLECentral_processAppMsg(sbcEvt_t *pMsg) {
 			break;
 
 			// Pairing event
-		case SBC_PAIRING_STATE_EVT:
+		case EBS_PAIRING_STATE_EVT:
 		{
-			SimpleBLECentral_processPairState(pMsg->hdr.state, *pMsg->pData);
+			EBS_processPairState(pMsg->hdr.state, *pMsg->pData);
 
 			ICall_free(pMsg->pData);
 			break;
 		}
 
 			// Passcode event
-		case SBC_PASSCODE_NEEDED_EVT:
+		case EBS_PASSCODE_NEEDED_EVT:
 		{
-			SimpleBLECentral_processPasscode(connHandle, *pMsg->pData);
+			EBS_processPasscode(connHandle, *pMsg->pData);
 
 			ICall_free(pMsg->pData);
 			break;
 		}
 
 			// Connecting to device timed out
-		case SBC_CONNECTING_TIMEOUT_EVT:
+		case EBS_CONNECTING_TIMEOUT_EVT:
 		{
 			GAPCentralRole_TerminateLink(connHandle);
 		}
@@ -698,7 +696,7 @@ static void SimpleBLECentral_processAppMsg(sbcEvt_t *pMsg) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_processRoleEvent
+ * @fn      EBS_processRoleEvent
  *
  * @brief   Central role event processing function.
  *
@@ -706,7 +704,7 @@ static void SimpleBLECentral_processAppMsg(sbcEvt_t *pMsg) {
  *
  * @return  none
  */
-static void SimpleBLECentral_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
+static void EBS_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 	switch (pEvent->gap.opcode)
 	{
 		case GAP_DEVICE_INIT_DONE_EVENT:
@@ -723,12 +721,12 @@ static void SimpleBLECentral_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 		case GAP_DEVICE_INFO_EVENT:
 		{
 			//Find peer device address by UUID
-			if ((DEFAULT_DEV_DISC_BY_SVC_UUID == FALSE)
-					|| SimpleBLECentral_findSvcUuid(EVRSPROFILE_SERV_UUID,
+			if ((DEV_DISC_BY_SVC_UUID == FALSE)
+					|| EBS_findSvcUuid(EVRSPROFILE_SERV_UUID,
 							pEvent->deviceInfo.pEvtData,
 							pEvent->deviceInfo.dataLen))
 			{
-				SimpleBLECentral_addDeviceInfo(pEvent->deviceInfo.addr,
+				EBS_addDeviceInfo(pEvent->deviceInfo.addr,
 						pEvent->deviceInfo.addrType);
 			}
 
@@ -740,12 +738,12 @@ static void SimpleBLECentral_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 						== 0)
 				{
 					//Check if pEventData contains a device name
-					if (SimpleBLECentral_findLocalName(
+					if (EBS_findLocalName(
 							pEvent->deviceInfo.pEvtData,
 							pEvent->deviceInfo.dataLen))
 					{
 						//Update deviceInfo entry with the name
-						SimpleBLECentral_addDeviceName(i,
+						EBS_addDeviceName(i,
 								pEvent->deviceInfo.pEvtData,
 								pEvent->deviceInfo.dataLen);
 					}
@@ -763,7 +761,7 @@ static void SimpleBLECentral_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 			Display_clearLines(dispHandle, ROW_ONE, ROW_SEVEN);
 			Display_print1(dispHandle, ROW_ONE, 0, "Devices found %d", scanRes);
 			state = BLE_STATE_DISCOVERED;
-			Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_DISCOVERED");
+			//Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_DISCOVERED");
 
 			if (scanRes > 0)
 			{
@@ -831,7 +829,7 @@ static void SimpleBLECentral_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 			procedureInProgress = FALSE;
 
 			// Cancel RSSI reads
-			SimpleBLECentral_CancelRssi(pEvent->linkTerminate.connectionHandle);
+			EBS_CancelRssi(pEvent->linkTerminate.connectionHandle);
 
 			//Clear screen and display disconnect reason
 			Display_clearLines(dispHandle, ROW_ONE, ROW_SEVEN);
@@ -866,7 +864,7 @@ static void SimpleBLECentral_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_handleKeys
+ * @fn      EBS_handleKeys
  *
  * @brief   Handles all key events for this device.
  *
@@ -877,7 +875,7 @@ static void SimpleBLECentral_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
  *
  * @return  none
  */
-static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
+static void EBS_handleKeys(uint8_t shift, uint8_t keys) {
 	switch (state)
 	{
 		case BLE_STATE_IDLE:
@@ -885,7 +883,7 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 			if (keys & KEY_RIGHT)
 			{
 				// Discover devices
-				SimpleBLECentral_discoverDevices();
+				EBS_discoverDevices();
 			}
 			//If LEFT is pressed, nothing happens.
 			break;
@@ -926,7 +924,7 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 			} else if (keys & KEY_RIGHT)
 			{
 				//Start scanning
-				SimpleBLECentral_discoverDevices();
+				EBS_discoverDevices();
 			}
 			break;
 
@@ -971,7 +969,7 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 				//Scan for devices if the scan option is displayed
 				if (scanIdx == 0)
 				{
-					SimpleBLECentral_discoverDevices();
+					EBS_discoverDevices();
 				}
 
 				//Connect to displayed device
@@ -1016,7 +1014,7 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 				{
 					case MENU_ITEM_CONN_PARAM_UPDATE:
 						selectedMenuItem = MENU_ITEM_RSSI;
-						if (SimpleBLECentral_RssiFind(connHandle) == NULL)
+						if (EBS_RssiFind(connHandle) == NULL)
 						{
 							Display_print0(dispHandle, ROW_SEVEN, 0,
 									">Start RSSI poll");
@@ -1077,16 +1075,16 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 
 					case MENU_ITEM_RSSI:
 						// Start or cancel RSSI polling
-						if (SimpleBLECentral_RssiFind(connHandle) == NULL)
+						if (EBS_RssiFind(connHandle) == NULL)
 						{
 							Display_clearLine(dispHandle, ROW_FIVE);
-							SimpleBLECentral_StartRssi(connHandle,
+							EBS_StartRssi(connHandle,
 							DEFAULT_RSSI_PERIOD);
 							Display_print0(dispHandle, ROW_SEVEN, 0,
 									">Stop RSSI poll");
 						} else
 						{
-							SimpleBLECentral_CancelRssi(connHandle);
+							EBS_CancelRssi(connHandle);
 							Display_print0(dispHandle, ROW_FIVE, 0,
 									"RSSI Cancelled");
 							if (selectedMenuItem == MENU_ITEM_RSSI)
@@ -1163,13 +1161,13 @@ static void SimpleBLECentral_handleKeys(uint8_t shift, uint8_t keys) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_processGATTMsg
+ * @fn      EBS_processGATTMsg
  *
  * @brief   Process GATT messages and events.
  *
  * @return  none
  */
-static void SimpleBLECentral_processGATTMsg(gattMsgEvent_t *pMsg) {
+static void EBS_processGATTMsg(gattMsgEvent_t *pMsg) {
 	if (state == BLE_STATE_CONNECTED)
 	{
 		// See if GATT server was unable to transmit an ATT response
@@ -1228,7 +1226,7 @@ static void SimpleBLECentral_processGATTMsg(gattMsgEvent_t *pMsg) {
 					pMsg->msg.mtuEvt.MTU);
 		} else if (discState != BLE_DISC_STATE_IDLE)
 		{
-			SimpleBLECentral_processGATTDiscEvent(pMsg);
+			EBS_processGATTDiscEvent(pMsg);
 		}
 	} // else - in case a GATT message came after a connection has dropped, ignore it.
 
@@ -1237,7 +1235,7 @@ static void SimpleBLECentral_processGATTMsg(gattMsgEvent_t *pMsg) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_processCmdCompleteEvt
+ * @fn      EBS_processCmdCompleteEvt
  *
  * @brief   Process an incoming OSAL HCI Command Complete Event.
  *
@@ -1245,7 +1243,7 @@ static void SimpleBLECentral_processGATTMsg(gattMsgEvent_t *pMsg) {
  *
  * @return  none
  */
-static void SimpleBLECentral_processCmdCompleteEvt(hciEvt_CmdComplete_t *pMsg) {
+static void EBS_processCmdCompleteEvt(hciEvt_CmdComplete_t *pMsg) {
 	switch (pMsg->cmdOpcode)
 	{
 		case HCI_READ_RSSI:
@@ -1265,13 +1263,13 @@ static void SimpleBLECentral_processCmdCompleteEvt(hciEvt_CmdComplete_t *pMsg) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_processPairState
+ * @fn      EBS_processPairState
  *
  * @brief   Process the new paring state.
  *
  * @return  none
  */
-static void SimpleBLECentral_processPairState(uint8_t pairState, uint8_t status) {
+static void EBS_processPairState(uint8_t pairState, uint8_t status) {
 	if (pairState == GAPBOND_PAIRING_STATE_STARTED)
 	{
 		Display_print0(dispHandle, ROW_SIX, 0, "Pairing started");
@@ -1303,13 +1301,13 @@ static void SimpleBLECentral_processPairState(uint8_t pairState, uint8_t status)
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_processPasscode
+ * @fn      EBS_processPasscode
  *
  * @brief   Process the Passcode request.
  *
  * @return  none
  */
-static void SimpleBLECentral_processPasscode(uint16_t connectionHandle,
+static void EBS_processPasscode(uint16_t connectionHandle,
 		uint8_t uiOutputs) {
 	uint32_t passcode;
 
@@ -1328,13 +1326,13 @@ static void SimpleBLECentral_processPasscode(uint16_t connectionHandle,
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_startDiscovery
+ * @fn      EBS_startDiscovery
  *
  * @brief   Start service discovery.
  *
  * @return  none
  */
-static void SimpleBLECentral_startDiscovery(void) {
+static void EBS_startDiscovery(void) {
 	attExchangeMTUReq_t req;
 
 	// Initialize cached handles
@@ -1351,13 +1349,13 @@ static void SimpleBLECentral_startDiscovery(void) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_processGATTDiscEvent
+ * @fn      EBS_processGATTDiscEvent
  *
  * @brief   Process GATT discovery event
  *
  * @return  none
  */
-static void SimpleBLECentral_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
+static void EBS_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 	if (discState == BLE_DISC_STATE_MTU)
 	{
 		// MTU size response received, discover simple BLE service
@@ -1469,13 +1467,13 @@ static void SimpleBLECentral_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_findSvcUuid
+ * @fn      EBS_findSvcUuid
  *
  * @brief   Find a given UUID in an advertiser's service UUID list.
  *
  * @return  TRUE if service UUID found
  */
-static bool SimpleBLECentral_findSvcUuid(uint16_t uuid, uint8_t *pData,
+static bool EBS_findSvcUuid(uint16_t uuid, uint8_t *pData,
 		uint8_t dataLen) {
 	uint8_t adLen;
 	uint8_t adType;
@@ -1533,13 +1531,13 @@ static bool SimpleBLECentral_findSvcUuid(uint16_t uuid, uint8_t *pData,
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_discoverDevices
+ * @fn      EBS_discoverDevices
  *
  * @brief   Scan to discover devices.
  *
  * @return  none
  */
-static void SimpleBLECentral_discoverDevices(void) {
+static void EBS_discoverDevices(void) {
 	if (!scanningStarted)
 	{
 		scanningStarted = TRUE;
@@ -1560,27 +1558,27 @@ static void SimpleBLECentral_discoverDevices(void) {
 }
 
 /**********************************************************************
- * @fn      SimpleBLECentral_timeoutConnecting
+ * @fn      EBS_timeoutConnecting
  *
  * @brief   Post event if connecting is timed out.
  *
  * @return  none
  */
-Void SimpleBLECentral_timeoutConnecting(UArg arg0) {
+Void EBS_timeoutConnecting(UArg arg0) {
 	if (state == BLE_STATE_CONNECTING)
 	{
-		SimpleBLECentral_enqueueMsg(SBC_CONNECTING_TIMEOUT_EVT, 0, NULL);
+		EBS_enqueueMsg(EBS_CONNECTING_TIMEOUT_EVT, 0, NULL);
 	}
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_addDeviceInfo
+ * @fn      EBS_addDeviceInfo
  *
  * @brief   Add a device to the device discovery result list
  *
  * @return  none
  */
-static void SimpleBLECentral_addDeviceInfo(uint8_t *pAddr, uint8_t addrType) {
+static void EBS_addDeviceInfo(uint8_t *pAddr, uint8_t addrType) {
 	uint8_t i;
 
 	// If result count not at max
@@ -1605,13 +1603,13 @@ static void SimpleBLECentral_addDeviceInfo(uint8_t *pAddr, uint8_t addrType) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_findLocalName
+ * @fn      EBS_findLocalName
  *
  * @brief   Check if pEvtData contains a device local name
  *
  * @return  TRUE if local name found
  */
-static bool SimpleBLECentral_findLocalName(uint8_t *pEvtData, uint8_t dataLen) {
+static bool EBS_findLocalName(uint8_t *pEvtData, uint8_t dataLen) {
 	uint8_t adLen;
 	uint8_t adType;
 	uint8_t *pEnd;
@@ -1656,13 +1654,13 @@ static bool SimpleBLECentral_findLocalName(uint8_t *pEvtData, uint8_t dataLen) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_addDeviceName
+ * @fn      EBS_addDeviceName
  *
  * @brief   Add a name to an existing device in the scan result list
  *
  * @return  none
  */
-static void SimpleBLECentral_addDeviceName(uint8_t i, uint8_t *pEvtData,
+static void EBS_addDeviceName(uint8_t i, uint8_t *pEvtData,
 		uint8_t dataLen) {
 	uint8_t scanRspLen;
 	uint8_t scanRspType;
@@ -1705,7 +1703,7 @@ static void SimpleBLECentral_addDeviceName(uint8_t i, uint8_t *pEvtData,
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_eventCB
+ * @fn      EBS_eventCB
  *
  * @brief   Central event callback function.
  *
@@ -1713,9 +1711,9 @@ static void SimpleBLECentral_addDeviceName(uint8_t i, uint8_t *pEvtData,
  *
  * @return  TRUE if safe to deallocate event message, FALSE otherwise.
  */
-static uint8_t SimpleBLECentral_eventCB(gapCentralRoleEvent_t *pEvent) {
+static uint8_t EBS_eventCB(gapCentralRoleEvent_t *pEvent) {
 	// Forward the role event to the application
-	if (SimpleBLECentral_enqueueMsg(SBC_STATE_CHANGE_EVT,
+	if (EBS_enqueueMsg(EBS_STATE_CHANGE_EVT,
 	SUCCESS, (uint8_t *) pEvent))
 	{
 		// App will process and free the event
@@ -1727,13 +1725,13 @@ static uint8_t SimpleBLECentral_eventCB(gapCentralRoleEvent_t *pEvent) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_pairStateCB
+ * @fn      EBS_pairStateCB
  *
  * @brief   Pairing state callback.
  *
  * @return  none
  */
-static void SimpleBLECentral_pairStateCB(uint16_t connHandle, uint8_t pairState,
+static void EBS_pairStateCB(uint16_t connHandle, uint8_t pairState,
 		uint8_t status) {
 	uint8_t *pData;
 
@@ -1743,18 +1741,18 @@ static void SimpleBLECentral_pairStateCB(uint16_t connHandle, uint8_t pairState,
 		*pData = status;
 
 		// Queue the event.
-		SimpleBLECentral_enqueueMsg(SBC_PAIRING_STATE_EVT, pairState, pData);
+		EBS_enqueueMsg(EBS_PAIRING_STATE_EVT, pairState, pData);
 	}
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_passcodeCB
+ * @fn      EBS_passcodeCB
  *
  * @brief   Passcode callback.
  *
  * @return  none
  */
-static void SimpleBLECentral_passcodeCB(uint8_t *deviceAddr,
+static void EBS_passcodeCB(uint8_t *deviceAddr,
 		uint16_t connHandle, uint8_t uiInputs, uint8_t uiOutputs) {
 	uint8_t *pData;
 
@@ -1764,12 +1762,12 @@ static void SimpleBLECentral_passcodeCB(uint8_t *deviceAddr,
 		*pData = uiOutputs;
 
 		// Enqueue the event.
-		SimpleBLECentral_enqueueMsg(SBC_PASSCODE_NEEDED_EVT, 0, pData);
+		EBS_enqueueMsg(EBS_PASSCODE_NEEDED_EVT, 0, pData);
 	}
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_startDiscHandler
+ * @fn      EBS_startDiscHandler
  *
  * @brief   Clock handler function
  *
@@ -1777,15 +1775,15 @@ static void SimpleBLECentral_passcodeCB(uint8_t *deviceAddr,
  *
  * @return  none
  */
-void SimpleBLECentral_startDiscHandler(UArg a0) {
-	events |= SBC_START_DISCOVERY_EVT;
+void EBS_startDiscHandler(UArg a0) {
+	events |= EBS_START_DISCOVERY_EVT;
 
 	// Wake up the application thread when it waits for clock event
 	Semaphore_post(sem);
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_keyChangeHandler
+ * @fn      EBS_keyChangeHandler
  *
  * @brief   Key event handler function
  *
@@ -1793,12 +1791,12 @@ void SimpleBLECentral_startDiscHandler(UArg a0) {
  *
  * @return  none
  */
-void SimpleBLECentral_keyChangeHandler(uint8_t keys) {
-	SimpleBLECentral_enqueueMsg(SBC_KEY_CHANGE_EVT, keys, NULL);
+void EBS_keyChangeHandler(uint8_t keys) {
+	EBS_enqueueMsg(EBS_KEY_CHANGE_EVT, keys, NULL);
 }
 
 /*********************************************************************
- * @fn      SimpleBLECentral_enqueueMsg
+ * @fn      EBS_enqueueMsg
  *
  * @brief   Creates a message and puts the message in RTOS queue.
  *
@@ -1808,9 +1806,9 @@ void SimpleBLECentral_keyChangeHandler(uint8_t keys) {
  *
  * @return  TRUE or FALSE
  */
-uint8_t SimpleBLECentral_enqueueMsg(uint8_t event, uint8_t status,
+uint8_t EBS_enqueueMsg(uint8_t event, uint8_t status,
 		uint8_t *pData) {
-	sbcEvt_t *pMsg = ICall_malloc(sizeof(sbcEvt_t));
+	ebsEvt_t *pMsg = ICall_malloc(sizeof(ebsEvt_t));
 
 	// Create dynamic pointer to message.
 	if (pMsg)
