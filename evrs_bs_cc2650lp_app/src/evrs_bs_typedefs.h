@@ -1,9 +1,17 @@
-/*
- * evrs_bs_typedefs.h
+/****************************************
  *
- *  Created on: 15 Aug. 2018
- *      Author: ziyix
- */
+ * @filename 	evrs_bs_typedefs.h
+ *
+ * @project 	evrs_bs_cc2650lp_app
+ *
+ * @brief 		global typedefs and macros
+ *
+ * @date 		22 Aug. 2018
+ *
+ * @author		Ziyi@outlook.com.au
+ *
+ ****************************************/
+
 
 #ifndef EVRS_BS_TYPEDEFS_H_
 #define EVRS_BS_TYPEDEFS_H_

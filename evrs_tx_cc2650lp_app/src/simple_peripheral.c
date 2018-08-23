@@ -341,7 +341,7 @@ static void SimpleBLEPeripheral_init(void) {
 	// Setup the GAP Peripheral Role Profile
 	{
 		// For all hardware platforms, device starts advertising upon initialization
-		uint8_t initialAdvertEnable = FALSE;
+		uint8_t initialAdvertEnable = TRUE;
 
 		// By setting this to zero, the device will go into the waiting state after
 		// being discoverable for 30.72 second, and will not being advertising again

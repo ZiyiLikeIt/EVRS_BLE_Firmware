@@ -1,49 +1,17 @@
-/******************************************************************************
+/****************************************
+ *
+ * @filename 	evrs_bs_main.c
+ *
+ * @project 	evrs_bs_cc2650lp_app
+ *
+ * @brief 		main functionality of base station
+ *
+ * @date 		22 Aug. 2018
+ *
+ * @author		Ziyi@outlook.com.au
+ *
+ ****************************************/
 
- @file  simple_central.c
-
- @brief This file contains the Simple BLE Central sample application for use
- with the CC2650 Bluetooth Low Energy Protocol Stack.
-
- Group: WCS, BTS
- Target Device: CC2650, CC2640, CC1350
-
- ******************************************************************************
-
- Copyright (c) 2013-2016, Texas Instruments Incorporated
- All rights reserved.
-
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
-
- *  Redistributions of source code must retain the above copyright
- notice, this list of conditions and the following disclaimer.
-
- *  Redistributions in binary form must reproduce the above copyright
- notice, this list of conditions and the following disclaimer in the
- documentation and/or other materials provided with the distribution.
-
- *  Neither the name of Texas Instruments Incorporated nor the names of
- its contributors may be used to endorse or promote products derived
- from this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- ******************************************************************************
- Release Name: ble_sdk_2_02_00_31
- Release Date: 2016-06-16 18:57:29
- *****************************************************************************/
 
 /*********************************************************************
  * INCLUDES
@@ -297,7 +265,7 @@ static uint16_t svcEndHdl = 0;
 static uint16_t charHdl[4] = {0,0,0,0};
 
 // Value to write
-static uint8_t charVal = 0;
+//static uint8_t charVal = 0;
 
 // Value read/write toggle
 static bool doWrite = FALSE;
@@ -315,7 +283,7 @@ readRssi_t readRssi[MAX_NUM_BLE_CONNS];
 int profileCounter = 0;
 
 // test
-int i = 0;
+int tcounter = 0;
 
 /*********************************************************************
  * LOCAL FUNCTIONS
@@ -720,6 +688,8 @@ static void EBS_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 
 		case GAP_DEVICE_INFO_EVENT:
 		{
+
+
 			//Find peer device address by UUID
 			if ((DEV_DISC_BY_SVC_UUID == FALSE)
 					|| EBS_findSvcUuid(EVRSPROFILE_SERV_UUID,
@@ -728,6 +698,7 @@ static void EBS_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 			{
 				EBS_addDeviceInfo(pEvent->deviceInfo.addr,
 						pEvent->deviceInfo.addrType);
+				Display_print1(dispHandle, ROW_THREE, 0, "%d DEVICE_INFO_EVENT triggered", ++tcounter);
 			}
 
 			// Check if the discovered device is already in scan results
@@ -746,6 +717,14 @@ static void EBS_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 						EBS_addDeviceName(i,
 								pEvent->deviceInfo.pEvtData,
 								pEvent->deviceInfo.dataLen);
+						Display_print5(dispHandle, 8, 0,"len %d, 0x%02x, 0x%02x, 0x%02x, 0x%02x",
+								pEvent->deviceInfo.dataLen,
+								pEvent->deviceInfo.pEvtData[0],pEvent->deviceInfo.pEvtData[1],
+								pEvent->deviceInfo.pEvtData[2],pEvent->deviceInfo.pEvtData[3]);
+						Display_print5(dispHandle, 9, 0,"0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x",
+								pEvent->deviceInfo.pEvtData[4],pEvent->deviceInfo.pEvtData[5],
+								pEvent->deviceInfo.pEvtData[6],pEvent->deviceInfo.pEvtData[7],
+								pEvent->deviceInfo.pEvtData[8]);
 					}
 				}
 			}
@@ -1205,8 +1184,7 @@ static void EBS_processGATTMsg(gattMsgEvent_t *pMsg) {
 			{
 				// After a successful write, display the value that was written and
 				// increment value
-				Display_print1(dispHandle, ROW_SIX, 0, "Write sent: 0x%02x",
-						charVal++);
+				Display_print0(dispHandle, ROW_SIX, 0, "Write sent");
 			}
 
 			procedureInProgress = FALSE;
