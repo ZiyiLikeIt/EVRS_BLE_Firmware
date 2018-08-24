@@ -140,6 +140,9 @@ typedef enum {
 #define SBP_CONN_EVT_END_EVT                  0x0008
 #define SBP_KEY_CHANGE_EVT                    0x0010
 
+#define ETX_NV_BUF_LEN 			8
+#define ETX_NV_ID				0x80
+
 /*********************************************************************
  * TYPEDEFS
  */
@@ -231,6 +234,9 @@ static uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "Simple BLE Peripheral";
 // Globals used for ATT Response retransmission
 static gattMsgEvent_t *pAttRsp = NULL;
 static uint8_t rspTxRetry = 0;
+
+// Flash params
+static uint8_t nvBuf[ETX_NV_BUF_LEN] = {0};
 
 /*********************************************************************
  * LOCAL FUNCTIONS
@@ -342,9 +348,22 @@ static void SimpleBLEPeripheral_init(void) {
 	dispHandle = Display_open(Display_Type_UART, NULL);
 	Display_print0(dispHandle, 0, 0, "\f");
 
+	// Non-volatile memory test
+	//uint8 nvStatus = SUCCESS;
+	osal_snv_read(ETX_NV_ID, ETX_NV_BUF_LEN, (uint8 *)nvBuf);
+	if (*nvBuf == 0x00) {
+		*nvBuf = 0x5A;
+		osal_snv_write(ETX_NV_ID, ETX_NV_BUF_LEN, (uint8 *)nvBuf);
+		Display_print1(dispHandle, 0, 0, "nv write: 0x%02x", *nvBuf);
+	} else {
+		//osal_snv_read(ETX_NV_ID, ETX_NV_BUF_LEN, (uint8 *)nvBuf);
+		Display_print1(dispHandle, 0, 0, "nv read: 0x%02x", *nvBuf);
+	}
+
 	// Setup the GAP
 	GAP_SetParamValue(TGAP_CONN_PAUSE_PERIPHERAL,
 	DEFAULT_CONN_PAUSE_PERIPHERAL);
+
 
 	// Setup the GAP Peripheral Role Profile
 	{
@@ -459,7 +478,7 @@ static void SimpleBLEPeripheral_init(void) {
 
 	HCI_LE_ReadMaxDataLenCmd();
 
-	Display_print0(dispHandle, 0, 0, "\fBLE Peripheral test");
+	Display_print0(dispHandle, 0, 0, "BLE Peripheral test");
 	Board_ledControl(BOARD_LED_ID_G, BOARD_LED_STATE_FLASH, 300);
 	//Board_ledControl(BOARD_LED_ID_R, BOARD_LED_STATE_ON, 0);
 }
