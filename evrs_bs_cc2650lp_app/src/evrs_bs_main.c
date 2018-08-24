@@ -126,6 +126,8 @@
 #define EBS_TASK_STACK_SIZE                   864
 #endif
 
+#define ETX_ADTYPE_DEST				0xAf
+
 // Application states
 typedef enum {
 	BLE_STATE_IDLE,
@@ -282,6 +284,9 @@ readRssi_t readRssi[MAX_NUM_BLE_CONNS];
 // counter for profile found
 int profileCounter = 0;
 
+// Base Station Identifier
+uint8_t baseStationID = 0x02;
+
 // test
 int tcounter = 0;
 
@@ -302,6 +307,7 @@ static bool EBS_findSvcUuid(uint16_t uuid, uint8_t *pData,
 		uint8_t dataLen);
 static void EBS_discoverDevices(void);
 void EBS_timeoutConnecting(UArg arg0);
+static bool EBS_checkBSId(uint8_t bsID, uint8_t *pEvtData, uint8_t dataLen);
 static void EBS_addDeviceInfo(uint8_t *pAddr, uint8_t addrType);
 static bool EBS_findLocalName(uint8_t *pEvtData, uint8_t dataLen);
 static void EBS_addDeviceName(uint8_t i, uint8_t *pEvtData,
@@ -689,25 +695,27 @@ static void EBS_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 		case GAP_DEVICE_INFO_EVENT:
 		{
 
-
 			//Find peer device address by UUID
-			if ((DEV_DISC_BY_SVC_UUID == FALSE)
-					|| EBS_findSvcUuid(EVRSPROFILE_SERV_UUID,
-							pEvent->deviceInfo.pEvtData,
-							pEvent->deviceInfo.dataLen))
+			if (EBS_findSvcUuid(EVRSPROFILE_SERV_UUID,
+					pEvent->deviceInfo.pEvtData, pEvent->deviceInfo.dataLen) &&
+				EBS_checkBSId(baseStationID,
+					pEvent->deviceInfo.pEvtData, pEvent->deviceInfo.dataLen))
 			{
 				EBS_addDeviceInfo(pEvent->deviceInfo.addr,
 						pEvent->deviceInfo.addrType);
-				Display_print1(dispHandle, ROW_THREE, 0, "%d DEVICE_INFO_EVENT triggered", ++tcounter);
+
+				//Display_print1(dispHandle, 8, 0,"dataLen = %d",	pEvent->deviceInfo.dataLen);
 			}
 
 			// Check if the discovered device is already in scan results
+			//Display_print1(dispHandle, 10, 0,"scanRes = %d", scanRes);
 			uint8_t i;
 			for (i = 0; i < scanRes; i++)
 			{
 				if (memcmp(pEvent->deviceInfo.addr, devList[i].addr, B_ADDR_LEN)
 						== 0)
 				{
+					//Display_print1(dispHandle, 9, 0,"dataLen = %d",	pEvent->deviceInfo.dataLen);
 					//Check if pEventData contains a device name
 					if (EBS_findLocalName(
 							pEvent->deviceInfo.pEvtData,
@@ -717,15 +725,10 @@ static void EBS_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 						EBS_addDeviceName(i,
 								pEvent->deviceInfo.pEvtData,
 								pEvent->deviceInfo.dataLen);
-						Display_print5(dispHandle, 8, 0,"len %d, 0x%02x, 0x%02x, 0x%02x, 0x%02x",
-								pEvent->deviceInfo.dataLen,
-								pEvent->deviceInfo.pEvtData[0],pEvent->deviceInfo.pEvtData[1],
-								pEvent->deviceInfo.pEvtData[2],pEvent->deviceInfo.pEvtData[3]);
-						Display_print5(dispHandle, 9, 0,"0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x",
-								pEvent->deviceInfo.pEvtData[4],pEvent->deviceInfo.pEvtData[5],
-								pEvent->deviceInfo.pEvtData[6],pEvent->deviceInfo.pEvtData[7],
-								pEvent->deviceInfo.pEvtData[8]);
 					}
+
+
+
 				}
 			}
 		}
@@ -1548,6 +1551,46 @@ Void EBS_timeoutConnecting(UArg arg0) {
 		EBS_enqueueMsg(EBS_CONNECTING_TIMEOUT_EVT, 0, NULL);
 	}
 }
+
+
+static bool EBS_checkBSId(uint8_t bsID, uint8_t *pEvtData, uint8_t dataLen) {
+	uint8_t adLen;
+	uint8_t adType;
+	uint8_t *pEnd;
+
+	int ii = 0;
+
+	pEnd = pEvtData + dataLen - 1;
+
+	//Display_print5(dispHandle, 9, 0,"len %d, 0x%02x, 0x%02x, 0x%02x, 0x%02x",
+	//		dataLen,pEvtData[8],pEvtData[9],pEvtData[10],pEvtData[11]);
+	// While end of data not reached
+	while (pEvtData < pEnd)
+	{
+		// Get length of next data item
+		adLen = *pEvtData++;
+		if (adLen > 0)
+		{
+			adType = *pEvtData;
+			//Display_print1(dispHandle, ii+9, 0, "0x%02x",adType);
+			// If AD type is for local name
+			if (adType == ETX_ADTYPE_DEST)
+			{
+				pEvtData++;
+				// For base station identifier in the advert data
+				return (*pEvtData == bsID);
+			} else
+			{
+				// Go to next item
+				pEvtData += adLen;
+				ii++;
+			}
+		}
+	}
+	// No name found
+	return FALSE;
+}
+
 
 /*********************************************************************
  * @fn      EBS_addDeviceInfo

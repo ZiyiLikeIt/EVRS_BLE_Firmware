@@ -126,6 +126,8 @@
 #define SBP_TASK_STACK_SIZE                   644
 #endif
 
+#define ETX_ADTYPE_DEST				0xAF
+
 // Application state
 typedef enum {
 	APP_STATE_INIT, APP_STATE_IDLE, APP_STATE_ADVERT
@@ -184,22 +186,23 @@ static appStates_t appState = APP_STATE_INIT;
 // GAP - SCAN RSP data (max size = 31 bytes)
 static uint8_t scanRspData[] = {
 		// complete name
-		0x14,// length of this data
-		GAP_ADTYPE_LOCAL_NAME_COMPLETE, 'S', 'i', 'm', 'p', 'l', 'e', 'B', 'L',
-		'E', 'P', 'e', 'r', 'i', 'p', 'h', 'e', 'r', 'a', 'l',
+		//0x14,// length of this data
+		//GAP_ADTYPE_LOCAL_NAME_COMPLETE, 'S', 'i', 'm', 'p', 'l', 'e', 'B', 'L',
+		//'E', 'P', 'e', 'r', 'i', 'p', 'h', 'e', 'r', 'a', 'l',
 
 		// connection interval range
 		0x05,// length of this data
-		GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE, LO_UINT16(
-				DEFAULT_DESIRED_MIN_CONN_INTERVAL),   // 100ms
-		HI_UINT16(DEFAULT_DESIRED_MIN_CONN_INTERVAL), LO_UINT16(
-				DEFAULT_DESIRED_MAX_CONN_INTERVAL),   // 1s
+		GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE,
+		LO_UINT16(DEFAULT_DESIRED_MIN_CONN_INTERVAL),   // 100ms
+		HI_UINT16(DEFAULT_DESIRED_MIN_CONN_INTERVAL),
+		LO_UINT16(DEFAULT_DESIRED_MAX_CONN_INTERVAL),   // 1s
 		HI_UINT16(DEFAULT_DESIRED_MAX_CONN_INTERVAL),
 
 		// Tx power level
 		0x02,// length of this data
-		GAP_ADTYPE_POWER_LEVEL, 0       // 0dBm
-		};
+		GAP_ADTYPE_POWER_LEVEL,
+		0       // 0dBm
+};
 
 // GAP - Advertisement data (max size = 31 bytes, though this is
 // best kept short to conserve power while advertisting)
@@ -215,7 +218,12 @@ static uint8_t advertData[] = {
 		// in this peripheral
 		0x03,// length of this data
 		GAP_ADTYPE_16BIT_MORE,      // some of the UUID's, but not all
-		LO_UINT16(EVRSPROFILE_SERV_UUID), HI_UINT16(EVRSPROFILE_SERV_UUID) };
+		LO_UINT16(EVRSPROFILE_SERV_UUID), HI_UINT16(EVRSPROFILE_SERV_UUID),
+
+		0x02,
+		ETX_ADTYPE_DEST,
+		0x02
+};
 
 // GAP GATT Attributes
 static uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "Simple BLE Peripheral";
