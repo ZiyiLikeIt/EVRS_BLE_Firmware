@@ -39,8 +39,8 @@ ORDERED_OBJS += \
 "./Startup/board.obj" \
 "./Startup/ccfg_app_ble.obj" \
 "./src/evrs_gatt_profile.obj" \
+"./src/evrs_tx_main.obj" \
 "./src/main.obj" \
-"./src/simple_peripheral.obj" \
 $(GEN_CMDS__FLAG) \
 -llibc.a \
 -l"C:/ti/tirtos_cc13xx_cc26xx_2_21_01_08/products/cc26xxware_2_24_03_17272/driverlib/bin/ccs/driverlib.lib" \
@@ -218,8 +218,8 @@ evrs_tx_cc2650lp_app.hex: $(EXE_OUTPUTS)
 clean:
 	-$(RM) $(GEN_CMDS__QUOTED)$(GEN_MISC_FILES__QUOTED)$(BIN_OUTPUTS__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)$(GEN_OPTS__QUOTED)
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
-	-$(RM) "Application\board_key.obj" "Application\board_led.obj" "Application\util.obj" "Drivers\Display\Display.obj" "Drivers\Display\DisplayDogm1286.obj" "Drivers\Display\DisplayUart.obj" "Drivers\ECC\ECCROMCC26XX.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\RF\RFCC26XX_singleMode.obj" "Drivers\SPI\SPI.obj" "Drivers\SPI\SPICC26XXDMA.obj" "Drivers\TRNG\TRNGCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "Drivers\UDMA\UDMACC26XX.obj" "ICall\icall.obj" "ICall\icall_cc2650.obj" "ICallBLE\ble_user_config.obj" "ICallBLE\icall_api.obj" "Middleware\extflash\ExtFlash.obj" "PROFILES\devinfoservice.obj" "PROFILES\gatt_uuid.obj" "PROFILES\gattservapp_util.obj" "PROFILES\peripheral.obj" "Startup\board.obj" "Startup\ccfg_app_ble.obj" "src\evrs_gatt_profile.obj" "src\main.obj" "src\simple_peripheral.obj" 
-	-$(RM) "Application\board_key.d" "Application\board_led.d" "Application\util.d" "Drivers\Display\Display.d" "Drivers\Display\DisplayDogm1286.d" "Drivers\Display\DisplayUART.d" "Drivers\ECC\ECCROMCC26XX.d" "Drivers\PIN\PINCC26XX.d" "Drivers\RF\RFCC26XX_singleMode.d" "Drivers\SPI\SPI.d" "Drivers\SPI\SPICC26XXDMA.d" "Drivers\TRNG\TRNGCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "Drivers\UDMA\UDMACC26XX.d" "ICall\icall.d" "ICall\icall_cc2650.d" "ICallBLE\ble_user_config.d" "ICallBLE\icall_api.d" "Middleware\extflash\ExtFlash.d" "PROFILES\devinfoservice.d" "PROFILES\gatt_uuid.d" "PROFILES\gattservapp_util.d" "PROFILES\peripheral.d" "Startup\board.d" "Startup\ccfg_app_ble.d" "src\evrs_gatt_profile.d" "src\main.d" "src\simple_peripheral.d" 
+	-$(RM) "Application\board_key.obj" "Application\board_led.obj" "Application\util.obj" "Drivers\Display\Display.obj" "Drivers\Display\DisplayDogm1286.obj" "Drivers\Display\DisplayUart.obj" "Drivers\ECC\ECCROMCC26XX.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\RF\RFCC26XX_singleMode.obj" "Drivers\SPI\SPI.obj" "Drivers\SPI\SPICC26XXDMA.obj" "Drivers\TRNG\TRNGCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "Drivers\UDMA\UDMACC26XX.obj" "ICall\icall.obj" "ICall\icall_cc2650.obj" "ICallBLE\ble_user_config.obj" "ICallBLE\icall_api.obj" "Middleware\extflash\ExtFlash.obj" "PROFILES\devinfoservice.obj" "PROFILES\gatt_uuid.obj" "PROFILES\gattservapp_util.obj" "PROFILES\peripheral.obj" "Startup\board.obj" "Startup\ccfg_app_ble.obj" "src\evrs_gatt_profile.obj" "src\evrs_tx_main.obj" "src\main.obj" 
+	-$(RM) "Application\board_key.d" "Application\board_led.d" "Application\util.d" "Drivers\Display\Display.d" "Drivers\Display\DisplayDogm1286.d" "Drivers\Display\DisplayUART.d" "Drivers\ECC\ECCROMCC26XX.d" "Drivers\PIN\PINCC26XX.d" "Drivers\RF\RFCC26XX_singleMode.d" "Drivers\SPI\SPI.d" "Drivers\SPI\SPICC26XXDMA.d" "Drivers\TRNG\TRNGCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "Drivers\UDMA\UDMACC26XX.d" "ICall\icall.d" "ICall\icall_cc2650.d" "ICallBLE\ble_user_config.d" "ICallBLE\icall_api.d" "Middleware\extflash\ExtFlash.d" "PROFILES\devinfoservice.d" "PROFILES\gatt_uuid.d" "PROFILES\gattservapp_util.d" "PROFILES\peripheral.d" "Startup\board.d" "Startup\ccfg_app_ble.d" "src\evrs_gatt_profile.d" "src\evrs_tx_main.d" "src\main.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

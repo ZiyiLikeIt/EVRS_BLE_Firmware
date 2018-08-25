@@ -81,7 +81,7 @@
 
 #include "board.h"
 
-#include "simple_peripheral.h"
+#include "evrs_tx_main.h"
 
 /*********************************************************************
  * CONSTANTS
@@ -117,16 +117,17 @@
 #define DEFAULT_CONN_PAUSE_PERIPHERAL         6
 
 // How often to perform periodic event (in msec)
-#define SBP_PERIODIC_EVT_PERIOD               5000
+#define ETX_PERIODIC_EVT_PERIOD               5000
 
 // Task configuration
-#define SBP_TASK_PRIORITY                     1
+#define ETX_TASK_PRIORITY                     1
 
-#ifndef SBP_TASK_STACK_SIZE
-#define SBP_TASK_STACK_SIZE                   644
+#ifndef ETX_TASK_STACK_SIZE
+#define ETX_TASK_STACK_SIZE                   1024
 #endif
 
 #define ETX_ADTYPE_DEST				0xAF
+#define ETX_ADTYPE_DEVID			0xAE
 
 // Application state
 typedef enum {
@@ -134,14 +135,15 @@ typedef enum {
 } appStates_t;
 
 // Internal Events for RTOS application
-#define SBP_STATE_CHANGE_EVT                  0x0001
-#define SBP_CHAR_CHANGE_EVT                   0x0002
-#define SBP_PERIODIC_EVT                      0x0004
-#define SBP_CONN_EVT_END_EVT                  0x0008
-#define SBP_KEY_CHANGE_EVT                    0x0010
+#define ETX_STATE_CHANGE_EVT                  0x0001
+#define ETX_CHAR_CHANGE_EVT                   0x0002
+#define ETX_PERIODIC_EVT                      0x0004
+#define ETX_CONN_EVT_END_EVT                  0x0008
+#define ETX_KEY_CHANGE_EVT                    0x0010
 
-#define ETX_NV_BUF_LEN 			8
-#define ETX_NV_ID				0x80
+#define ETX_DEVID_LEN 			4
+#define ETX_DEVID_NV_ID			0x80
+#define ETX_DEVID_PREFIX		0x3168
 
 /*********************************************************************
  * TYPEDEFS
@@ -181,31 +183,10 @@ static uint16_t events = 0;
 
 // Task configuration
 Task_Struct sbpTask;
-Char sbpTaskStack[SBP_TASK_STACK_SIZE];
+Char sbpTaskStack[ETX_TASK_STACK_SIZE];
 
 // Profile state and parameters
 static appStates_t appState = APP_STATE_INIT;
-
-// GAP - SCAN RSP data (max size = 31 bytes)
-static uint8_t scanRspData[] = {
-		// complete name
-		//0x14,// length of this data
-		//GAP_ADTYPE_LOCAL_NAME_COMPLETE, 'S', 'i', 'm', 'p', 'l', 'e', 'B', 'L',
-		//'E', 'P', 'e', 'r', 'i', 'p', 'h', 'e', 'r', 'a', 'l',
-
-		// connection interval range
-		0x05,// length of this data
-		GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE,
-		LO_UINT16(DEFAULT_DESIRED_MIN_CONN_INTERVAL),   // 100ms
-		HI_UINT16(DEFAULT_DESIRED_MIN_CONN_INTERVAL),
-		LO_UINT16(DEFAULT_DESIRED_MAX_CONN_INTERVAL),   // 1s
-		HI_UINT16(DEFAULT_DESIRED_MAX_CONN_INTERVAL),
-
-		// Tx power level
-		0x02,// length of this data
-		GAP_ADTYPE_POWER_LEVEL,
-		0       // 0dBm
-};
 
 // GAP - Advertisement data (max size = 31 bytes, though this is
 // best kept short to conserve power while advertisting)
@@ -225,45 +206,79 @@ static uint8_t advertData[] = {
 
 		0x02,
 		ETX_ADTYPE_DEST,
-		0x02
+		0x00
 };
 
+// GAP - SCAN RSP data (max size = 31 bytes)
+static uint8_t scanRspData[15] = {
+		// complete name
+		//0x14,// length of this data
+		//GAP_ADTYPE_LOCAL_NAME_COMPLETE, 'S', 'i', 'm', 'p', 'l', 'e', 'B', 'L',
+		//'E', 'P', 'e', 'r', 'i', 'p', 'h', 'e', 'r', 'a', 'l',
+
+		// connection interval range
+		0x05,// length of this data
+		GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE,
+		LO_UINT16(DEFAULT_DESIRED_MIN_CONN_INTERVAL),   // 100ms
+		HI_UINT16(DEFAULT_DESIRED_MIN_CONN_INTERVAL),
+		LO_UINT16(DEFAULT_DESIRED_MAX_CONN_INTERVAL),   // 1s
+		HI_UINT16(DEFAULT_DESIRED_MAX_CONN_INTERVAL),
+
+		// Tx power level
+		0x02, // length of this data
+		GAP_ADTYPE_POWER_LEVEL,
+		0x00,       // 0dBm
+
+		// Device ID rsp
+		0x05,
+		ETX_ADTYPE_DEVID,
+		0x00, 0x00, 0x00, 0x00
+};
+
+
+
 // GAP GATT Attributes
-static uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "Simple BLE Peripheral";
+static uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "EVRS Transmitter";
 
 // Globals used for ATT Response retransmission
 static gattMsgEvent_t *pAttRsp = NULL;
 static uint8_t rspTxRetry = 0;
 
-// Flash params
-static uint8_t nvBuf[ETX_NV_BUF_LEN] = {0};
+// device ID params about Flash
+static uint8_t devID[ETX_DEVID_LEN] = {0};
 
 /*********************************************************************
  * LOCAL FUNCTIONS
  */
 
-static void SimpleBLEPeripheral_init(void);
-static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1);
+static void ETX_init(void);
+static void ETX_taskFxn(UArg a0, UArg a1);
 
-static uint8_t SimpleBLEPeripheral_processStackMsg(ICall_Hdr *pMsg);
-static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg);
-static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg);
-static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState);
-static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID);
-//static void SimpleBLEPeripheral_performPeriodicTask(void);
-//static void SimpleBLEPeripheral_clockHandler(UArg arg);
+static uint8_t ETX_processStackMsg(ICall_Hdr *pMsg);
+static uint8_t ETX_processGATTMsg(gattMsgEvent_t *pMsg);
+static void ETX_processAppMsg(sbpEvt_t *pMsg);
+static void ETX_processStateChangeEvt(gaprole_States_t newState);
+static void ETX_processCharValueChangeEvt(uint8_t paramID);
+//static void ETX_performPeriodicTask(void);
+//static void ETX_clockHandler(UArg arg);
 
-static void SimpleBLEPeripheral_sendAttRsp(void);
-static void SimpleBLEPeripheral_freeAttRsp(uint8_t status);
+static void ETX_sendAttRsp(void);
+static void ETX_freeAttRsp(uint8_t status);
 
-static void SimpleBLEPeripheral_stateChangeCB(gaprole_States_t newState);
+static void ETX_stateChangeCB(gaprole_States_t newState);
 #ifndef FEATURE_OAD_ONCHIP
-static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID);
+static void ETX_charValueChangeCB(uint8_t paramID);
 #endif //!FEATURE_OAD_ONCHIP
-static void SimpleBLEPeripheral_enqueueMsg(uint8_t event, uint8_t state);
+static void ETX_enqueueMsg(uint8_t event, uint8_t state);
 
-void SimpleBLEPeripheral_keyChangeHandler(uint8_t keys);
-static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys);
+void ETX_keyChangeHandler(uint8_t keys);
+static void ETX_handleKeys(uint8_t shift, uint8_t keys);
+
+//device id
+static void ETX_DevId_Find(uint8_t* nvBuf);
+static void ETX_DevId_Refresh(uint16_t tPrefix, uint8_t* nvBuf);
+static void ETX_ScanRsp_UpdateDeviceID();
+static void ETX_Advert_UpdateDestinyBS();
 
 /*********************************************************************
  * EXTERN FUNCTIONS
@@ -275,19 +290,19 @@ extern void AssertHandler(uint8 assertCause, uint8 assertSubcause);
  */
 
 // GAP Role Callbacks
-static gapRolesCBs_t SimpleBLEPeripheral_gapRoleCBs = {
-		SimpleBLEPeripheral_stateChangeCB     // Profile State Change Callbacks
+static gapRolesCBs_t ETX_gapRoleCBs = {
+		ETX_stateChangeCB     // Profile State Change Callbacks
 		};
 
 // GAP Bond Manager Callbacks
-static gapBondCBs_t simpleBLEPeripheral_BondMgrCBs = {
+static gapBondCBs_t ETX_BondMgrCBs = {
 		NULL, // Passcode callback (not used by application)
 		NULL  // Pairing / Bonding state Callback (not used by application)
 		};
 
 // Simple GATT Profile Callbacks
-static EVRSProfileCBs_t SimpleBLEPeripheral_EVRSProfileCBs = {
-		SimpleBLEPeripheral_charValueChangeCB // Characteristic value change callback
+static EVRSProfileCBs_t ETX_EVRSProfileCBs = {
+		ETX_charValueChangeCB // Characteristic value change callback
 		};
 
 /*********************************************************************
@@ -295,7 +310,7 @@ static EVRSProfileCBs_t SimpleBLEPeripheral_EVRSProfileCBs = {
  */
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_createTask
+ * @fn      ETX_createTask
  *
  * @brief   Task creation function for the Simple BLE Peripheral.
  *
@@ -303,20 +318,20 @@ static EVRSProfileCBs_t SimpleBLEPeripheral_EVRSProfileCBs = {
  *
  * @return  None.
  */
-void SimpleBLEPeripheral_createTask(void) {
+void ETX_createTask(void) {
 	Task_Params taskParams;
 
 	// Configure task
 	Task_Params_init(&taskParams);
 	taskParams.stack = sbpTaskStack;
-	taskParams.stackSize = SBP_TASK_STACK_SIZE;
-	taskParams.priority = SBP_TASK_PRIORITY;
+	taskParams.stackSize = ETX_TASK_STACK_SIZE;
+	taskParams.priority = ETX_TASK_PRIORITY;
 
-	Task_construct(&sbpTask, SimpleBLEPeripheral_taskFxn, &taskParams, NULL);
+	Task_construct(&sbpTask, ETX_taskFxn, &taskParams, NULL);
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_init
+ * @fn      ETX_init
  *
  * @brief   Called during initialization and contains application
  *          specific initialization (ie. hardware initialization/setup,
@@ -327,7 +342,7 @@ void SimpleBLEPeripheral_createTask(void) {
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_init(void) {
+static void ETX_init(void) {
 	// ******************************************************************
 	// N0 STACK API CALLS CAN OCCUR BEFORE THIS CALL TO ICall_registerApp
 	// ******************************************************************
@@ -342,23 +357,17 @@ static void SimpleBLEPeripheral_init(void) {
 	// Create an RTOS queue for message from profile to be sent to app.
 	appMsgQueue = Util_constructQueue(&appMsg);
 
-	Board_initKeys(SimpleBLEPeripheral_keyChangeHandler);
+	Board_initKeys(ETX_keyChangeHandler);
 	Board_initLEDs();
 
 	dispHandle = Display_open(Display_Type_UART, NULL);
 	Display_print0(dispHandle, 0, 0, "\f");
 
-	// Non-volatile memory test
-	//uint8 nvStatus = SUCCESS;
-	osal_snv_read(ETX_NV_ID, ETX_NV_BUF_LEN, (uint8 *)nvBuf);
-	if (*nvBuf == 0x00) {
-		*nvBuf = 0x5A;
-		osal_snv_write(ETX_NV_ID, ETX_NV_BUF_LEN, (uint8 *)nvBuf);
-		Display_print1(dispHandle, 0, 0, "nv write: 0x%02x", *nvBuf);
-	} else {
-		//osal_snv_read(ETX_NV_ID, ETX_NV_BUF_LEN, (uint8 *)nvBuf);
-		Display_print1(dispHandle, 0, 0, "nv read: 0x%02x", *nvBuf);
-	}
+	// Device ID check
+	ETX_DevId_Find(devID);
+	if (devID[3] != ((ETX_DEVID_PREFIX>>8) % 0xFF)) // no valid device id found
+		ETX_DevId_Refresh(ETX_DEVID_PREFIX, devID);
+	ETX_ScanRsp_UpdateDeviceID();
 
 	// Setup the GAP
 	GAP_SetParamValue(TGAP_CONN_PAUSE_PERIPHERAL,
@@ -448,27 +457,27 @@ static void SimpleBLEPeripheral_init(void) {
 	{
 		uint8_t sysIdVal = 0xA1;
 		uint8_t devIdVal = 0xA2;
-		uint8_t destVal = 0xA3;
+		uint8_t cmdVal = 0xA3;
 		uint8_t dataVal = 0xA4;
 
 		EVRSProfile_SetParameter(EVRSPROFILE_SYSID, sizeof(sysIdVal),
 				&sysIdVal);
 		EVRSProfile_SetParameter(EVRSPROFILE_DEVID, sizeof(devIdVal),
 				&devIdVal);
-		EVRSProfile_SetParameter(EVRSPROFILE_DEST, sizeof(destVal),
-				&destVal);
+		EVRSProfile_SetParameter(EVRSPROFILE_CMD, sizeof(cmdVal),
+				&cmdVal);
 		EVRSProfile_SetParameter(EVRSPROFILE_DATA, sizeof(dataVal),
 				&dataVal);
 	}
 
 	// Register callback with SimpleGATTprofile
-	EVRSProfile_RegisterAppCBs(&SimpleBLEPeripheral_EVRSProfileCBs);
+	EVRSProfile_RegisterAppCBs(&ETX_EVRSProfileCBs);
 
 	// Start the Device
-	VOID GAPRole_StartDevice(&SimpleBLEPeripheral_gapRoleCBs);
+	VOID GAPRole_StartDevice(&ETX_gapRoleCBs);
 
 	// Start Bond Manager
-	VOID GAPBondMgr_Register(&simpleBLEPeripheral_BondMgrCBs);
+	VOID GAPBondMgr_Register(&ETX_BondMgrCBs);
 
 	// Register with GAP for HCI/Host messages
 	GAP_RegisterForMsgs(selfEntity);
@@ -484,7 +493,7 @@ static void SimpleBLEPeripheral_init(void) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_taskFxn
+ * @fn      ETX_taskFxn
  *
  * @brief   Application task entry point for the Simple BLE Peripheral.
  *
@@ -492,9 +501,9 @@ static void SimpleBLEPeripheral_init(void) {
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
+static void ETX_taskFxn(UArg a0, UArg a1) {
 	// Initialize application
-	SimpleBLEPeripheral_init();
+	ETX_init();
 
 	// Application main loop
 	for (;;)
@@ -523,15 +532,15 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 					// Check for BLE stack events first
 					if (pEvt->signature == 0xffff)
 					{
-						if (pEvt->event_flag & SBP_CONN_EVT_END_EVT)
+						if (pEvt->event_flag & ETX_CONN_EVT_END_EVT)
 						{
 							// Try to retransmit pending ATT Response (if any)
-							SimpleBLEPeripheral_sendAttRsp();
+							ETX_sendAttRsp();
 						}
 					} else
 					{
 						// Process inter-task message
-						safeToDealloc = SimpleBLEPeripheral_processStackMsg(
+						safeToDealloc = ETX_processStackMsg(
 								(ICall_Hdr *) pMsg);
 					}
 				}
@@ -549,7 +558,7 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 				if (pMsg)
 				{
 					// Process message.
-					SimpleBLEPeripheral_processAppMsg(pMsg);
+					ETX_processAppMsg(pMsg);
 
 					// Free the space from the message.
 					ICall_free(pMsg);
@@ -557,21 +566,21 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
 			}
 		}
 
-		if (events & SBP_PERIODIC_EVT)
+		if (events & ETX_PERIODIC_EVT)
 		{
-			events &= ~SBP_PERIODIC_EVT;
+			events &= ~ETX_PERIODIC_EVT;
 
 			//Util_startClock(&periodicClock);
 
 			// Perform periodic application task
-			//SimpleBLEPeripheral_performPeriodicTask();
+			//ETX_performPeriodicTask();
 		}
 
 	}
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_processStackMsg
+ * @fn      ETX_processStackMsg
  *
  * @brief   Process an incoming stack message.
  *
@@ -579,14 +588,14 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1) {
  *
  * @return  TRUE if safe to deallocate incoming message, FALSE otherwise.
  */
-static uint8_t SimpleBLEPeripheral_processStackMsg(ICall_Hdr *pMsg) {
+static uint8_t ETX_processStackMsg(ICall_Hdr *pMsg) {
 	uint8_t safeToDealloc = TRUE;
 
 	switch (pMsg->event)
 	{
 		case GATT_MSG_EVENT:
 			// Process GATT message
-			safeToDealloc = SimpleBLEPeripheral_processGATTMsg(
+			safeToDealloc = ETX_processGATTMsg(
 					(gattMsgEvent_t *) pMsg);
 			break;
 
@@ -620,23 +629,23 @@ static uint8_t SimpleBLEPeripheral_processStackMsg(ICall_Hdr *pMsg) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_processGATTMsg
+ * @fn      ETX_processGATTMsg
  *
  * @brief   Process GATT messages and events.
  *
  * @return  TRUE if safe to deallocate incoming message, FALSE otherwise.
  */
-static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg) {
+static uint8_t ETX_processGATTMsg(gattMsgEvent_t *pMsg) {
 	// See if GATT server was unable to transmit an ATT response
 	if (pMsg->hdr.status == blePending)
 	{
 		// No HCI buffer was available. Let's try to retransmit the response
 		// on the next connection event.
 		if (HCI_EXT_ConnEventNoticeCmd(pMsg->connHandle, selfEntity,
-		SBP_CONN_EVT_END_EVT) == SUCCESS)
+		ETX_CONN_EVT_END_EVT) == SUCCESS)
 		{
 			// First free any pending response
-			SimpleBLEPeripheral_freeAttRsp(FAILURE);
+			ETX_freeAttRsp(FAILURE);
 
 			// Hold on to the response message for retransmission
 			pAttRsp = pMsg;
@@ -667,7 +676,7 @@ static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_sendAttRsp
+ * @fn      ETX_sendAttRsp
  *
  * @brief   Send a pending ATT response message.
  *
@@ -675,7 +684,7 @@ static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg) {
  *
  * @return  none
  */
-static void SimpleBLEPeripheral_sendAttRsp(void) {
+static void ETX_sendAttRsp(void) {
 	// See if there's a pending ATT Response to be transmitted
 	if (pAttRsp != NULL)
 	{
@@ -694,7 +703,7 @@ static void SimpleBLEPeripheral_sendAttRsp(void) {
 			HCI_EXT_ConnEventNoticeCmd(pAttRsp->connHandle, selfEntity, 0);
 
 			// We're done with the response message
-			SimpleBLEPeripheral_freeAttRsp(status);
+			ETX_freeAttRsp(status);
 		} else
 		{
 			// Continue retrying
@@ -704,7 +713,7 @@ static void SimpleBLEPeripheral_sendAttRsp(void) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_freeAttRsp
+ * @fn      ETX_freeAttRsp
  *
  * @brief   Free ATT response message.
  *
@@ -712,7 +721,7 @@ static void SimpleBLEPeripheral_sendAttRsp(void) {
  *
  * @return  none
  */
-static void SimpleBLEPeripheral_freeAttRsp(uint8_t status) {
+static void ETX_freeAttRsp(uint8_t status) {
 	// See if there's a pending ATT response message
 	if (pAttRsp != NULL)
 	{
@@ -739,7 +748,7 @@ static void SimpleBLEPeripheral_freeAttRsp(uint8_t status) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_processAppMsg
+ * @fn      ETX_processAppMsg
  *
  * @brief   Process an incoming callback from a profile.
  *
@@ -747,20 +756,20 @@ static void SimpleBLEPeripheral_freeAttRsp(uint8_t status) {
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg) {
+static void ETX_processAppMsg(sbpEvt_t *pMsg) {
 	switch (pMsg->hdr.event)
 	{
-		case SBP_STATE_CHANGE_EVT:
-			SimpleBLEPeripheral_processStateChangeEvt(
+		case ETX_STATE_CHANGE_EVT:
+			ETX_processStateChangeEvt(
 					(gaprole_States_t) pMsg->hdr.state);
 			break;
 
-		case SBP_CHAR_CHANGE_EVT:
-			SimpleBLEPeripheral_processCharValueChangeEvt(pMsg->hdr.state);
+		case ETX_CHAR_CHANGE_EVT:
+			ETX_processCharValueChangeEvt(pMsg->hdr.state);
 			break;
 
-		case SBP_KEY_CHANGE_EVT:
-			SimpleBLEPeripheral_handleKeys(0, pMsg->hdr.state);
+		case ETX_KEY_CHANGE_EVT:
+			ETX_handleKeys(0, pMsg->hdr.state);
 
 		default:
 			// Do nothing.
@@ -769,7 +778,7 @@ static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_stateChangeCB
+ * @fn      ETX_stateChangeCB
  *
  * @brief   Callback from GAP Role indicating a role state change.
  *
@@ -777,12 +786,12 @@ static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg) {
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_stateChangeCB(gaprole_States_t newState) {
-	SimpleBLEPeripheral_enqueueMsg(SBP_STATE_CHANGE_EVT, newState);
+static void ETX_stateChangeCB(gaprole_States_t newState) {
+	ETX_enqueueMsg(ETX_STATE_CHANGE_EVT, newState);
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_processStateChangeEvt
+ * @fn      ETX_processStateChangeEvt
  *
  * @brief   Process a pending GAP Role state change event.
  *
@@ -790,7 +799,7 @@ static void SimpleBLEPeripheral_stateChangeCB(gaprole_States_t newState) {
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState) {
+static void ETX_processStateChangeEvt(gaprole_States_t newState) {
 #ifdef PLUS_BROADCASTER
 	static bool firstConnFlag = false;
 #endif // PLUS_BROADCASTER
@@ -861,7 +870,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 				// Reset flag for next connection.
 				firstConnFlag = false;
 
-				SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
+				ETX_freeAttRsp(bleNotConnected);
 			}
 			break;
 #endif //PLUS_BROADCASTER
@@ -925,7 +934,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 
 		case GAPROLE_WAITING:
 			//Util_stopClock(&periodicClock);
-			SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
+			ETX_freeAttRsp(bleNotConnected);
 
 			Display_print0(dispHandle, 0, 0, "Disconnected");
 			Board_ledControl(BOARD_LED_ID_R, BOARD_LED_STATE_OFF, 0);
@@ -935,7 +944,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 			break;
 
 		case GAPROLE_WAITING_AFTER_TIMEOUT:
-			SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
+			ETX_freeAttRsp(bleNotConnected);
 
 			Display_print0(dispHandle, 0, 0, "Timed Out");
 
@@ -960,7 +969,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_charValueChangeCB
+ * @fn      ETX_charValueChangeCB
  *
  * @brief   Callback from Simple Profile indicating a characteristic
  *          value change.
@@ -969,12 +978,12 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID) {
-	SimpleBLEPeripheral_enqueueMsg(SBP_CHAR_CHANGE_EVT, paramID);
+static void ETX_charValueChangeCB(uint8_t paramID) {
+	ETX_enqueueMsg(ETX_CHAR_CHANGE_EVT, paramID);
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_processCharValueChangeEvt
+ * @fn      ETX_processCharValueChangeEvt
  *
  * @brief   Process a pending Simple Profile characteristic value change
  *          event.
@@ -983,7 +992,7 @@ static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID) {
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID) {
+static void ETX_processCharValueChangeEvt(uint8_t paramID) {
 	uint8_t newValue;
 
 	switch (paramID)
@@ -995,10 +1004,10 @@ static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID) {
 					(uint8_t )newValue);
 			break;
 
-		case EVRSPROFILE_DEST:
-			EVRSProfile_GetParameter(EVRSPROFILE_DEST, &newValue);
+		case EVRSPROFILE_CMD:
+			EVRSProfile_GetParameter(EVRSPROFILE_CMD, &newValue);
 
-			Display_print1(dispHandle, 0, 0, "Destiny BS: 0x%02x",
+			Display_print1(dispHandle, 0, 0, "BS Command: 0x%02x",
 					(uint8_t )newValue);
 			break;
 
@@ -1016,7 +1025,7 @@ static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_enqueueMsg
+ * @fn      ETX_enqueueMsg
  *
  * @brief   Creates a message and puts the message in RTOS queue.
  *
@@ -1025,7 +1034,7 @@ static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID) {
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_enqueueMsg(uint8_t event, uint8_t state) {
+static void ETX_enqueueMsg(uint8_t event, uint8_t state) {
 	sbpEvt_t *pMsg;
 
 	// Create dynamic pointer to message.
@@ -1040,7 +1049,7 @@ static void SimpleBLEPeripheral_enqueueMsg(uint8_t event, uint8_t state) {
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_keyChangeHandler
+ * @fn      ETX_keyChangeHandler
  *
  * @brief   Key event handler function
  *
@@ -1048,12 +1057,12 @@ static void SimpleBLEPeripheral_enqueueMsg(uint8_t event, uint8_t state) {
  *
  * @return  none
  */
-void SimpleBLEPeripheral_keyChangeHandler(uint8_t keys) {
-	SimpleBLEPeripheral_enqueueMsg(SBP_KEY_CHANGE_EVT, keys);
+void ETX_keyChangeHandler(uint8_t keys) {
+	ETX_enqueueMsg(ETX_KEY_CHANGE_EVT, keys);
 }
 
 /*********************************************************************
- * @fn      SimpleBLEPeripheral_handleKeys
+ * @fn      ETX_handleKeys
  *
  * @brief   Handles all key events for this device.
  *
@@ -1064,7 +1073,7 @@ void SimpleBLEPeripheral_keyChangeHandler(uint8_t keys) {
  *
  * @return  none
  */
-static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
+static void ETX_handleKeys(uint8_t shift, uint8_t keys) {
 	//Display_print0(dispHandle, 0, 0, "handleKey() called");
 	uint8_t advertEnable = FALSE;
 	switch (appState)
@@ -1075,9 +1084,9 @@ static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
 		case APP_STATE_IDLE:
 			if (keys & KEY_RIGHT)
 			{
-				advertEnable = TRUE;
-				GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
-						&advertEnable);
+				ETX_Advert_UpdateDestinyBS();
+				GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData),
+								advertData);
 				appState = APP_STATE_ADVERT;
 			}
 			break;
@@ -1102,6 +1111,43 @@ static void SimpleBLEPeripheral_handleKeys(uint8_t shift, uint8_t keys) {
 			break;
 
 	}
+}
+
+static void ETX_DevId_Find(uint8_t* nvBuf) {
+	uint8_t rtn = osal_snv_read(ETX_DEVID_NV_ID, ETX_DEVID_LEN, (uint8 *)nvBuf);
+	if (rtn == SUCCESS)
+		Display_print1(dispHandle, 0, 0, "Device ID found: 0x%08x",
+				BUILD_UINT32(nvBuf[0], nvBuf[1], nvBuf[2], nvBuf[3]));
+	return;
+}
+
+static void ETX_DevId_Refresh(uint16_t tPrefix, uint8_t* nvBuf) {
+	uint16_t tRnd = Util_GetTRNG() % 0xFFFF;
+	nvBuf[0] = LO_UINT16(tRnd);
+	nvBuf[1] = HI_UINT16(tRnd);
+	nvBuf[2] = LO_UINT16(tPrefix);
+	nvBuf[3] = HI_UINT16(tPrefix);
+	uint8_t rtn = osal_snv_write(ETX_DEVID_NV_ID, ETX_DEVID_LEN, (uint8 *)nvBuf);
+	if (rtn == SUCCESS) {
+		rtn = osal_snv_read(ETX_DEVID_NV_ID, ETX_DEVID_LEN, (uint8 *)nvBuf);
+		if (rtn == SUCCESS)
+				Display_print1(dispHandle, 0, 0, "Device ID refreshed: 0x%08x",
+						BUILD_UINT32(nvBuf[0], nvBuf[1], nvBuf[2], nvBuf[3]));
+	}
+	return;
+}
+
+
+static void ETX_ScanRsp_UpdateDeviceID() {
+
+	scanRspData[11] = devID[0];
+	scanRspData[12] = devID[1];
+	scanRspData[13] = devID[2];
+	scanRspData[14] = devID[3];
+}
+
+static void ETX_Advert_UpdateDestinyBS() {
+	advertData[9] = 0x02;
 }
 
 /*********************************************************************
