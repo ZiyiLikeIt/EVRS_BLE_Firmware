@@ -37,18 +37,7 @@ extern "C"
  * MACROS
  */
 
-// GATT Params
-// Simple Profile Service UUID
-#define EVRSPROFILE_SERV_UUID 			0xAFF0
-#define EVRSPROFILE_SYSID_UUID         	0xAFF2
-#define EVRSPROFILE_DEVID_UUID      	0xAFF4
-#define EVRSPROFILE_DEST_UUID        	0xAFF8
-#define EVRSPROFILE_DATA_UUID         	0xAFFE
 
-#define EVRSPROFILE_SYSID				0x00  // RW uint8
-#define EVRSPROFILE_DEVID				0x01  // RW uint8
-#define EVRSPROFILE_DEST				0x02  // RW uint8
-#define EVRSPROFILE_DATA				0x03  // RW uint8
 
 // Max number of connections
 #define MAX_NUM_BLE_CONNS		6
