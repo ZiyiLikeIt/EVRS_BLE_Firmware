@@ -50,6 +50,9 @@ extern "C"
 #define EVRSPROFILE_DEST				0x02  // RW uint8
 #define EVRSPROFILE_DATA				0x03  // RW uint8
 
+// Max number of connections
+#define MAX_NUM_BLE_CONNS		6
+
 /*********************************************************************
  * FUNCTIONS
  */

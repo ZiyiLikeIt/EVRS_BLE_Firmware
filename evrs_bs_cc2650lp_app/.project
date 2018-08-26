@@ -67,6 +67,16 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
+			<name>Application/board_display.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/cc2650lp_driver/board_display.c</locationURI>
+		</link>
+		<link>
+			<name>Application/board_display.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/cc2650lp_driver/board_display.h</locationURI>
+		</link>
+		<link>
 			<name>Application/board_key.c</name>
 			<type>1</type>
 			<locationURI>SRC_EX/common/cc26xx/board_key.c</locationURI>

@@ -75,9 +75,9 @@
 #include "rcosc_calibration.h"
 #endif //USE_RCOSC
 
-#include <ti/mw/display/Display.h>
 #include "board_key.h"
 #include "board_led.h"
+#include "board_display.h"
 
 #include "board.h"
 
@@ -114,7 +114,7 @@
 #define DEFAULT_ENABLE_UPDATE_REQUEST         GAPROLE_LINK_PARAM_UPDATE_INITIATE_BOTH_PARAMS
 
 // Connection Pause Peripheral time value (in seconds)
-#define DEFAULT_CONN_PAUSE_PERIPHERAL         6
+#define CONN_PAUSE_PERIPHERAL         6
 
 // How often to perform periodic event (in msec)
 #define ETX_PERIODIC_EVT_PERIOD               5000
@@ -143,7 +143,7 @@ typedef enum {
 
 #define ETX_DEVID_LEN 			4
 #define ETX_DEVID_NV_ID			0x80
-#define ETX_DEVID_PREFIX		0x3168
+#define ETX_DEVID_PREFIX		0x95
 
 /*********************************************************************
  * TYPEDEFS
@@ -158,8 +158,6 @@ typedef struct {
  * GLOBAL VARIABLES
  */
 
-// Display Interface
-Display_Handle dispHandle = NULL;
 
 /*********************************************************************
  * LOCAL VARIABLES
@@ -238,11 +236,14 @@ static uint8_t scanRspData[15] = {
 
 
 // GAP GATT Attributes
-static uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "EVRS Transmitter";
+static const uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "EVRS Transmitter";
 
 // Globals used for ATT Response retransmission
 static gattMsgEvent_t *pAttRsp = NULL;
 static uint8_t rspTxRetry = 0;
+
+// Destiny base station ID
+static uint8_t destBsID = 0x00;
 
 // device ID params about Flash
 static uint8_t devID[ETX_DEVID_LEN] = {0};
@@ -276,7 +277,7 @@ static void ETX_handleKeys(uint8_t shift, uint8_t keys);
 
 //device id
 static void ETX_DevId_Find(uint8_t* nvBuf);
-static void ETX_DevId_Refresh(uint16_t tPrefix, uint8_t* nvBuf);
+static void ETX_DevId_Refresh(uint8_t IdPrefix, uint8_t* nvBuf);
 static void ETX_ScanRsp_UpdateDeviceID();
 static void ETX_Advert_UpdateDestinyBS();
 
@@ -359,19 +360,19 @@ static void ETX_init(void) {
 
 	Board_initKeys(ETX_keyChangeHandler);
 	Board_initLEDs();
+	Board_Display_Init();
 
-	dispHandle = Display_open(Display_Type_UART, NULL);
-	Display_print0(dispHandle, 0, 0, "\f");
 
 	// Device ID check
-	ETX_DevId_Find(devID);
-	if (devID[3] != ((ETX_DEVID_PREFIX>>8) % 0xFF)) // no valid device id found
-		ETX_DevId_Refresh(ETX_DEVID_PREFIX, devID);
-	ETX_ScanRsp_UpdateDeviceID();
+	{
+		ETX_DevId_Find(devID);
+		if (devID[3] != ETX_DEVID_PREFIX) // no valid device id found
+				ETX_DevId_Refresh(ETX_DEVID_PREFIX, devID);
+			ETX_ScanRsp_UpdateDeviceID();
+	}
 
 	// Setup the GAP
-	GAP_SetParamValue(TGAP_CONN_PAUSE_PERIPHERAL,
-	DEFAULT_CONN_PAUSE_PERIPHERAL);
+	GAP_SetParamValue(TGAP_CONN_PAUSE_PERIPHERAL, CONN_PAUSE_PERIPHERAL);
 
 
 	// Setup the GAP Peripheral Role Profile
@@ -414,7 +415,7 @@ static void ETX_init(void) {
 	}
 
 	// Set the GAP Characteristics
-	GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN, attDeviceName);
+	GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN, (void*)attDeviceName);
 
 	// Set advertising interval
 	{
@@ -487,7 +488,7 @@ static void ETX_init(void) {
 
 	HCI_LE_ReadMaxDataLenCmd();
 
-	Display_print0(dispHandle, 0, 0, "BLE Peripheral test");
+	uout0("EVRS TX initialized");
 	Board_ledControl(BOARD_LED_ID_G, BOARD_LED_STATE_FLASH, 300);
 	//Board_ledControl(BOARD_LED_ID_R, BOARD_LED_STATE_ON, 0);
 }
@@ -660,12 +661,12 @@ static uint8_t ETX_processGATTMsg(gattMsgEvent_t *pMsg) {
 		// The app is informed in case it wants to drop the connection.
 
 		// Display the opcode of the message that caused the violation.
-		Display_print1(dispHandle, 0, 0, "FC Violated: %d",
+		uout1("FC Violated: %d",
 				pMsg->msg.flowCtrlEvt.opcode);
 	} else if (pMsg->method == ATT_MTU_UPDATED_EVENT)
 	{
 		// MTU size updated
-		Display_print1(dispHandle, 0, 0, "MTU Size: $d", pMsg->msg.mtuEvt.MTU);
+		uout1("MTU Size: $d", pMsg->msg.mtuEvt.MTU);
 	}
 
 	// Free message payload. Needed only for ATT Protocol messages
@@ -707,7 +708,7 @@ static void ETX_sendAttRsp(void) {
 		} else
 		{
 			// Continue retrying
-			Display_print1(dispHandle, 0, 0, "Rsp send retry: %d", rspTxRetry);
+			uout1("Rsp send retry: %d", rspTxRetry);
 		}
 	}
 }
@@ -728,13 +729,13 @@ static void ETX_freeAttRsp(uint8_t status) {
 		// See if the response was sent out successfully
 		if (status == SUCCESS)
 		{
-			Display_print1(dispHandle, 0, 0, "Rsp sent retry: %d", rspTxRetry);
+			uout1("Rsp sent retry: %d", rspTxRetry);
 		} else
 		{
 			// Free response payload
 			GATT_bm_free(&pAttRsp->msg, pAttRsp->method);
 
-			Display_print1(dispHandle, 0, 0, "Rsp retry failed: %d",
+			uout1("Rsp retry failed: %d",
 					rspTxRetry);
 		}
 
@@ -833,17 +834,16 @@ static void ETX_processStateChangeEvt(gaprole_States_t newState) {
 			appState = APP_STATE_IDLE;
 
 			// Display device address
-			Display_print0(dispHandle, 0, 0,
-					Util_convertBdAddr2Str(ownAddress));
-			Display_print0(dispHandle, 0, 0, "Initialized");
+			uout0(Util_convertBdAddr2Str(ownAddress));
+			uout0("Initialized");
 			Board_ledControl(BOARD_LED_ID_R, BOARD_LED_STATE_OFF, 0);
 
 		}
 			break;
 
 		case GAPROLE_ADVERTISING:
-			appState = APP_STATE_ADVERT;
-			Display_print0(dispHandle, 0, 0, "Advertising");
+			appState = APP_STATE_IDLE;
+			uout0("Advertising");
 			Board_ledControl(BOARD_LED_ID_R, BOARD_LED_STATE_FLASH, 100);
 			break;
 
@@ -888,19 +888,16 @@ static void ETX_processStateChangeEvt(gaprole_States_t newState) {
 			// connection
 			if (linkDB_GetInfo(numActive - 1, &linkInfo) == SUCCESS)
 			{
-				Display_print1(dispHandle, 0, 0, "Num Conns: %d",
-						(uint16_t )numActive);
-				Display_print0(dispHandle, 0, 0,
-						Util_convertBdAddr2Str(linkInfo.addr));
+				uout1("Num Conns: %d", (uint16_t )numActive);
+				uout0(Util_convertBdAddr2Str(linkInfo.addr));
 			} else
 			{
 				uint8_t peerAddress[B_ADDR_LEN];
 
 				GAPRole_GetParameter(GAPROLE_CONN_BD_ADDR, peerAddress);
 
-				Display_print0(dispHandle, 0, 0, "Connected");
-				Display_print0(dispHandle, 0, 0,
-						Util_convertBdAddr2Str(peerAddress));
+				uout0("Connected");
+				uout0(Util_convertBdAddr2Str(peerAddress));
 			}
 			Board_ledControl(BOARD_LED_ID_R, BOARD_LED_STATE_FLASH, 500);
 
@@ -929,14 +926,14 @@ static void ETX_processStateChangeEvt(gaprole_States_t newState) {
 			break;
 
 		case GAPROLE_CONNECTED_ADV:
-			Display_print0(dispHandle, 0, 0, "Connected Advertising");
+			uout0("Connected Advertising");
 			break;
 
 		case GAPROLE_WAITING:
 			//Util_stopClock(&periodicClock);
 			ETX_freeAttRsp(bleNotConnected);
 
-			Display_print0(dispHandle, 0, 0, "Disconnected");
+			uout0("Disconnected");
 			Board_ledControl(BOARD_LED_ID_R, BOARD_LED_STATE_OFF, 0);
 
 			// Clear remaining lines
@@ -946,7 +943,7 @@ static void ETX_processStateChangeEvt(gaprole_States_t newState) {
 		case GAPROLE_WAITING_AFTER_TIMEOUT:
 			ETX_freeAttRsp(bleNotConnected);
 
-			Display_print0(dispHandle, 0, 0, "Timed Out");
+			uout0("Timed Out");
 
 			// Clear remaining lines
 			//Display_clearLines(dispHandle, 3, 5);
@@ -958,7 +955,7 @@ static void ETX_processStateChangeEvt(gaprole_States_t newState) {
 			break;
 
 		case GAPROLE_ERROR:
-			Display_print0(dispHandle, 0, 0, "Error");
+			uout0("Error");
 			break;
 
 		default:
@@ -1000,21 +997,21 @@ static void ETX_processCharValueChangeEvt(uint8_t paramID) {
 		case EVRSPROFILE_DEVID:
 			EVRSProfile_GetParameter(EVRSPROFILE_DEVID, &newValue);
 
-			Display_print1(dispHandle, 0, 0, "Device Id: 0x%02x",
+			uout1("Device Id: 0x%02x",
 					(uint8_t )newValue);
 			break;
 
 		case EVRSPROFILE_CMD:
 			EVRSProfile_GetParameter(EVRSPROFILE_CMD, &newValue);
 
-			Display_print1(dispHandle, 0, 0, "BS Command: 0x%02x",
+			uout1("BS Command: 0x%02x",
 					(uint8_t )newValue);
 			break;
 
 		case EVRSPROFILE_DATA:
 			EVRSProfile_GetParameter(EVRSPROFILE_DATA, &newValue);
 
-			Display_print1(dispHandle, 0, 0, "User Data: 0x%02x",
+			uout1("User Data: 0x%02x",
 					(uint8_t )newValue);
 			break;
 
@@ -1074,7 +1071,7 @@ void ETX_keyChangeHandler(uint8_t keys) {
  * @return  none
  */
 static void ETX_handleKeys(uint8_t shift, uint8_t keys) {
-	//Display_print0(dispHandle, 0, 0, "handleKey() called");
+	//uout0("handleKey() called");
 	uint8_t advertEnable = FALSE;
 	switch (appState)
 	{
@@ -1085,8 +1082,11 @@ static void ETX_handleKeys(uint8_t shift, uint8_t keys) {
 			if (keys & KEY_RIGHT)
 			{
 				ETX_Advert_UpdateDestinyBS();
-				GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData),
+				bStatus_t rtn = 0;
+				rtn = GAPRole_SetParameter(GAPROLE_ADVERT_DATA, sizeof(advertData),
 								advertData);
+				if (rtn == SUCCESS)
+					uout1("BS set to 0x%02x", destBsID);
 				appState = APP_STATE_ADVERT;
 			}
 			break;
@@ -1116,22 +1116,22 @@ static void ETX_handleKeys(uint8_t shift, uint8_t keys) {
 static void ETX_DevId_Find(uint8_t* nvBuf) {
 	uint8_t rtn = osal_snv_read(ETX_DEVID_NV_ID, ETX_DEVID_LEN, (uint8 *)nvBuf);
 	if (rtn == SUCCESS)
-		Display_print1(dispHandle, 0, 0, "Device ID found: 0x%08x",
+		uout1("Device ID found: 0x%08x",
 				BUILD_UINT32(nvBuf[0], nvBuf[1], nvBuf[2], nvBuf[3]));
 	return;
 }
 
-static void ETX_DevId_Refresh(uint16_t tPrefix, uint8_t* nvBuf) {
-	uint16_t tRnd = Util_GetTRNG() % 0xFFFF;
-	nvBuf[0] = LO_UINT16(tRnd);
-	nvBuf[1] = HI_UINT16(tRnd);
-	nvBuf[2] = LO_UINT16(tPrefix);
-	nvBuf[3] = HI_UINT16(tPrefix);
+static void ETX_DevId_Refresh(uint8_t IdPrefix, uint8_t* nvBuf) {
+	uint32_t rnd = Util_GetTRNG() % 0xFFFFFF;
+	nvBuf[0] = rnd % 0xFF ;
+	nvBuf[1] = (rnd >> 8) % 0xFF;
+	nvBuf[2] = (rnd >> 16) % 0xFF;
+	nvBuf[3] = IdPrefix;
 	uint8_t rtn = osal_snv_write(ETX_DEVID_NV_ID, ETX_DEVID_LEN, (uint8 *)nvBuf);
 	if (rtn == SUCCESS) {
 		rtn = osal_snv_read(ETX_DEVID_NV_ID, ETX_DEVID_LEN, (uint8 *)nvBuf);
 		if (rtn == SUCCESS)
-				Display_print1(dispHandle, 0, 0, "Device ID refreshed: 0x%08x",
+				uout1("Device ID refreshed: 0x%08x",
 						BUILD_UINT32(nvBuf[0], nvBuf[1], nvBuf[2], nvBuf[3]));
 	}
 	return;
@@ -1147,7 +1147,8 @@ static void ETX_ScanRsp_UpdateDeviceID() {
 }
 
 static void ETX_Advert_UpdateDestinyBS() {
-	advertData[9] = 0x02;
+	destBsID = 0x02;
+	advertData[9] = destBsID;
 }
 
 /*********************************************************************
