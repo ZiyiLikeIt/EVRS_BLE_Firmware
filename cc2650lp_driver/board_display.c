@@ -12,7 +12,6 @@
  *
  ****************************************/
 
-
 #include <board_display.h>
 #include <ti/mw/display/Display.h>
 

@@ -13,8 +13,8 @@
  ****************************************/
 
 
-#ifndef SIMPLEBLECENTRAL_H
-#define SIMPLEBLECENTRAL_H
+#ifndef EVRSBSMAIN_H
+#define EVRSBSMAIN_H
 
 #ifdef __cplusplus
 extern "C"
@@ -40,7 +40,7 @@ extern "C"
 
 
 // Max number of connections
-#define MAX_NUM_BLE_CONNS		6
+#define MAX_NUM_BLE_CONNS		1
 
 /*********************************************************************
  * FUNCTIONS
