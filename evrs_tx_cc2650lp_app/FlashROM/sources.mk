@@ -138,5 +138,6 @@ Middleware/extflash \
 PROFILES \
 Startup \
 TOOLS \
+drivers \
 src \
 

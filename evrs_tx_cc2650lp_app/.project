@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>simple_peripheral_cc2650lp_app</name>
+	<name>evrs_tx_cc2650lp_app</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -74,12 +74,12 @@
 		<link>
 			<name>Application/board_display.c</name>
 			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/cc2650lp_driver/board_display.c</locationURI>
+			<locationURI>PROJECT_LOC/drivers/board_display.c</locationURI>
 		</link>
 		<link>
 			<name>Application/board_display.h</name>
 			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/cc2650lp_driver/board_display.h</locationURI>
+			<locationURI>PROJECT_LOC/drivers/board_display.h</locationURI>
 		</link>
 		<link>
 			<name>Application/board_key.c</name>
@@ -94,12 +94,12 @@
 		<link>
 			<name>Application/board_led.c</name>
 			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/cc2650lp_driver/board_led.c</locationURI>
+			<locationURI>PROJECT_LOC/drivers/board_led.c</locationURI>
 		</link>
 		<link>
 			<name>Application/board_led.h</name>
 			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/cc2650lp_driver/board_led.h</locationURI>
+			<locationURI>PROJECT_LOC/drivers/board_led.h</locationURI>
 		</link>
 		<link>
 			<name>Application/rcosc_calibration.h</name>
