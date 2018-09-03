@@ -68,7 +68,6 @@ RMDIR := RMDIR /S/Q
 -include PROFILES/subdir_vars.mk
 -include Startup/subdir_vars.mk
 -include TOOLS/subdir_vars.mk
--include drivers/subdir_vars.mk
 -include src/subdir_vars.mk
 -include Application/subdir_rules.mk
 -include Drivers/Display/subdir_rules.mk
@@ -85,7 +84,6 @@ RMDIR := RMDIR /S/Q
 -include PROFILES/subdir_rules.mk
 -include Startup/subdir_rules.mk
 -include TOOLS/subdir_rules.mk
--include drivers/subdir_rules.mk
 -include src/subdir_rules.mk
 -include objects.mk
 

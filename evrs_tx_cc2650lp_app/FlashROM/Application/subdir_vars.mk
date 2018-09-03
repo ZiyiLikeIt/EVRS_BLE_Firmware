@@ -6,9 +6,9 @@ SHELL = cmd.exe
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../drivers/board_display.c \
+E:/workbench/git/EVRS_BLE_Firmware/cc2650lp_driver/board_display.c \
 C:/ti/ble_sdk_2_02_02_25/src/common/cc26xx/board_key.c \
-../drivers/board_led.c \
+E:/workbench/git/EVRS_BLE_Firmware/cc2650lp_driver/board_led.c \
 C:/ti/ble_sdk_2_02_02_25/src/common/cc26xx/util.c 
 
 C_DEPS += \
@@ -36,9 +36,9 @@ C_DEPS__QUOTED += \
 "Application\util.d" 
 
 C_SRCS__QUOTED += \
-"../drivers/board_display.c" \
+"E:/workbench/git/EVRS_BLE_Firmware/cc2650lp_driver/board_display.c" \
 "C:/ti/ble_sdk_2_02_02_25/src/common/cc26xx/board_key.c" \
-"../drivers/board_led.c" \
+"E:/workbench/git/EVRS_BLE_Firmware/cc2650lp_driver/board_led.c" \
 "C:/ti/ble_sdk_2_02_02_25/src/common/cc26xx/util.c" 
 
 
