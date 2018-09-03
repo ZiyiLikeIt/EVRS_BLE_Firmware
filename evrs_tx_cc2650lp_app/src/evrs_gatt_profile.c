@@ -58,9 +58,9 @@ CONST uint8 EVRSProfileSysIdUUID[ATT_BT_UUID_SIZE] = { LO_UINT16(
 CONST uint8 EVRSProfileDevIdUUID[ATT_BT_UUID_SIZE] = { LO_UINT16(
 		EVRSPROFILE_DEVID_UUID), HI_UINT16(EVRSPROFILE_DEVID_UUID) };
 
-// Destiny base station number UUID: 0xAFF4
-CONST uint8 EVRSProfileDestUUID[ATT_BT_UUID_SIZE] = { LO_UINT16(
-		EVRSPROFILE_DEST_UUID), HI_UINT16(EVRSPROFILE_DEST_UUID) };
+// Command number UUID: 0xAFF4
+CONST uint8 EVRSProfileCmdUUID[ATT_BT_UUID_SIZE] = { LO_UINT16(
+		EVRSPROFILE_CMD_UUID), HI_UINT16(EVRSPROFILE_CMD_UUID) };
 
 // User data UUID: 0xAFF8
 CONST uint8 EVRSProfileDataUUID[ATT_BT_UUID_SIZE] = { LO_UINT16(
@@ -106,14 +106,14 @@ static uint8 EVRSProfileDevId = 0;
 // EVRS Profile Device Id User Description
 static uint8 EVRSProfileDevIdUserDesp[10] = "Device Id";
 
-// EVRS Profile Destiny BS Properties
-static uint8 EVRSProfileDestProps = GATT_PROP_READ | GATT_PROP_WRITE;
+// EVRS Profile Command BS Properties
+static uint8 EVRSProfileCmdProps = GATT_PROP_READ | GATT_PROP_WRITE;
 
-// Destiny BS Value
-static uint8 EVRSProfileDest = 0;
+// Command BS Value
+static uint8 EVRSProfileCmd = 0;
 
-// EVRS Profile Destiny BS User Description
-static uint8 EVRSProfileDestUserDesp[10] = "Destny BS";
+// EVRS Profile BS Command User Description
+static uint8 EVRSProfileCmdUserDesp[11] = "BS Command";
 
 // EVRS Profile User Data Properties
 static uint8 EVRSProfileDataProps = GATT_PROP_READ | GATT_PROP_WRITE;
@@ -160,17 +160,17 @@ static gattAttribute_t EVRSProfileAttrTbl[SERVAPP_NUM_ATTR_SUPPORTED] = {
 		{ { ATT_BT_UUID_SIZE, charUserDescUUID },
 		GATT_PERMIT_READ, 0, EVRSProfileDevIdUserDesp },
 
-		// Destiny BS Declaration
+		// BS Command Declaration
 		{ { ATT_BT_UUID_SIZE, characterUUID },
-		GATT_PERMIT_READ, 0, &EVRSProfileDestProps },
+		GATT_PERMIT_READ, 0, &EVRSProfileCmdProps },
 
-		// Destiny BS Value
-		{ { ATT_BT_UUID_SIZE, EVRSProfileDestUUID },
-		GATT_PERMIT_READ | GATT_PERMIT_WRITE, 0, &EVRSProfileDest },
+		// BS Command Value
+		{ { ATT_BT_UUID_SIZE, EVRSProfileCmdUUID },
+		GATT_PERMIT_READ | GATT_PERMIT_WRITE, 0, &EVRSProfileCmd },
 
-		// Destiny BS User Description
+		// BS Command User Description
 		{ { ATT_BT_UUID_SIZE, charUserDescUUID },
-		GATT_PERMIT_READ, 0, EVRSProfileDestUserDesp },
+		GATT_PERMIT_READ, 0, EVRSProfileCmdUserDesp },
 
 		// User Data Declaration
 		{ { ATT_BT_UUID_SIZE, characterUUID },
@@ -309,10 +309,10 @@ bStatus_t EVRSProfile_SetParameter(uint8 param, uint8 len, void *value) {
 			}
 			break;
 
-		case EVRSPROFILE_DEST:
+		case EVRSPROFILE_CMD:
 			if (len == sizeof(uint8))
 			{
-				EVRSProfileDest = *((uint8*) value);
+				EVRSProfileCmd = *((uint8*) value);
 			} else
 			{
 				ret = bleInvalidRange;
@@ -362,8 +362,8 @@ bStatus_t EVRSProfile_GetParameter(uint8 param, void *value) {
 			*((uint8*) value) = EVRSProfileDevId;
 			break;
 
-		case EVRSPROFILE_DEST:
-			*((uint8*) value) = EVRSProfileDest;
+		case EVRSPROFILE_CMD:
+			*((uint8*) value) = EVRSProfileCmd;
 			break;
 
 		case EVRSPROFILE_DATA:
@@ -415,7 +415,7 @@ static bStatus_t EVRSProfile_ReadAttrCB(uint16_t connHandle,
 
 			case EVRSPROFILE_SYSID_UUID:
 			case EVRSPROFILE_DEVID_UUID:
-			case EVRSPROFILE_DEST_UUID:
+			case EVRSPROFILE_CMD_UUID:
 			case EVRSPROFILE_DATA_UUID:
 				*pLen = 1;
 				pValue[0] = *pAttr->pValue;
@@ -464,7 +464,7 @@ static bStatus_t EVRSProfile_WriteAttrCB(uint16_t connHandle,
 		switch (uuid)
 		{
 			case EVRSPROFILE_DEVID_UUID:
-			case EVRSPROFILE_DEST_UUID:
+			case EVRSPROFILE_CMD_UUID:
 			case EVRSPROFILE_DATA_UUID:
 
 				//Validate the value
@@ -488,8 +488,8 @@ static bStatus_t EVRSProfile_WriteAttrCB(uint16_t connHandle,
 
 					if (pAttr->pValue == &EVRSProfileDevId)
 						notifyApp = EVRSPROFILE_DEVID;
-					else if (pAttr->pValue == &EVRSProfileDest)
-						notifyApp = EVRSPROFILE_DEST;
+					else if (pAttr->pValue == &EVRSProfileCmd)
+						notifyApp = EVRSPROFILE_CMD;
 					else
 						notifyApp = EVRSPROFILE_DATA;
 				}

@@ -1,49 +1,17 @@
-/******************************************************************************
+/****************************************
+ *
+ * @filename 	evrs_bs_main.c
+ *
+ * @project 	evrs_bs_cc2650lp_app
+ *
+ * @brief 		main functionality of base station
+ *
+ * @date 		22 Aug. 2018
+ *
+ * @author		Ziyi@outlook.com.au
+ *
+ ****************************************/
 
- @file  simple_central.c
-
- @brief This file contains the Simple BLE Central sample application for use
- with the CC2650 Bluetooth Low Energy Protocol Stack.
-
- Group: WCS, BTS
- Target Device: CC2650, CC2640, CC1350
-
- ******************************************************************************
-
- Copyright (c) 2013-2016, Texas Instruments Incorporated
- All rights reserved.
-
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
-
- *  Redistributions of source code must retain the above copyright
- notice, this list of conditions and the following disclaimer.
-
- *  Redistributions in binary form must reproduce the above copyright
- notice, this list of conditions and the following disclaimer in the
- documentation and/or other materials provided with the distribution.
-
- *  Neither the name of Texas Instruments Incorporated nor the names of
- its contributors may be used to endorse or promote products derived
- from this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- ******************************************************************************
- Release Name: ble_sdk_2_02_00_31
- Release Date: 2016-06-16 18:57:29
- *****************************************************************************/
 
 /*********************************************************************
  * INCLUDES
@@ -73,8 +41,9 @@
 #include "util.h"
 #include "board_key.h"
 #include "board_led.h"
+#include "board_display.h"
 #include "evrs_bs_rssi.h"
-#include <ti/mw/display/Display.h>
+//#include <ti/mw/display/Display.h>
 #include "board.h"
 
 #include "ble_user_config.h"
@@ -88,10 +57,10 @@
  */
 
 // Maximum number of scan responses
-#define DEFAULT_MAX_SCAN_RES                  8
+#define MAX_SCAN_RES		20
 
 // Scan duration in ms
-#define DEFAULT_SCAN_DURATION                 4000
+#define DEFAULT_SCAN_DURATION                 10000
 
 // Discovery mode (limited, general, all)
 #define DEFAULT_DISCOVERY_MODE                DEVDISC_MODE_ALL
@@ -103,10 +72,10 @@
 #define DEFAULT_DISCOVERY_WHITE_LIST          FALSE
 
 // TRUE to use high scan duty cycle when creating link
-#define DEFAULT_LINK_HIGH_DUTY_CYCLE          FALSE
+#define LINK_HIGH_DUTY_CYCLE          TRUE
 
 // TRUE to use white list when creating link
-#define DEFAULT_LINK_WHITE_LIST               FALSE
+#define LINK_WHITE_LIST               FALSE
 
 // Initial minimum connection interval (units of 1.25 ms.)
 #define INITIAL_MIN_CONN_INTERVAL 	      	  16
@@ -143,7 +112,7 @@
 #define DEFAULT_UPDATE_CONN_TIMEOUT           600
 
 // Default service discovery timer delay in ms
-#define DEFAULT_SVC_DISCOVERY_DELAY           1000
+#define SVC_DISCOVERY_DELAY           500
 
 // TRUE to filter discovery results on desired service UUID
 #define DEV_DISC_BY_SVC_UUID          TRUE
@@ -158,49 +127,51 @@
 #define EBS_TASK_STACK_SIZE                   864
 #endif
 
+// GATT Params
+// EVRS Profile Service UUID
+#define EVRSPROFILE_SERV_UUID 			0xAFF0
+#define EVRSPROFILE_SYSID_UUID         	0xAFF2
+#define EVRSPROFILE_DEVID_UUID      	0xAFF4
+#define EVRSPROFILE_CMD_UUID        	0xAFF8
+#define EVRSPROFILE_DATA_UUID         	0xAFFE
+
+#define ETX_ADTYPE_DEST				0xAF
+#define ETX_ADTYPE_DEVID			0xAE
+#define ETX_DEVID_LEN 				4
+#define ETX_DEVID_PREFIX			0x95
+
 // Application states
 typedef enum {
-	BLE_STATE_IDLE,
-	BLE_STATE_BROWSING,
-	BLE_STATE_CONNECTING,
-	BLE_STATE_CONNECTED,
-	BLE_STATE_DISCOVERED,
-	BLE_STATE_DISCONNECTING
-} bleState_t;
+	EBS_STATE_INIT,
+	EBS_STATE_DISCOVERY,
+	EBS_STATE_UPLOAD,
+	EBS_STATE_POLLING
+} EbsState_t;
 
 // Discovery states
 typedef enum {
-	BLE_DISC_STATE_IDLE,                // Idle
-	BLE_DISC_STATE_MTU,                 // Exchange ATT MTU size
-	BLE_DISC_STATE_SVC,                 // Service discovery
-	BLE_DISC_STATE_CHAR                 // Characteristic discovery
-} bleDiscState_t;
+	EBS_DISC_STATE_IDLE,                // Idle
+	EBS_DISC_STATE_MTU,                 // Exchange ATT MTU size
+	EBS_DISC_STATE_SVC,                 // Service discovery
+	EBS_DISC_STATE_CHAR                 // Characteristic discovery
+} EbsDiscState_t;
 
-// Connection parameter update
-enum {
-	INITIAL_PARAMETERS, DEFAULT_UPDATE_PARAMETERS
-};
-
-// Screen row
-enum {
-	ROW_ZERO = 0,
-	ROW_ONE = 1,
-	ROW_TWO = 2,
-	ROW_THREE = 3,
-	ROW_FOUR = 4,
-	ROW_FIVE = 5,
-	ROW_SIX = 6,
-	ROW_SEVEN = 7,
-	ROW_STATE = 8
-};
-
-// Menu item state
+// Polling states
 typedef enum {
-	MENU_ITEM_CONN_PARAM_UPDATE,
-	MENU_ITEM_RSSI,
-	MENU_ITEM_READ_WRITE,
-	MENU_ITEM_DISCONNECT
-} MenuItem_t;
+	EBS_POLL_STATE_IDLE,
+	EBS_POLL_STATE_CONNECT,
+	EBS_POLL_STATE_READ,
+	EBS_POLL_STATE_WRITE,
+	EBS_POLL_STATE_TERMINATE
+} EbsPollState_t;
+
+typedef enum {
+	EVRSPROFILE_SYSID,
+	EVRSPROFILE_DEVID,
+	EVRSPROFILE_CMD,
+	EVRSPROFILE_DATA
+} ProfileId_t;
+
 
 /*********************************************************************
  * TYPEDEFS
@@ -210,25 +181,34 @@ typedef enum {
 typedef struct {
 	appEvtHdr_t hdr; // event header
 	uint8_t *pData;  // event data
-} ebsEvt_t;
+} EbsEvt_t;
 
 
 /**
  * Type of device discovery (Scan) to perform.
  */
 typedef struct {
-	char localName[20];	 		 //!< Device's Name
-	uint8_t addrType;            //!< Address Type: @ref ADDRTYPE_DEFINES
-	uint8_t addr[B_ADDR_LEN];    //!< Device's Address
-	uint8_t nameLength; 	 	 //!< Device name length
-} devRecInfo_t;
+	//char localName[20];		//!< Device's Name
+	uint8_t addrType;	//!< Address Type: @ref ADDRTYPE_DEFINES
+	uint8_t addr[B_ADDR_LEN];	//!< Device's Address
+	uint8_t txDevID[ETX_DEVID_LEN];	// Tx Id
+} DevRecInfo_t;
+
+
+typedef struct {
+	uint8_t addrType;	//!< Address Type: @ref ADDRTYPE_DEFINES
+	uint8_t addr[B_ADDR_LEN];	//!< Device's Address
+	uint8_t txDevID[ETX_DEVID_LEN];	// Tx Id
+	uint16_t connHdl;	// connection handle
+	EbsPollState_t state; // connection state
+} TargetInfo_t;
 
 /*********************************************************************
  * GLOBAL VARIABLES
  */
 
 // Display Interface
-Display_Handle dispHandle = NULL;
+// Display_Handle dispHdl = NULL;
 
 /*********************************************************************
  * EXTERNAL VARIABLES
@@ -262,45 +242,34 @@ Task_Struct ebsTask;
 Char ebsTaskStack[EBS_TASK_STACK_SIZE];
 
 // GAP GATT Attributes
-static const uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "Simple BLE Central";
+static const uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "EVRS BaseStation";
 
 // Number of scan results and scan result index
 static uint8_t scanRes;
 static uint8_t scanIdx;
 
 // Scan result list
-static devRecInfo_t devList[DEFAULT_MAX_SCAN_RES];
+static DevRecInfo_t discTxList[MAX_SCAN_RES];
 
 // Scanning state
 static bool scanningStarted = FALSE;
 
 // Connection handle of current connection
-static uint16_t connHandle = GAP_CONNHANDLE_INIT;
+//static uint16_t connHandleList[MAX_NUM_BLE_CONNS] = GAP_CONNHANDLE_INIT;
 
 // Application state
-static bleState_t state = BLE_STATE_IDLE;
+static EbsState_t ebsState = EBS_STATE_INIT;
+//static bleState_t state = BLE_STATE_IDLE;
 
 // Discovery state
-static bleDiscState_t discState = BLE_DISC_STATE_IDLE;
-
-// Connection paramters
-static uint8_t currentConnectionParameter = INITIAL_PARAMETERS;
-
-//Connection option state
-static MenuItem_t selectedMenuItem = MENU_ITEM_CONN_PARAM_UPDATE;
+static EbsDiscState_t discState = EBS_DISC_STATE_IDLE;
 
 // Discovered service start and end handle
 static uint16_t svcStartHdl = 0;
 static uint16_t svcEndHdl = 0;
 
 // Discovered characteristic handle
-static uint16_t charHdl[4] = {0,0,0,0};
-
-// Value to write
-static uint8_t charVal = 0;
-
-// Value read/write toggle
-static bool doWrite = FALSE;
+static uint16_t charHdl[4] = {0};
 
 // GATT read/write procedure state
 static bool procedureInProgress = FALSE;
@@ -314,8 +283,18 @@ readRssi_t readRssi[MAX_NUM_BLE_CONNS];
 // counter for profile found
 int profileCounter = 0;
 
+// Base Station Identifier
+uint8_t baseStationID = 0x02;
+
+// Target Tx List
+TargetInfo_t targetList[MAX_NUM_BLE_CONNS];
+TargetInfo_t* pVacantSlot = targetList;
+TargetInfo_t* pConnectingSlot = NULL;
+
+Semaphore_Handle targetConnSem;
+
 // test
-int i = 0;
+int tcounter = 0;
 
 /*********************************************************************
  * LOCAL FUNCTIONS
@@ -326,40 +305,44 @@ static void EBS_taskFxn(UArg a0, UArg a1);
 static void EBS_processGATTMsg(gattMsgEvent_t *pMsg);
 static void EBS_handleKeys(uint8_t shift, uint8_t keys);
 static void EBS_processStackMsg(ICall_Hdr *pMsg);
-static void EBS_processAppMsg(ebsEvt_t *pMsg);
+static void EBS_processAppMsg(EbsEvt_t *pMsg);
 static void EBS_processRoleEvent(gapCentralRoleEvent_t *pEvent);
 static void EBS_processGATTDiscEvent(gattMsgEvent_t *pMsg);
+static uint8_t EBS_writeCharbyHandle(uint16_t connHandle, ProfileId_t charHdlId,
+		uint8_t* pData, uint8_t len);
+static uint8_t EBS_readCharbyHandle(uint16_t connHandle, ProfileId_t charHdlId);
 static void EBS_startDiscovery(void);
 static bool EBS_findSvcUuid(uint16_t uuid, uint8_t *pData,
 		uint8_t dataLen);
 static void EBS_discoverDevices(void);
 void EBS_timeoutConnecting(UArg arg0);
+static bool EBS_checkBSId(uint8_t bsID, uint8_t *pEvtData, uint8_t dataLen);
 static void EBS_addDeviceInfo(uint8_t *pAddr, uint8_t addrType);
-static bool EBS_findLocalName(uint8_t *pEvtData, uint8_t dataLen);
-static void EBS_addDeviceName(uint8_t i, uint8_t *pEvtData,
+// static bool EBS_findLocalName(uint8_t *pEvtData, uint8_t dataLen);
+static void EBS_addDeviceID(uint8_t index, uint8_t *pEvtData,
 		uint8_t dataLen);
 static void EBS_processPairState(uint8_t pairState, uint8_t status);
-static void EBS_processPasscode(uint16_t connectionHandle,
-		uint8_t uiOutputs);
+//static void EBS_processPasscode(uint16_t connectionHandle,
+//		uint8_t uiOutputs);
 
 static void EBS_processCmdCompleteEvt(hciEvt_CmdComplete_t *pMsg);
-/*
-static bStatus_t EBS_StartRssi(uint16_t connHandle,
-		uint16_t period);
-static bStatus_t EBS_CancelRssi(uint16_t connHandle);
-static readRssi_t *EBS_RssiAlloc(uint16_t connHandle);
-static readRssi_t *EBS_RssiFind(uint16_t connHandle);
-static void EBS_RssiFree(uint16_t connHandle);
-*/
 
 static uint8_t EBS_eventCB(gapCentralRoleEvent_t *pEvent);
-static void EBS_passcodeCB(uint8_t *deviceAddr,
-		uint16_t connHandle, uint8_t uiInputs, uint8_t uiOutputs);
+//static void EBS_passcodeCB(uint8_t *deviceAddr,
+//		uint16_t connHandle, uint8_t uiInputs, uint8_t uiOutputs);
 static void EBS_pairStateCB(uint16_t connHandle, uint8_t pairState,
 		uint8_t status);
 
 void EBS_startDiscHandler(UArg a0);
 void EBS_keyChangeHandler(uint8_t keys);
+
+static void EBS_updateEbsState(EbsState_t newState);
+static void EBS_stateChange(EbsState_t newState);
+static void EBS_updatePollState(uint8_t targetIndex, EbsPollState_t newState);
+
+static void EBS_updateTargetList(uint8_t* txID);
+
+static uint32_t EBS_parseDevID(uint8_t* devID);
 
 /*********************************************************************
  * PROFILE CALLBACKS
@@ -371,7 +354,7 @@ static gapCentralRoleCB_t EBS_roleCB = { EBS_eventCB // Event callback
 
 // Bond Manager Callbacks
 static gapBondCBs_t EBS_bondCB = {
-		(pfnPasscodeCB_t) EBS_passcodeCB, // Passcode callback
+		NULL, // Passcode callback
 		EBS_pairStateCB                  // Pairing state callback
 		};
 
@@ -428,7 +411,7 @@ static void EBS_init(void) {
 
 	// Setup discovery delay as a one-shot timer
 	Util_constructClock(&startDiscClock, EBS_startDiscHandler,
-	DEFAULT_SVC_DISCOVERY_DELAY, 0, false, 0);
+	SVC_DISCOVERY_DELAY, 0, false, 0);
 
 	// Set initial connection parameter values
 	GAP_SetParamValue(TGAP_CONN_EST_INT_MIN, INITIAL_MIN_CONN_INTERVAL);
@@ -442,13 +425,7 @@ static void EBS_init(void) {
 
 	Board_initKeys(EBS_keyChangeHandler);
 	Board_initLEDs();
-
-	//In the project predefines, UART is disabled by default. Thus LCD display will be used.
-	//Please see the project documentation for instructions on choosing LDC or UART display.
-	Display_Params dispParams;
-	dispParams.lineClearMode = DISPLAY_CLEAR_BOTH;
-	dispHandle = Display_open(Display_Type_UART, &dispParams);
-	Display_print0(dispHandle, 0, 0, "\f");
+	Board_Display_Init();
 
 	// Initialize internal data
 	for (i = 0; i < MAX_NUM_BLE_CONNS; i++)
@@ -459,10 +436,10 @@ static void EBS_init(void) {
 
 	// Setup Central Profile
 	{
-		uint8_t scanRes = DEFAULT_MAX_SCAN_RES;
+		uint8_t maxScanRes = MAX_SCAN_RES;
 
 		GAPCentralRole_SetParameter(GAPCENTRALROLE_MAX_SCAN_RES,
-				sizeof(uint8_t), &scanRes);
+				sizeof(uint8_t), &maxScanRes);
 	}
 
 	// Setup GAP
@@ -513,7 +490,7 @@ static void EBS_init(void) {
 	// Register for GATT local events and ATT Responses pending for transmission
 	GATT_RegisterForMsgs(selfEntity);
 
-	Display_print0(dispHandle, ROW_ZERO, 0, "BLE Central test");
+	targetConnSem = Semaphore_create(0, NULL, NULL);
 	Board_ledControl(BOARD_LED_ID_G, BOARD_LED_STATE_FLASH, 300);
 }
 
@@ -564,7 +541,7 @@ static void EBS_taskFxn(UArg a0, UArg a1) {
 		// If RTOS queue is not empty, process app message
 		while (!Queue_empty(appMsgQueue))
 		{
-			ebsEvt_t *pMsg = (ebsEvt_t *) Util_dequeueMsg(appMsgQueue);
+			EbsEvt_t *pMsg = (EbsEvt_t *) Util_dequeueMsg(appMsgQueue);
 			if (pMsg)
 			{
 				// Process message
@@ -634,14 +611,18 @@ static void EBS_processStackMsg(ICall_Hdr *pMsg) {
  *
  * @return  none
  */
-static void EBS_processAppMsg(ebsEvt_t *pMsg) {
+static void EBS_processAppMsg(EbsEvt_t *pMsg) {
 	switch (pMsg->hdr.event)
 	{
-		case EBS_STATE_CHANGE_EVT:
+		case EBS_STACK_MSG_EVT:
 			EBS_processStackMsg((ICall_Hdr *) pMsg->pData);
 
 			// Free the stack message
 			ICall_freeMsg(pMsg->pData);
+			break;
+
+		case EBS_STATE_CHANGE_EVT:
+			EBS_stateChange((EbsState_t)pMsg->hdr.state);
 			break;
 
 		case EBS_KEY_CHANGE_EVT:
@@ -674,7 +655,7 @@ static void EBS_processAppMsg(ebsEvt_t *pMsg) {
 			break;
 		}
 
-			// Passcode event
+			/* Passcode event
 		case EBS_PASSCODE_NEEDED_EVT:
 		{
 			EBS_processPasscode(connHandle, *pMsg->pData);
@@ -682,11 +663,11 @@ static void EBS_processAppMsg(ebsEvt_t *pMsg) {
 			ICall_free(pMsg->pData);
 			break;
 		}
-
+		*/
 			// Connecting to device timed out
 		case EBS_CONNECTING_TIMEOUT_EVT:
 		{
-			GAPCentralRole_TerminateLink(connHandle);
+			GAPCentralRole_TerminateLink(pConnectingSlot->connHdl);
 		}
 
 		default:
@@ -710,43 +691,36 @@ static void EBS_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 		case GAP_DEVICE_INIT_DONE_EVENT:
 		{
 			maxPduSize = pEvent->initDone.dataPktLen;
-			Display_print0(dispHandle, ROW_ZERO, 0, "BLE Central test");
-			Display_print0(dispHandle, ROW_ONE, 0,
-					Util_convertBdAddr2Str(pEvent->initDone.devAddr));
-			Display_print0(dispHandle, ROW_TWO, 0, "Initialized");
-			Display_print0(dispHandle, ROW_SEVEN, 0, ">RIGHT to scan");
+			uout0("EVRS BS initialized");
+			uout0(Util_convertBdAddr2Str(pEvent->initDone.devAddr));
+			uout1("BS ID: 0x%02x", baseStationID);
 		}
 			break;
 
 		case GAP_DEVICE_INFO_EVENT:
 		{
-			//Find peer device address by UUID
-			if ((DEV_DISC_BY_SVC_UUID == FALSE)
-					|| EBS_findSvcUuid(EVRSPROFILE_SERV_UUID,
-							pEvent->deviceInfo.pEvtData,
-							pEvent->deviceInfo.dataLen))
+
+			//Find tx device address by UUID
+			if (EBS_findSvcUuid(EVRSPROFILE_SERV_UUID,
+					pEvent->deviceInfo.pEvtData, pEvent->deviceInfo.dataLen) &&
+				EBS_checkBSId(baseStationID,
+					pEvent->deviceInfo.pEvtData, pEvent->deviceInfo.dataLen))
 			{
 				EBS_addDeviceInfo(pEvent->deviceInfo.addr,
 						pEvent->deviceInfo.addrType);
 			}
 
 			// Check if the discovered device is already in scan results
-			uint8_t i;
-			for (i = 0; i < scanRes; i++)
+			uint8_t index;
+			for (index = 0; index < scanRes; index++)
 			{
-				if (memcmp(pEvent->deviceInfo.addr, devList[i].addr, B_ADDR_LEN)
+				if (memcmp(pEvent->deviceInfo.addr, discTxList[index].addr, B_ADDR_LEN)
 						== 0)
 				{
-					//Check if pEventData contains a device name
-					if (EBS_findLocalName(
+					//Update deviceInfo entry with the name
+					EBS_addDeviceID(index,
 							pEvent->deviceInfo.pEvtData,
-							pEvent->deviceInfo.dataLen))
-					{
-						//Update deviceInfo entry with the name
-						EBS_addDeviceName(i,
-								pEvent->deviceInfo.pEvtData,
-								pEvent->deviceInfo.dataLen);
-					}
+							pEvent->deviceInfo.dataLen);
 				}
 			}
 		}
@@ -758,16 +732,8 @@ static void EBS_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 			scanningStarted = FALSE;
 			// initialize scan index to first
 			scanIdx = 0;
-			Display_clearLines(dispHandle, ROW_ONE, ROW_SEVEN);
-			Display_print1(dispHandle, ROW_ONE, 0, "Devices found %d", scanRes);
-			state = BLE_STATE_DISCOVERED;
-			//Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_DISCOVERED");
-
-			if (scanRes > 0)
-			{
-				Display_print0(dispHandle, ROW_SIX, 0, "<LEFT to browse");
-			}
-			Display_print0(dispHandle, ROW_SEVEN, 0, ">RIGHT to scan");
+			uout1("%d Device(s) found", scanRes);
+			EBS_updateEbsState(EBS_STATE_UPLOAD);
 		}
 			break;
 
@@ -776,8 +742,8 @@ static void EBS_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 			if (pEvent->gap.hdr.status == SUCCESS)
 			{
 				//Connect to selected device
-				state = BLE_STATE_CONNECTED;
-				connHandle = pEvent->linkCmpl.connectionHandle;
+				//state = BLE_STATE_CONNECTED;
+				//connHandle = pEvent->linkCmpl.connectionHandle;
 				procedureInProgress = TRUE;
 
 				// If service discovery not performed initiate service discovery
@@ -786,379 +752,70 @@ static void EBS_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 					Util_startClock(&startDiscClock);
 				}
 
-				//Find device name in devList struct
+				//Find device ID in discTxList struct
 				uint8_t i;
 				for (i = 0; i < scanRes; i++)
 				{
-					if (memcmp(pEvent->linkCmpl.devAddr, devList[i].addr,
+					if (memcmp(pEvent->linkCmpl.devAddr, targetList[i].addr,
 					B_ADDR_LEN) == NULL)
 					{
 						break;
 					}
 				}
-				Display_clearLines(dispHandle, ROW_ONE, ROW_SEVEN);
-				Display_print1(dispHandle, ROW_ONE, 0, "%s",
-						devList[i].localName);
-				Display_print1(dispHandle, ROW_TWO, 0, "%s",
-						Util_convertBdAddr2Str(pEvent->linkCmpl.devAddr));
-				Display_print0(dispHandle, ROW_THREE, 0, "Connected");
-				selectedMenuItem = MENU_ITEM_CONN_PARAM_UPDATE;
-				Display_print0(dispHandle, ROW_SEVEN, 0, ">Param upd req");
+				targetList[i].connHdl = pEvent->linkCmpl.connectionHandle;
+				uout1("Tx ID 0x%08x Connected", EBS_parseDevID(targetList[i].txDevID));
+				uout1("Tx Addr %s", Util_convertBdAddr2Str(pEvent->linkCmpl.devAddr));
+
 			} else
 			{
-				state = BLE_STATE_IDLE;
-				connHandle = GAP_CONNHANDLE_INIT;
-				discState = BLE_DISC_STATE_IDLE;
+				//connHandle = GAP_CONNHANDLE_INIT;
+				discState = EBS_DISC_STATE_IDLE;
 
-				Display_clearLine(dispHandle, ROW_FOUR);
-				Display_print0(dispHandle, ROW_TWO, 0, "Connect Failed");
-				Display_print1(dispHandle, ROW_THREE, 0, "Reason: %d",
-						pEvent->gap.hdr.status);
-				Display_print0(dispHandle, ROW_SEVEN, 0, ">RIGHT to scan");
+				uout1("Connect Failed: 0x%02x",pEvent->gap.hdr.status);
 			}
 		}
 			break;
 
 		case GAP_LINK_TERMINATED_EVENT:
 		{
-			state = BLE_STATE_IDLE;
-			connHandle = GAP_CONNHANDLE_INIT;
-			discState = BLE_DISC_STATE_IDLE;
+			//state = BLE_STATE_IDLE;
+			//connHandle = GAP_CONNHANDLE_INIT;
+			discState = EBS_DISC_STATE_IDLE;
 			memset(charHdl,0x00,4);
 			profileCounter = 0;
 			procedureInProgress = FALSE;
+			EBS_updatePollState(1, EBS_POLL_STATE_IDLE);
 
 			// Cancel RSSI reads
 			EBS_CancelRssi(pEvent->linkTerminate.connectionHandle);
 
 			//Clear screen and display disconnect reason
-			Display_clearLines(dispHandle, ROW_ONE, ROW_SEVEN);
-			Display_print0(dispHandle, ROW_ONE, 0, "Disconnected");
-			Display_print1(dispHandle, ROW_TWO, 0, "Reason: %d",
-					pEvent->linkTerminate.reason);
-			Display_print0(dispHandle, ROW_SEVEN, 0, ">RIGHT to scan");
-			selectedMenuItem = MENU_ITEM_CONN_PARAM_UPDATE;
+			uout1("Disconnected: 0x%02x", pEvent->linkTerminate.reason);
 		}
 			break;
-
+		/*
 		case GAP_LINK_PARAM_UPDATE_EVENT:
 		{
 			if (state == BLE_STATE_CONNECTED)
 			{
 				if (pEvent->linkUpdate.status == SUCCESS)
 				{
-					Display_print1(dispHandle, ROW_FOUR, 0, "ParUpd: %d ms",
+					Display_print1(dispHdl, ROW_FOUR, 0, "ParUpd: %d ms",
 							pEvent->linkUpdate.connInterval * 1.25);
 				} else
 				{
-					Display_print1(dispHandle, ROW_FOUR, 0, "Param error: %d",
+					Display_print1(dispHdl, ROW_FOUR, 0, "Param error: %d",
 							pEvent->linkUpdate.status);
 				}
 			}
 		}
 			break;
-
+		*/
 		default:
 			break;
 	}
 }
 
-/*********************************************************************
- * @fn      EBS_handleKeys
- *
- * @brief   Handles all key events for this device.
- *
- * @param   shift - true if in shift/alt.
- * @param   keys - bit field for key events. Valid entries:
- *                 HAL_KEY_SW_2
- *                 HAL_KEY_SW_1
- *
- * @return  none
- */
-static void EBS_handleKeys(uint8_t shift, uint8_t keys) {
-	switch (state)
-	{
-		case BLE_STATE_IDLE:
-			//Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_IDLE");
-			if (keys & KEY_RIGHT)
-			{
-				// Discover devices
-				EBS_discoverDevices();
-			}
-			//If LEFT is pressed, nothing happens.
-			break;
-
-		case BLE_STATE_DISCOVERED:
-			//Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_DISCOVERED");
-			if (keys & KEY_LEFT)
-			{
-				//Display Discovery Results
-				if (!scanningStarted && scanRes > 0)
-				{
-					if (scanIdx >= scanRes)
-					{
-						Display_clearLines(dispHandle, ROW_TWO, ROW_SEVEN);
-						Display_print0(dispHandle, ROW_SIX, 0,
-								"<LEFT to browse");
-						Display_print0(dispHandle, ROW_SEVEN, 0,
-								">RIGHT to scan");
-
-						state = BLE_STATE_BROWSING;
-						scanIdx = 0;
-					} else
-					{
-						Display_print1(dispHandle, ROW_ONE, 0, "Device %d",
-								(scanIdx + 1));
-						Display_print0(dispHandle, ROW_TWO, 0,
-								Util_convertBdAddr2Str(devList[scanIdx].addr));
-						Display_print1(dispHandle, ROW_THREE, 0, "%s",
-								devList[scanIdx].localName);
-						Display_print0(dispHandle, ROW_SEVEN, 0,
-								">RIGHT to connect");
-
-						state = BLE_STATE_BROWSING;
-						scanIdx++;
-					}
-				}
-				return;
-			} else if (keys & KEY_RIGHT)
-			{
-				//Start scanning
-				EBS_discoverDevices();
-			}
-			break;
-
-		case BLE_STATE_BROWSING:
-			//Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_BROWSING");
-			if (keys & KEY_LEFT)
-			{
-				//Navigate through discovery results
-				if (!scanningStarted && scanRes > 0)
-				{
-					if (scanIdx >= scanRes)
-					{
-						//Display the scan option
-						Display_clearLines(dispHandle, ROW_ONE, ROW_SEVEN);
-						Display_print1(dispHandle, ROW_ONE, 0,
-								"Devices found %d", scanRes);
-						Display_print0(dispHandle, ROW_SIX, 0,
-								"<LEFT to browse");
-						Display_print0(dispHandle, ROW_SEVEN, 0,
-								">RIGHT to scan");
-
-						state = BLE_STATE_BROWSING;
-						scanIdx = 0;
-					} else
-					{
-						//Display next device
-						Display_print1(dispHandle, ROW_ONE, 0, "Device %d",
-								(scanIdx + 1));
-						Display_print0(dispHandle, ROW_TWO, 0,
-								Util_convertBdAddr2Str(devList[scanIdx].addr));
-						Display_print1(dispHandle, ROW_THREE, 0, "%s",
-								devList[scanIdx].localName);
-						Display_print0(dispHandle, ROW_SEVEN, 0,
-								">RIGHT to connect");
-
-						state = BLE_STATE_BROWSING;
-						scanIdx++;
-					}
-				}
-			} else if (keys & KEY_RIGHT)
-			{
-				//Scan for devices if the scan option is displayed
-				if (scanIdx == 0)
-				{
-					EBS_discoverDevices();
-				}
-
-				//Connect to displayed device
-				else
-				{
-					uint8_t addrType;
-					uint8_t *peerAddr;
-					if (scanRes > 0 && state == BLE_STATE_BROWSING)
-					{
-						// connect to current device in scan result
-						peerAddr = devList[scanIdx - 1].addr;
-						addrType = devList[scanIdx - 1].addrType;
-
-						state = BLE_STATE_CONNECTING;
-
-						Util_startClock(&connectingClock);
-
-						GAPCentralRole_EstablishLink(
-						DEFAULT_LINK_HIGH_DUTY_CYCLE,
-						DEFAULT_LINK_WHITE_LIST, addrType, peerAddr);
-
-						Display_clearLines(dispHandle, ROW_FOUR, ROW_SEVEN);
-						Display_print0(dispHandle, ROW_TWO, 0,
-								Util_convertBdAddr2Str(peerAddr));
-						Display_print0(dispHandle, ROW_FOUR, 0, "Connecting");
-					}
-				}
-			}
-			break;
-
-		case BLE_STATE_CONNECTING:
-			//Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_CONNECTING");
-			//Nothing happens if buttons are pressed while the device is connecting.
-			break;
-
-		case BLE_STATE_CONNECTED:
-			//Display_print0(dispHandle, ROW_STATE, 0, "BLE_STATE_CONNECTED");
-			if (keys & KEY_LEFT) //Navigate though menu.
-			{
-				//Iterate through rows
-				switch (selectedMenuItem)
-				{
-					case MENU_ITEM_CONN_PARAM_UPDATE:
-						selectedMenuItem = MENU_ITEM_RSSI;
-						if (EBS_RssiFind(connHandle) == NULL)
-						{
-							Display_print0(dispHandle, ROW_SEVEN, 0,
-									">Start RSSI poll");
-						} else
-						{
-							Display_print0(dispHandle, ROW_SEVEN, 0,
-									">Stop RSSI poll");
-						}
-						break;
-
-					case MENU_ITEM_RSSI:
-						selectedMenuItem = MENU_ITEM_READ_WRITE;
-						Display_print0(dispHandle, ROW_SEVEN, 0,
-								">Read/write req");
-						break;
-
-					case MENU_ITEM_READ_WRITE:
-						selectedMenuItem = MENU_ITEM_DISCONNECT;
-						Display_print0(dispHandle, ROW_SEVEN, 0, ">Disconnect");
-						break;
-
-					case MENU_ITEM_DISCONNECT:
-						selectedMenuItem = MENU_ITEM_CONN_PARAM_UPDATE;
-						Display_print0(dispHandle, ROW_SEVEN, 0,
-								">Param upd req");
-						break;
-				}
-			}
-			if (keys & KEY_RIGHT)
-			{
-				switch (selectedMenuItem)
-				{
-					case MENU_ITEM_CONN_PARAM_UPDATE:
-						//Connection Parameter Update
-						Display_print0(dispHandle, ROW_FOUR, 0,
-								"Param upd req");
-						switch (currentConnectionParameter)
-						{
-							case INITIAL_PARAMETERS:
-								GAPCentralRole_UpdateLink(connHandle,
-								DEFAULT_UPDATE_MIN_CONN_INTERVAL,
-								DEFAULT_UPDATE_MAX_CONN_INTERVAL,
-								DEFAULT_UPDATE_SLAVE_LATENCY,
-								DEFAULT_UPDATE_CONN_TIMEOUT);
-								currentConnectionParameter =
-										DEFAULT_UPDATE_PARAMETERS;
-								break;
-							case DEFAULT_UPDATE_PARAMETERS:
-								GAPCentralRole_UpdateLink(connHandle,
-								INITIAL_MIN_CONN_INTERVAL,
-								INITIAL_MAX_CONN_INTERVAL,
-								INITIAL_SLAVE_LATENCY,
-								INITIAL_CONN_TIMEOUT);
-								currentConnectionParameter = INITIAL_PARAMETERS;
-								break;
-						}
-						break;
-
-					case MENU_ITEM_RSSI:
-						// Start or cancel RSSI polling
-						if (EBS_RssiFind(connHandle) == NULL)
-						{
-							Display_clearLine(dispHandle, ROW_FIVE);
-							EBS_StartRssi(connHandle,
-							DEFAULT_RSSI_PERIOD);
-							Display_print0(dispHandle, ROW_SEVEN, 0,
-									">Stop RSSI poll");
-						} else
-						{
-							EBS_CancelRssi(connHandle);
-							Display_print0(dispHandle, ROW_FIVE, 0,
-									"RSSI Cancelled");
-							if (selectedMenuItem == MENU_ITEM_RSSI)
-							{
-								Display_print0(dispHandle, ROW_SEVEN, 0,
-										">Start RSSI poll");
-							}
-						}
-						break;
-
-					case MENU_ITEM_READ_WRITE:
-						if (state == BLE_STATE_CONNECTED&&
-						charHdl != 0 &&
-						procedureInProgress == FALSE)
-						{
-							uint8_t status;
-							// Do a read or write as long as no other read or write is in progress
-							if (doWrite)
-							{
-								// Do a write
-								attWriteReq_t req;
-								req.pValue = GATT_bm_alloc(connHandle,
-								ATT_WRITE_REQ, 1, NULL);
-								if (req.pValue != NULL)
-								{
-									Display_print0(dispHandle, ROW_SIX, 0,
-											"Write req sent");
-									req.handle = charHdl[EVRSPROFILE_DATA];
-									req.len = 1;
-									req.pValue[0] = 0xaf;
-									req.sig = 0;
-									req.cmd = 0;
-									status = GATT_WriteCharValue(connHandle,
-											&req, selfEntity);
-									//Display_print1(dispHandle, 9, 0, "0x%04x",req.handle);
-									if (status != SUCCESS)
-									{
-										GATT_bm_free((gattMsg_t *) &req,
-										ATT_WRITE_REQ);
-									}
-								} else
-								{
-									status = bleMemAllocError;
-								}
-							} else
-							{
-								// Do a read
-								attReadReq_t req;
-								req.handle = charHdl[EVRSPROFILE_DATA];
-								status = GATT_ReadCharValue(connHandle, &req,
-										selfEntity);
-								Display_print0(dispHandle, ROW_SIX, 0,
-										"Read req sent");
-							}
-
-							if (status == SUCCESS)
-							{
-								procedureInProgress = TRUE;
-								doWrite = !doWrite;
-							}
-						}
-						break;
-
-					case MENU_ITEM_DISCONNECT:
-						GAPCentralRole_TerminateLink(connHandle);
-						state = BLE_STATE_DISCONNECTING;
-						Display_clearLines(dispHandle, ROW_ONE, ROW_SEVEN);
-						Display_print0(dispHandle, ROW_ONE, 0, "Disconnecting");
-						break;
-				}
-			}
-	}
-	return;
-}
 
 /*********************************************************************
  * @fn      EBS_processGATTMsg
@@ -1168,28 +825,26 @@ static void EBS_handleKeys(uint8_t shift, uint8_t keys) {
  * @return  none
  */
 static void EBS_processGATTMsg(gattMsgEvent_t *pMsg) {
-	if (state == BLE_STATE_CONNECTED)
+	if (ebsState == EBS_STATE_POLLING)
 	{
 		// See if GATT server was unable to transmit an ATT response
 		if (pMsg->hdr.status == blePending)
 		{
 			// No HCI buffer was available. App can try to retransmit the response
 			// on the next connection event. Drop it for now.
-			Display_print1(dispHandle, ROW_SIX, 0, "ATT Rsp drped %d",
-					pMsg->method);
+			uout1("ATT Rsp drped %d", pMsg->method);
 		} else if ((pMsg->method == ATT_READ_RSP)
 				|| ((pMsg->method == ATT_ERROR_RSP)
 						&& (pMsg->msg.errorRsp.reqOpcode == ATT_READ_REQ)))
 		{
 			if (pMsg->method == ATT_ERROR_RSP)
 			{
-				Display_print1(dispHandle, ROW_SIX, 0, "Read Error 0x%02x",
-						pMsg->msg.errorRsp.errCode);
+				uout1("Read Error 0x%02x", pMsg->msg.errorRsp.errCode);
 			} else
 			{
 				// After a successful read, display the read value
-				Display_print1(dispHandle, ROW_SIX, 0, "Read rsp: 0x%02x",
-						pMsg->msg.readRsp.pValue[0]);
+				uout1("Read rsp: 0x%02x", pMsg->msg.readRsp.pValue[0]);
+				EBS_updatePollState(0, EBS_POLL_STATE_WRITE);
 			}
 
 			procedureInProgress = FALSE;
@@ -1199,14 +854,13 @@ static void EBS_processGATTMsg(gattMsgEvent_t *pMsg) {
 		{
 			if (pMsg->method == ATT_ERROR_RSP)
 			{
-				Display_print1(dispHandle, ROW_SIX, 0, "Write Error 0x%02x",
-						pMsg->msg.errorRsp.errCode);
+				uout1("Write Error 0x%02x", pMsg->msg.errorRsp.errCode);
 			} else
 			{
 				// After a successful write, display the value that was written and
 				// increment value
-				Display_print1(dispHandle, ROW_SIX, 0, "Write sent: 0x%02x",
-						charVal++);
+				uout0("Write done");
+				EBS_updatePollState(0, EBS_POLL_STATE_TERMINATE);
 			}
 
 			procedureInProgress = FALSE;
@@ -1217,14 +871,12 @@ static void EBS_processGATTMsg(gattMsgEvent_t *pMsg) {
 			// The app is informed in case it wants to drop the connection.
 
 			// Display the opcode of the message that caused the violation.
-			Display_print1(dispHandle, ROW_THREE, 0, "FC Violated: %d",
-					pMsg->msg.flowCtrlEvt.opcode);
+			uout1("FC Violated: %d", pMsg->msg.flowCtrlEvt.opcode);
 		} else if (pMsg->method == ATT_MTU_UPDATED_EVENT)
 		{
 			// MTU size updated
-			Display_print1(dispHandle, ROW_THREE, 0, "MTU Size: %d",
-					pMsg->msg.mtuEvt.MTU);
-		} else if (discState != BLE_DISC_STATE_IDLE)
+			uout1("MTU Size: %d", pMsg->msg.mtuEvt.MTU);
+		} else if (discState != EBS_DISC_STATE_IDLE)
 		{
 			EBS_processGATTDiscEvent(pMsg);
 		}
@@ -1248,11 +900,10 @@ static void EBS_processCmdCompleteEvt(hciEvt_CmdComplete_t *pMsg) {
 	{
 		case HCI_READ_RSSI:
 		{
-			if (state == BLE_STATE_CONNECTED)
+			if (ebsState == EBS_STATE_POLLING)
 			{
 				int8 rssi = (int8) pMsg->pReturnParam[3];
-				Display_print1(dispHandle, ROW_FIVE, 0, "RSSI -dB: %d",
-						(uint32_t )(-rssi));
+				uout1("RSSI -dB: %d", (uint32_t )(-rssi));
 			}
 		}
 			break;
@@ -1272,30 +923,30 @@ static void EBS_processCmdCompleteEvt(hciEvt_CmdComplete_t *pMsg) {
 static void EBS_processPairState(uint8_t pairState, uint8_t status) {
 	if (pairState == GAPBOND_PAIRING_STATE_STARTED)
 	{
-		Display_print0(dispHandle, ROW_SIX, 0, "Pairing started");
+		uout0("Pairing started");
 	} else if (pairState == GAPBOND_PAIRING_STATE_COMPLETE)
 	{
 		if (status == SUCCESS)
 		{
-			Display_print0(dispHandle, ROW_SIX, 0, "Pairing success");
+			uout0("Pairing success");
 		} else
 		{
-			Display_print1(dispHandle, ROW_SIX, 0, "Pairing fail: %d", status);
+			uout1("Pairing fail: %d", status);
 		}
 	} else if (pairState == GAPBOND_PAIRING_STATE_BONDED)
 	{
 		if (status == SUCCESS)
 		{
-			Display_print0(dispHandle, ROW_SIX, 0, "Bonding success");
+			uout0("Bonding success");
 		}
 	} else if (pairState == GAPBOND_PAIRING_STATE_BOND_SAVED)
 	{
 		if (status == SUCCESS)
 		{
-			Display_print0(dispHandle, ROW_SIX, 0, "Bond save succ");
+			uout0("Bond save succ");
 		} else
 		{
-			Display_print1(dispHandle, ROW_SIX, 0, "Bnd save fail: %d", status);
+			uout1("Bond save fail: %d", status);
 		}
 	}
 }
@@ -1306,7 +957,7 @@ static void EBS_processPairState(uint8_t pairState, uint8_t status) {
  * @brief   Process the Passcode request.
  *
  * @return  none
- */
+ **************************
 static void EBS_processPasscode(uint16_t connectionHandle,
 		uint8_t uiOutputs) {
 	uint32_t passcode;
@@ -1318,13 +969,13 @@ static void EBS_processPasscode(uint16_t connectionHandle,
 	// Display passcode to user
 	if (uiOutputs != 0)
 	{
-		Display_print0(dispHandle, ROW_FOUR, 0, "Passcode:");
-		Display_print1(dispHandle, ROW_FIVE, 0, "%d", passcode);
+		Display_print0(dispHdl, ROW_FOUR, 0, "Passcode:");
+		Display_print1(dispHdl, ROW_FIVE, 0, "%d", passcode);
 	}
 	// Send passcode response
 	GAPBondMgr_PasscodeRsp(connectionHandle, SUCCESS, passcode);
 }
-
+*/
 /*********************************************************************
  * @fn      EBS_startDiscovery
  *
@@ -1338,14 +989,20 @@ static void EBS_startDiscovery(void) {
 	// Initialize cached handles
 	svcStartHdl = svcEndHdl = 0;
 	memset(charHdl, 0x00, 4);
-	discState = BLE_DISC_STATE_MTU;
+	discState = EBS_DISC_STATE_SVC;
+
+	// Discovery simple BLE service
+	uint8_t uuid[ATT_BT_UUID_SIZE] = { LO_UINT16(EVRSPROFILE_SERV_UUID),
+			HI_UINT16(EVRSPROFILE_SERV_UUID) };
+	VOID GATT_DiscPrimaryServiceByUUID(pConnectingSlot->connHdl, uuid,
+			ATT_BT_UUID_SIZE, selfEntity);
 
 	// Discover GATT Server's Rx MTU size
-	req.clientRxMTU = maxPduSize - L2CAP_HDR_SIZE;
+	//req.clientRxMTU = maxPduSize - L2CAP_HDR_SIZE;
 
 	// ATT MTU size should be set to the minimum of the Client Rx MTU
 	// and Server Rx MTU values
-	VOID GATT_ExchangeMTU(connHandle, &req, selfEntity);
+	//VOID GATT_ExchangeMTU(connHandle, &req, selfEntity);
 }
 
 /*********************************************************************
@@ -1356,23 +1013,7 @@ static void EBS_startDiscovery(void) {
  * @return  none
  */
 static void EBS_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
-	if (discState == BLE_DISC_STATE_MTU)
-	{
-		// MTU size response received, discover simple BLE service
-		if (pMsg->method == ATT_EXCHANGE_MTU_RSP)
-		{
-			// Just in case we're using the default MTU size (23 octets)
-			Display_print1(dispHandle, ROW_THREE, 0, "MTU Size: %d",
-					ATT_MTU_SIZE);
-
-			// Discovery simple BLE service
-			uint8_t uuid[ATT_BT_UUID_SIZE] = { LO_UINT16(EVRSPROFILE_SERV_UUID),
-								HI_UINT16(EVRSPROFILE_SERV_UUID) };
-			VOID GATT_DiscPrimaryServiceByUUID(connHandle, uuid,
-						ATT_BT_UUID_SIZE, selfEntity);
-			discState = BLE_DISC_STATE_SVC;
-		}
-	} else if (discState == BLE_DISC_STATE_SVC)
+	if (discState == EBS_DISC_STATE_SVC)
 	{
 		// Service found, store handles
 		if (pMsg->method == ATT_FIND_BY_TYPE_VALUE_RSP
@@ -1392,27 +1033,13 @@ static void EBS_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 		{
 			if (svcStartHdl != 0)
 			{
-				/*
-				attReadByTypeReq_t req;
-
 				// Discover characteristic
-
-				req.startHandle = svcStartHdl;
-				req.endHandle = svcEndHdl;
-				req.type.len = ATT_BT_UUID_SIZE;
-				req.type.uuid[0] = LO_UINT16(EVRSPROFILE_SYSID_UUID);
-				req.type.uuid[1] = HI_UINT16(EVRSPROFILE_SYSID_UUID);
-
-				VOID GATT_ReadUsingCharUUID(connHandle, &req, selfEntity);
-				 */
-				VOID GATT_DiscAllChars(connHandle, svcStartHdl, svcEndHdl,
+				VOID GATT_DiscAllChars(pConnectingSlot->connHdl, svcStartHdl, svcEndHdl,
 					selfEntity);
-				discState = BLE_DISC_STATE_CHAR;
-
-
+				discState = EBS_DISC_STATE_CHAR;
 			}
 		}
-	} else if (discState == BLE_DISC_STATE_CHAR)
+	} else if (discState == EBS_DISC_STATE_CHAR)
 	{
 		// Characteristic found, store handle
 		if ((pMsg->method == ATT_READ_BY_TYPE_RSP)
@@ -1436,8 +1063,8 @@ static void EBS_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 						profileCounter++;
 						break;
 
-					case LO_UINT16(EVRSPROFILE_DEST_UUID):
-						charHdl[EVRSPROFILE_DEST] = BUILD_UINT16(
+					case LO_UINT16(EVRSPROFILE_CMD_UUID):
+						charHdl[EVRSPROFILE_CMD] = BUILD_UINT16(
 								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 3),
 								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 4));
 						profileCounter++;
@@ -1455,12 +1082,10 @@ static void EBS_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 				&& (pMsg->hdr.status == bleProcedureComplete)
 				|| (pMsg->method == ATT_ERROR_RSP))
 		{
-			Display_print1(dispHandle, ROW_FOUR, 0,
-					"%d Profile Found ", profileCounter);
-			Display_print4(dispHandle, ROW_FIVE, 0,"0x%04x,0x%04x,0x%04x,0x%04x",
-					charHdl[0],charHdl[1],charHdl[2],charHdl[3]);
+			uout1("%d Profile(s) Found ", profileCounter);
 			procedureInProgress = FALSE;
-			discState = BLE_DISC_STATE_IDLE;
+			discState = EBS_DISC_STATE_IDLE;
+			EBS_updatePollState(0, EBS_POLL_STATE_READ);
 		}
 
 	}
@@ -1544,10 +1169,9 @@ static void EBS_discoverDevices(void) {
 
 		//Clear old scan results
 		scanRes = 0;
-		memset(devList, NULL, sizeof(devList[0]) * DEFAULT_MAX_SCAN_RES);
+		memset(discTxList, NULL, sizeof(discTxList[0]) * MAX_SCAN_RES);
 
-		Display_clearLines(dispHandle, ROW_ONE, ROW_SEVEN);
-		Display_print0(dispHandle, ROW_ONE, 0, "Discovering...");
+		uout0("Discovering...");
 		GAPCentralRole_StartDiscovery(DEFAULT_DISCOVERY_MODE,
 		DEFAULT_DISCOVERY_ACTIVE_SCAN,
 		DEFAULT_DISCOVERY_WHITE_LIST);
@@ -1565,11 +1189,51 @@ static void EBS_discoverDevices(void) {
  * @return  none
  */
 Void EBS_timeoutConnecting(UArg arg0) {
-	if (state == BLE_STATE_CONNECTING)
+	if (pConnectingSlot != NULL)
 	{
 		EBS_enqueueMsg(EBS_CONNECTING_TIMEOUT_EVT, 0, NULL);
 	}
 }
+
+
+static bool EBS_checkBSId(uint8_t bsID, uint8_t *pEvtData, uint8_t dataLen) {
+	uint8_t adLen;
+	uint8_t adType;
+	uint8_t *pEnd;
+
+	int ii = 0;
+
+	pEnd = pEvtData + dataLen - 1;
+
+	//Display_print5(dispHdl, 9, 0,"len %d, 0x%02x, 0x%02x, 0x%02x, 0x%02x",
+	//		dataLen,pEvtData[8],pEvtData[9],pEvtData[10],pEvtData[11]);
+	// While end of data not reached
+	while (pEvtData < pEnd)
+	{
+		// Get length of next data item
+		adLen = *pEvtData++;
+		if (adLen > 0)
+		{
+			adType = *pEvtData;
+			//Display_print1(dispHdl, ii+9, 0, "0x%02x",adType);
+			// If AD type is for local name
+			if (adType == ETX_ADTYPE_DEST)
+			{
+				pEvtData++;
+				// For base station identifier in the advert data
+				return (*pEvtData == bsID);
+			} else
+			{
+				// Go to next item
+				pEvtData += adLen;
+				ii++;
+			}
+		}
+	}
+	// No name found
+	return FALSE;
+}
+
 
 /*********************************************************************
  * @fn      EBS_addDeviceInfo
@@ -1582,20 +1246,20 @@ static void EBS_addDeviceInfo(uint8_t *pAddr, uint8_t addrType) {
 	uint8_t i;
 
 	// If result count not at max
-	if (scanRes < DEFAULT_MAX_SCAN_RES)
+	if (scanRes < MAX_SCAN_RES)
 	{
 		// Check if device is already in scan results
 		for (i = 0; i < scanRes; i++)
 		{
-			if (memcmp(pAddr, devList[i].addr, B_ADDR_LEN) == 0)
+			if (memcmp(pAddr, discTxList[i].addr, B_ADDR_LEN) == 0)
 			{
 				return;
 			}
 		}
 
 		// Add addr to scan result list
-		memcpy(devList[scanRes].addr, pAddr, B_ADDR_LEN);
-		devList[scanRes].addrType = addrType;
+		memcpy(discTxList[scanRes].addr, pAddr, B_ADDR_LEN);
+		discTxList[scanRes].addrType = addrType;
 
 		// Increment scan result count
 		scanRes++;
@@ -1608,7 +1272,7 @@ static void EBS_addDeviceInfo(uint8_t *pAddr, uint8_t addrType) {
  * @brief   Check if pEvtData contains a device local name
  *
  * @return  TRUE if local name found
- */
+ *******************************************************
 static bool EBS_findLocalName(uint8_t *pEvtData, uint8_t dataLen) {
 	uint8_t adLen;
 	uint8_t adType;
@@ -1652,7 +1316,7 @@ static bool EBS_findLocalName(uint8_t *pEvtData, uint8_t dataLen) {
 	// No name found
 	return FALSE;
 }
-
+*/
 /*********************************************************************
  * @fn      EBS_addDeviceName
  *
@@ -1660,7 +1324,7 @@ static bool EBS_findLocalName(uint8_t *pEvtData, uint8_t dataLen) {
  *
  * @return  none
  */
-static void EBS_addDeviceName(uint8_t i, uint8_t *pEvtData,
+static void EBS_addDeviceID(uint8_t index, uint8_t *pEvtData,
 		uint8_t dataLen) {
 	uint8_t scanRspLen;
 	uint8_t scanRspType;
@@ -1678,21 +1342,14 @@ static void EBS_addDeviceName(uint8_t i, uint8_t *pEvtData,
 			scanRspType = *pEvtData;
 
 			// If scan response type is for local name
-			if ((scanRspType == GAP_ADTYPE_LOCAL_NAME_SHORT)
-					|| (scanRspType == GAP_ADTYPE_LOCAL_NAME_COMPLETE))
+			if (scanRspType == ETX_ADTYPE_DEVID)
 			{
 				//Set name length in the device struct.
-				devList[i].nameLength = scanRspLen - 1;
 				pEvtData++;
-				uint8_t j = 0;
 
-				//Copy device name from the scan response data
-				while ((pEvtData < pEnd) && (j < scanRspLen - 1))
-				{
-					devList[i].localName[j] = *pEvtData;
-					pEvtData++;
-					j++;
-				}
+				//Copy device id from the scan response data
+				for (int j = 0; j < ETX_DEVID_LEN; j++)
+					discTxList[index].txDevID[j] = *pEvtData++;
 			}
 		} else
 		{
@@ -1713,8 +1370,7 @@ static void EBS_addDeviceName(uint8_t i, uint8_t *pEvtData,
  */
 static uint8_t EBS_eventCB(gapCentralRoleEvent_t *pEvent) {
 	// Forward the role event to the application
-	if (EBS_enqueueMsg(EBS_STATE_CHANGE_EVT,
-	SUCCESS, (uint8_t *) pEvent))
+	if (EBS_enqueueMsg(EBS_STACK_MSG_EVT, SUCCESS, (uint8_t *) pEvent))
 	{
 		// App will process and free the event
 		return FALSE;
@@ -1723,6 +1379,7 @@ static uint8_t EBS_eventCB(gapCentralRoleEvent_t *pEvent) {
 	// Caller should free the event
 	return TRUE;
 }
+
 
 /*********************************************************************
  * @fn      EBS_pairStateCB
@@ -1751,7 +1408,7 @@ static void EBS_pairStateCB(uint16_t connHandle, uint8_t pairState,
  * @brief   Passcode callback.
  *
  * @return  none
- */
+ *********************************************************
 static void EBS_passcodeCB(uint8_t *deviceAddr,
 		uint16_t connHandle, uint8_t uiInputs, uint8_t uiOutputs) {
 	uint8_t *pData;
@@ -1765,7 +1422,7 @@ static void EBS_passcodeCB(uint8_t *deviceAddr,
 		EBS_enqueueMsg(EBS_PASSCODE_NEEDED_EVT, 0, pData);
 	}
 }
-
+*/
 /*********************************************************************
  * @fn      EBS_startDiscHandler
  *
@@ -1808,7 +1465,7 @@ void EBS_keyChangeHandler(uint8_t keys) {
  */
 uint8_t EBS_enqueueMsg(uint8_t event, uint8_t status,
 		uint8_t *pData) {
-	ebsEvt_t *pMsg = ICall_malloc(sizeof(ebsEvt_t));
+	EbsEvt_t *pMsg = ICall_malloc(sizeof(EbsEvt_t));
 
 	// Create dynamic pointer to message.
 	if (pMsg)
@@ -1822,3 +1479,461 @@ uint8_t EBS_enqueueMsg(uint8_t event, uint8_t status,
 	}
 	return FALSE;
 }
+
+static uint32_t EBS_parseDevID(uint8_t* devID) {
+	return BUILD_UINT32(devID[0], devID[1], devID[2], devID[3]);
+}
+
+static uint8_t EBS_writeCharbyHandle(uint16_t connHandle, ProfileId_t charHdlId,
+		uint8_t* pData, uint8_t len) {
+	if (len > 23)
+		return FAILURE;
+	// Do a write using char handle
+	attWriteReq_t req;
+	uint8_t status;
+	req.pValue = GATT_bm_alloc(connHandle, ATT_WRITE_REQ, len, NULL);
+	if (req.pValue != NULL)
+	{
+		req.handle = charHdl[charHdlId];
+		req.len = len;
+		//memcpy(req.pValue, pData, len);
+		for (int i = 0; i < len; i++)
+			req.pValue[i] = pData[i];
+		req.sig = 0;
+		req.cmd = 0;
+		status = GATT_WriteCharValue(connHandle, &req, selfEntity);
+		//Display_print2(dispHandle,ROW_SIX,0,"Write req sent [%d,0x%02x]", req.len, *(req.pValue));
+		if (status != SUCCESS)
+			GATT_bm_free((gattMsg_t *) &req, ATT_WRITE_REQ);
+	} else
+	{
+		status = bleMemAllocError;
+	}
+	return status;
+}
+
+static uint8_t EBS_readCharbyHandle(uint16_t connHandle, ProfileId_t charHdlId) {
+	// Do a read
+	attReadReq_t req;
+	uint8_t status;
+	req.handle = charHdl[charHdlId];
+	status = GATT_ReadCharValue(connHandle, &req, selfEntity);
+	return status;
+}
+
+
+static void EBS_updateEbsState(EbsState_t newState) {
+	ebsState = newState;
+	EBS_enqueueMsg(EBS_STATE_CHANGE_EVT, newState, NULL);
+}
+
+static void EBS_stateChange(EbsState_t newState) {
+	switch (newState) {
+		case EBS_STATE_INIT:
+			uout0("ebsState = EBS_STATE_INIT");
+
+			break;
+
+		case EBS_STATE_DISCOVERY:
+			uout0("ebsState = EBS_STATE_DISCOVERY");
+			EBS_discoverDevices();
+			break;
+
+		case EBS_STATE_UPLOAD:
+			//TODO: send the discTxList to BC using UART
+			uout0("ebsState = EBS_STATE_UPLOAD");
+
+			break;
+
+		case EBS_STATE_POLLING:
+			uout0("ebsState = EBS_STATE_POLLING");
+			Semaphore_post(targetConnSem); // enable target connect
+
+			break;
+
+		default:
+			break;
+	}
+}
+
+
+static void EBS_updatePollState(uint8_t targetIndex, EbsPollState_t newState) {
+	if (ebsState != EBS_STATE_POLLING)
+		return;
+	targetList[targetIndex].state = newState;
+	uint8_t rsp = 0xFF;
+	switch (newState) {
+		case EBS_POLL_STATE_IDLE:
+			break;
+
+		case EBS_POLL_STATE_CONNECT:
+			// TODO: need a lookup process if using parallel connections
+			Semaphore_pend(targetConnSem, -1); // waiting for a vacant conn slot
+			// findNextVacantSlot(pVacantSlot) // TODO: find a vacant target connection slot
+			pConnectingSlot = targetList + targetIndex;
+			Util_startClock(&connectingClock);
+			GAPCentralRole_EstablishLink(LINK_HIGH_DUTY_CYCLE, LINK_WHITE_LIST,
+					targetList[targetIndex].addrType, targetList[targetIndex].addr);
+			break;
+
+		case EBS_POLL_STATE_READ:
+			Semaphore_post(targetConnSem); // release the sem to allow next connect
+			pConnectingSlot = NULL;
+			EBS_readCharbyHandle(targetList[targetIndex].connHdl, EVRSPROFILE_DATA);
+			// TODO: upload the data to EBC
+			break;
+
+		case EBS_POLL_STATE_WRITE: // finish read
+			uout0("into write process");
+			EBS_writeCharbyHandle(targetList[targetIndex].connHdl, EVRSPROFILE_DATA, &rsp, 1);
+
+			break;
+
+		case EBS_POLL_STATE_TERMINATE: // finish write
+			GAPCentralRole_TerminateLink(targetList[targetIndex].connHdl);
+			break;
+
+		default:
+			break;
+	}
+}
+
+/*********************************************************************
+ * @fn      EBS_handleKeys
+ *
+ * @brief   Handles all key events for this device.
+ *
+ * @param   shift - true if in shift/alt.
+ * @param   keys - bit field for key events. Valid entries:
+ *                 HAL_KEY_SW_2
+ *                 HAL_KEY_SW_1
+ *
+ * @return  none
+ */
+static void EBS_handleKeys(uint8_t shift, uint8_t keys) {
+	switch (ebsState) {
+		case EBS_STATE_INIT:
+			// TODO: pretend to receive a uart_ack
+			if (keys & KEY_RIGHT)
+				EBS_updateEbsState(EBS_STATE_DISCOVERY);
+			break;
+
+		//case EBS_STATE_DISCOVERY:
+		case EBS_STATE_UPLOAD:
+			// TODO: pretend to receive a uart_ack
+			if (keys & KEY_LEFT) {
+				EBS_updateTargetList(discTxList[0].txDevID);
+				EBS_updateEbsState(EBS_STATE_POLLING);
+			}
+			break;
+
+		case EBS_STATE_POLLING:
+			if (keys & KEY_RIGHT) {
+				EBS_updatePollState(0,EBS_POLL_STATE_CONNECT);
+			} else if (keys & KEY_LEFT) {
+				EBS_updateTargetList(discTxList[1].txDevID);
+				EBS_updatePollState(0,EBS_POLL_STATE_CONNECT);
+			}
+
+	}
+}
+
+
+static void EBS_updateTargetList(uint8_t* txID) {
+	uint8_t index;
+	for (index = 0; index < scanRes; index++)
+		if (memcmp(discTxList[index].txDevID, txID, ETX_DEVID_LEN) == NULL)
+			break;
+	memcpy(pVacantSlot->addr, discTxList[index].addr, B_ADDR_LEN);
+	memcpy(pVacantSlot->txDevID, discTxList[index].txDevID, ETX_DEVID_LEN);
+	pVacantSlot->addrType = discTxList[index].addrType;
+	// TODO: need a targetList manager to find next vacant
+
+}
+
+
+
+
+/*	switch (state)
+	{
+		case BLE_STATE_IDLE:
+			//Display_print0(dispHdl, ROW_STATE, 0, "BLE_STATE_IDLE");
+			if (keys & KEY_RIGHT)
+			{
+				// Discover devices
+				EBS_discoverDevices();
+			}
+			//If LEFT is pressed, nothing happens.
+			break;
+
+		case BLE_STATE_DISCOVERED:
+			//Display_print0(dispHdl, ROW_STATE, 0, "BLE_STATE_DISCOVERED");
+			if (keys & KEY_LEFT)
+			{
+				//Display Discovery Results
+				if (!scanningStarted && scanRes > 0)
+				{
+					if (scanIdx >= scanRes)
+					{
+						Display_clearLines(dispHdl, ROW_TWO, ROW_SEVEN);
+						Display_print0(dispHdl, ROW_SIX, 0,
+								"<LEFT to browse");
+						Display_print0(dispHdl, ROW_SEVEN, 0,
+								">RIGHT to scan");
+
+						state = BLE_STATE_BROWSING;
+						scanIdx = 0;
+					} else
+					{
+						Display_print1(dispHdl, ROW_ONE, 0, "Device %d",
+								(scanIdx + 1));
+						Display_print0(dispHdl, ROW_TWO, 0,
+								Util_convertBdAddr2Str(discTxList[scanIdx].addr));
+						Display_print1(dispHdl, ROW_THREE, 0, "Tx ID 0x%08x",
+								EBS_parseDevID(discTxList[scanIdx].txDevID));
+						Display_print0(dispHdl, ROW_SEVEN, 0,
+								">RIGHT to connect");
+
+						state = BLE_STATE_BROWSING;
+						scanIdx++;
+					}
+				}
+				return;
+			} else if (keys & KEY_RIGHT)
+			{
+				//Start scanning
+				EBS_discoverDevices();
+			}
+			break;
+
+		case BLE_STATE_BROWSING:
+			//Display_print0(dispHdl, ROW_STATE, 0, "BLE_STATE_BROWSING");
+			if (keys & KEY_LEFT)
+			{
+				//Navigate through discovery results
+				if (!scanningStarted && scanRes > 0)
+				{
+					if (scanIdx >= scanRes)
+					{
+						//Display the scan option
+						Display_clearLines(dispHdl, ROW_ONE, ROW_SEVEN);
+						Display_print1(dispHdl, ROW_ONE, 0,
+								"Devices found %d", scanRes);
+						Display_print0(dispHdl, ROW_SIX, 0,
+								"<LEFT to browse");
+						Display_print0(dispHdl, ROW_SEVEN, 0,
+								">RIGHT to scan");
+
+						state = BLE_STATE_BROWSING;
+						scanIdx = 0;
+					} else
+					{
+						//Display next device
+						Display_print1(dispHdl, ROW_ONE, 0, "Device %d",
+								(scanIdx + 1));
+						Display_print0(dispHdl, ROW_TWO, 0,
+								Util_convertBdAddr2Str(discTxList[scanIdx].addr));
+						Display_print1(dispHdl, ROW_THREE, 0, "Tx ID 0x%08x",
+								EBS_parseDevID(discTxList[scanIdx].txDevID));
+						Display_print0(dispHdl, ROW_SEVEN, 0,
+								">RIGHT to connect");
+
+						state = BLE_STATE_BROWSING;
+						scanIdx++;
+					}
+				}
+			} else if (keys & KEY_RIGHT)
+			{
+				//Scan for devices if the scan option is displayed
+				if (scanIdx == 0)
+				{
+					EBS_discoverDevices();
+				}
+
+				//Connect to displayed device
+				else
+				{
+					uint8_t addrType;
+					uint8_t *peerAddr;
+					if (scanRes > 0 && state == BLE_STATE_BROWSING)
+					{
+						// connect to current device in scan result
+						peerAddr = discTxList[scanIdx - 1].addr;
+						addrType = discTxList[scanIdx - 1].addrType;
+
+						state = BLE_STATE_CONNECTING;
+
+						Util_startClock(&connectingClock);
+
+						GAPCentralRole_EstablishLink(LINK_HIGH_DUTY_CYCLE,
+						DEFAULT_LINK_WHITE_LIST, addrType, peerAddr);
+
+						Display_clearLines(dispHdl, ROW_FOUR, ROW_SEVEN);
+						Display_print0(dispHdl, ROW_TWO, 0,
+								Util_convertBdAddr2Str(peerAddr));
+						Display_print0(dispHdl, ROW_FOUR, 0, "Connecting");
+					}
+				}
+			}
+			break;
+
+		case BLE_STATE_CONNECTING:
+			//Display_print0(dispHdl, ROW_STATE, 0, "BLE_STATE_CONNECTING");
+			//Nothing happens if buttons are pressed while the device is connecting.
+			break;
+
+		case BLE_STATE_CONNECTED:
+			//Display_print0(dispHdl, ROW_STATE, 0, "BLE_STATE_CONNECTED");
+			if (keys & KEY_LEFT) //Navigate though menu.
+			{
+				//Iterate through rows
+				switch (selectedMenuItem)
+				{
+					case MENU_ITEM_CONN_PARAM_UPDATE:
+						selectedMenuItem = MENU_ITEM_RSSI;
+						if (EBS_RssiFind(connHandle) == NULL)
+						{
+							Display_print0(dispHdl, ROW_SEVEN, 0,
+									">Start RSSI poll");
+						} else
+						{
+							Display_print0(dispHdl, ROW_SEVEN, 0,
+									">Stop RSSI poll");
+						}
+						break;
+
+					case MENU_ITEM_RSSI:
+						selectedMenuItem = MENU_ITEM_READ_WRITE;
+						Display_print0(dispHdl, ROW_SEVEN, 0,
+								">Read/write req");
+						break;
+
+					case MENU_ITEM_READ_WRITE:
+						selectedMenuItem = MENU_ITEM_DISCONNECT;
+						Display_print0(dispHdl, ROW_SEVEN, 0, ">Disconnect");
+						break;
+
+					case MENU_ITEM_DISCONNECT:
+						selectedMenuItem = MENU_ITEM_CONN_PARAM_UPDATE;
+						Display_print0(dispHdl, ROW_SEVEN, 0,
+								">Param upd req");
+						break;
+				}
+			}
+			if (keys & KEY_RIGHT)
+			{
+				switch (selectedMenuItem)
+				{
+					case MENU_ITEM_CONN_PARAM_UPDATE:
+						//Connection Parameter Update
+						Display_print0(dispHdl, ROW_FOUR, 0,
+								"Param upd req");
+						switch (currentConnectionParameter)
+						{
+							case INITIAL_PARAMETERS:
+								GAPCentralRole_UpdateLink(connHandle,
+								DEFAULT_UPDATE_MIN_CONN_INTERVAL,
+								DEFAULT_UPDATE_MAX_CONN_INTERVAL,
+								DEFAULT_UPDATE_SLAVE_LATENCY,
+								DEFAULT_UPDATE_CONN_TIMEOUT);
+								currentConnectionParameter =
+										DEFAULT_UPDATE_PARAMETERS;
+								break;
+							case DEFAULT_UPDATE_PARAMETERS:
+								GAPCentralRole_UpdateLink(connHandle,
+								INITIAL_MIN_CONN_INTERVAL,
+								INITIAL_MAX_CONN_INTERVAL,
+								INITIAL_SLAVE_LATENCY,
+								INITIAL_CONN_TIMEOUT);
+								currentConnectionParameter = INITIAL_PARAMETERS;
+								break;
+						}
+						break;
+
+					case MENU_ITEM_RSSI:
+						// Start or cancel RSSI polling
+						if (EBS_RssiFind(connHandle) == NULL)
+						{
+							Display_clearLine(dispHdl, ROW_FIVE);
+							EBS_StartRssi(connHandle,
+							DEFAULT_RSSI_PERIOD);
+							Display_print0(dispHdl, ROW_SEVEN, 0,
+									">Stop RSSI poll");
+						} else
+						{
+							EBS_CancelRssi(connHandle);
+							Display_print0(dispHdl, ROW_FIVE, 0,
+									"RSSI Cancelled");
+							if (selectedMenuItem == MENU_ITEM_RSSI)
+							{
+								Display_print0(dispHdl, ROW_SEVEN, 0,
+										">Start RSSI poll");
+							}
+						}
+						break;
+
+					case MENU_ITEM_READ_WRITE:
+						if (state == BLE_STATE_CONNECTED&&
+						charHdl != 0 &&
+						procedureInProgress == FALSE)
+						{
+							uint8_t status;
+							// Do a read or write as long as no other read or write is in progress
+							if (doWrite)
+							{
+								// Do a write
+								attWriteReq_t req;
+								req.pValue = GATT_bm_alloc(connHandle,
+								ATT_WRITE_REQ, 1, NULL);
+								if (req.pValue != NULL)
+								{
+									Display_print0(dispHdl, ROW_SIX, 0,
+											"Write req sent");
+									req.handle = charHdl[EVRSPROFILE_DATA];
+									req.len = 1;
+									req.pValue[0] = 0xaf;
+									req.sig = 0;
+									req.cmd = 0;
+									status = GATT_WriteCharValue(connHandle,
+											&req, selfEntity);
+									//Display_print1(dispHdl, 9, 0, "0x%04x",req.handle);
+									if (status != SUCCESS)
+									{
+										GATT_bm_free((gattMsg_t *) &req,
+										ATT_WRITE_REQ);
+									}
+								} else
+								{
+									status = bleMemAllocError;
+								}
+							} else
+							{
+								// Do a read
+								attReadReq_t req;
+								req.handle = charHdl[EVRSPROFILE_DATA];
+								status = GATT_ReadCharValue(connHandle, &req,
+										selfEntity);
+								Display_print0(dispHdl, ROW_SIX, 0,
+										"Read req sent");
+							}
+
+							if (status == SUCCESS)
+							{
+								procedureInProgress = TRUE;
+								doWrite = !doWrite;
+							}
+						}
+						break;
+
+					case MENU_ITEM_DISCONNECT:
+						GAPCentralRole_TerminateLink(connHandle);
+						state = BLE_STATE_DISCONNECTING;
+						Display_clearLines(dispHdl, ROW_ONE, ROW_SEVEN);
+						Display_print0(dispHdl, ROW_ONE, 0, "Disconnecting");
+						break;
+				}
+			}
+	}
+	return;
+}
+*/

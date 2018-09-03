@@ -67,6 +67,16 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
+			<name>Application/board_display.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/cc2650lp_driver/board_display.c</locationURI>
+		</link>
+		<link>
+			<name>Application/board_display.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/cc2650lp_driver/board_display.h</locationURI>
+		</link>
+		<link>
 			<name>Application/board_key.c</name>
 			<type>1</type>
 			<locationURI>SRC_EX/common/cc26xx/board_key.c</locationURI>
@@ -262,24 +272,14 @@
 			<locationURI>TI_RTOS_DRIVERS_BASE/ti/mw/display/Display.h</locationURI>
 		</link>
 		<link>
-			<name>Drivers/Display/DisplayDogm1286.h</name>
+			<name>Drivers/Display/DisplayUART.c</name>
 			<type>1</type>
-			<locationURI>TI_RTOS_DRIVERS_BASE/ti/mw/display/DisplayDogm1286.h</locationURI>
+			<locationURI>TI_RTOS_DRIVERS_BASE/ti/mw/display/DisplayUART.h</locationURI>
 		</link>
 		<link>
-			<name>Drivers/Display/DisplaySharp.c</name>
+			<name>Drivers/Display/DisplayUART.h</name>
 			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_IMPORT_LOC/src/components/display_eng/ti/mw/display/DisplaySharp.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/Display/DisplayUart.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_IMPORT_LOC/src/components/display_eng/ti/mw/display/DisplayUart.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/Display/DisplayUart.h</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_IMPORT_LOC/src/components/display_eng/ti/mw/display/DisplayUart.h</locationURI>
+			<locationURI>TI_RTOS_DRIVERS_BASE/ti/mw/display/DisplayUART.h</locationURI>
 		</link>
 		<link>
 			<name>Drivers/ECC/ECCROMCC26XX.c</name>
