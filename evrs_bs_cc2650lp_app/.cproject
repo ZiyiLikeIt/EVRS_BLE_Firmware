@@ -70,7 +70,7 @@
 									<listOptionValue builtIn="false" value="${COM_TI_RTSC_TIRTOSCC13XX_CC26XX_SYMBOLS}"/>
 									<listOptionValue builtIn="false" value="USE_ICALL"/>
 									<listOptionValue builtIn="false" value="MAX_PDU_SIZE=162"/>
-									<listOptionValue builtIn="false" value="POWER_SAVING"/>
+									<listOptionValue builtIn="false" value="xPOWER_SAVING"/>
 									<listOptionValue builtIn="false" value="GAPCENTRALROLE_TASK_STACK_SIZE=510"/>
 									<listOptionValue builtIn="false" value="HEAPMGR_SIZE=0"/>
 									<listOptionValue builtIn="false" value="xDisplay_DISABLE_ALL"/>

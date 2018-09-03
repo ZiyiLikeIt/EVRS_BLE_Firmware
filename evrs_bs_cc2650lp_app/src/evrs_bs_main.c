@@ -160,7 +160,6 @@ typedef enum {
 typedef enum {
 	EBS_POLL_STATE_IDLE,
 	EBS_POLL_STATE_CONNECT,
-	EBS_POLL_STATE_CHECK,
 	EBS_POLL_STATE_READ,
 	EBS_POLL_STATE_WRITE,
 	EBS_POLL_STATE_TERMINATE
@@ -785,6 +784,7 @@ static void EBS_processRoleEvent(gapCentralRoleEvent_t *pEvent) {
 			memset(charHdl,0x00,4);
 			profileCounter = 0;
 			procedureInProgress = FALSE;
+			EBS_updatePollState(1, EBS_POLL_STATE_IDLE);
 
 			// Cancel RSSI reads
 			EBS_CancelRssi(pEvent->linkTerminate.connectionHandle);
@@ -844,6 +844,7 @@ static void EBS_processGATTMsg(gattMsgEvent_t *pMsg) {
 			{
 				// After a successful read, display the read value
 				uout1("Read rsp: 0x%02x", pMsg->msg.readRsp.pValue[0]);
+				EBS_updatePollState(0, EBS_POLL_STATE_WRITE);
 			}
 
 			procedureInProgress = FALSE;
@@ -858,7 +859,8 @@ static void EBS_processGATTMsg(gattMsgEvent_t *pMsg) {
 			{
 				// After a successful write, display the value that was written and
 				// increment value
-				uout0("Write rsped");
+				uout0("Write done");
+				EBS_updatePollState(0, EBS_POLL_STATE_TERMINATE);
 			}
 
 			procedureInProgress = FALSE;
@@ -1031,24 +1033,10 @@ static void EBS_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 		{
 			if (svcStartHdl != 0)
 			{
-				/*
-				attReadByTypeReq_t req;
-
 				// Discover characteristic
-
-				req.startHandle = svcStartHdl;
-				req.endHandle = svcEndHdl;
-				req.type.len = ATT_BT_UUID_SIZE;
-				req.type.uuid[0] = LO_UINT16(EVRSPROFILE_SYSID_UUID);
-				req.type.uuid[1] = HI_UINT16(EVRSPROFILE_SYSID_UUID);
-
-				VOID GATT_ReadUsingCharUUID(connHandle, &req, selfEntity);
-				 */
 				VOID GATT_DiscAllChars(pConnectingSlot->connHdl, svcStartHdl, svcEndHdl,
 					selfEntity);
 				discState = EBS_DISC_STATE_CHAR;
-
-
 			}
 		}
 	} else if (discState == EBS_DISC_STATE_CHAR)
@@ -1097,7 +1085,7 @@ static void EBS_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 			uout1("%d Profile(s) Found ", profileCounter);
 			procedureInProgress = FALSE;
 			discState = EBS_DISC_STATE_IDLE;
-			EBS_updatePollState(0, EBS_POLL_STATE_CHECK);
+			EBS_updatePollState(0, EBS_POLL_STATE_READ);
 		}
 
 	}
@@ -1573,6 +1561,7 @@ static void EBS_updatePollState(uint8_t targetIndex, EbsPollState_t newState) {
 	if (ebsState != EBS_STATE_POLLING)
 		return;
 	targetList[targetIndex].state = newState;
+	uint8_t rsp = 0xFF;
 	switch (newState) {
 		case EBS_POLL_STATE_IDLE:
 			break;
@@ -1587,19 +1576,21 @@ static void EBS_updatePollState(uint8_t targetIndex, EbsPollState_t newState) {
 					targetList[targetIndex].addrType, targetList[targetIndex].addr);
 			break;
 
-		case EBS_POLL_STATE_CHECK:
+		case EBS_POLL_STATE_READ:
 			Semaphore_post(targetConnSem); // release the sem to allow next connect
 			pConnectingSlot = NULL;
-			EBS_readCharbyHandle(targetList[targetIndex].connHdl, EVRSPROFILE_SYSID);
+			EBS_readCharbyHandle(targetList[targetIndex].connHdl, EVRSPROFILE_DATA);
+			// TODO: upload the data to EBC
 			break;
 
-		case EBS_POLL_STATE_READ:
+		case EBS_POLL_STATE_WRITE: // finish read
+			uout0("into write process");
+			EBS_writeCharbyHandle(targetList[targetIndex].connHdl, EVRSPROFILE_DATA, &rsp, 1);
+
 			break;
 
-		case EBS_POLL_STATE_WRITE:
-			break;
-
-		case EBS_POLL_STATE_TERMINATE:
+		case EBS_POLL_STATE_TERMINATE: // finish write
+			GAPCentralRole_TerminateLink(targetList[targetIndex].connHdl);
 			break;
 
 		default:
@@ -1638,6 +1629,9 @@ static void EBS_handleKeys(uint8_t shift, uint8_t keys) {
 
 		case EBS_STATE_POLLING:
 			if (keys & KEY_RIGHT) {
+				EBS_updatePollState(0,EBS_POLL_STATE_CONNECT);
+			} else if (keys & KEY_LEFT) {
+				EBS_updateTargetList(discTxList[1].txDevID);
 				EBS_updatePollState(0,EBS_POLL_STATE_CONNECT);
 			}
 
