@@ -42,7 +42,7 @@
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_16.9.compilerID.OPT_FOR_SPEED.1972775953" name="Speed vs. size trade-offs (--opt_for_speed, -mf)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.9.compilerID.OPT_FOR_SPEED" value="com.ti.ccstudio.buildDefinitions.TMS470_16.9.compilerID.OPT_FOR_SPEED.0" valueType="enumerated"/>
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_16.9.compilerID.INCLUDE_PATH.469990254" name="Add dir to #include search path (--include_path, -I)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.9.compilerID.INCLUDE_PATH" valueType="includePath">
 									<listOptionValue builtIn="false" value="${PROJECT_LOC}/src"/>
-									<listOptionValue builtIn="false" value="${PROJECT_LOC}/../cc2650lp_driver"/>
+									<listOptionValue builtIn="false" value="${PROJECT_LOC}/drv"/>
 									<listOptionValue builtIn="false" value="${COM_TI_RTSC_TIRTOSCC13XX_CC26XX_INCLUDE_PATH}"/>
 									<listOptionValue builtIn="false" value="${SRC_BLE_CORE}/controller/cc26xx/inc"/>
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}"/>
