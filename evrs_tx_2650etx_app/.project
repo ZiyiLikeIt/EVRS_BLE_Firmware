@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>evrs_tx_2650etx_app</name>
+	<name>evrs_tx_cc2650lp_app</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -74,12 +74,12 @@
 		<link>
 			<name>Application/board_display.c</name>
 			<type>1</type>
-			<locationURI>copy_PROJECT_LOC/drivers/board_display.c</locationURI>
+			<locationURI>PROJECT_LOC/drivers/board_display.c</locationURI>
 		</link>
 		<link>
 			<name>Application/board_display.h</name>
 			<type>1</type>
-			<locationURI>copy_PROJECT_LOC/drivers/board_display.h</locationURI>
+			<locationURI>PROJECT_LOC/drivers/board_display.h</locationURI>
 		</link>
 		<link>
 			<name>Application/board_key.c</name>
@@ -94,12 +94,12 @@
 		<link>
 			<name>Application/board_led.c</name>
 			<type>1</type>
-			<locationURI>copy_PROJECT_LOC/drivers/board_led.c</locationURI>
+			<locationURI>PROJECT_LOC/drivers/board_led.c</locationURI>
 		</link>
 		<link>
 			<name>Application/board_led.h</name>
 			<type>1</type>
-			<locationURI>copy_PROJECT_LOC/drivers/board_led.h</locationURI>
+			<locationURI>PROJECT_LOC/drivers/board_led.h</locationURI>
 		</link>
 		<link>
 			<name>Application/rcosc_calibration.h</name>
@@ -513,10 +513,6 @@
 		<variable>
 			<name>TOOLS_BLE</name>
 			<value>$%7BPARENT-5-ORG_PROJ_DIR%7D/tools</value>
-		</variable>
-		<variable>
-			<name>copy_PROJECT_LOC</name>
-			<value>$%7BPARENT-2-PROJECT_LOC%7D/git/EVRS_BLE_Firmware/evrs_tx_2650etx_app</value>
 		</variable>
 	</variableList>
 </projectDescription>
