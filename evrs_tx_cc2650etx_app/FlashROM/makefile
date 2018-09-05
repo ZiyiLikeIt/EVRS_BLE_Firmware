@@ -12,7 +12,6 @@ GEN_CMDS__FLAG := -l"configPkg/linker.cmd"
 ORDERED_OBJS += \
 "C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/config/ccs_linker_defines.cmd" \
 "C:/ti/ble_sdk_2_02_02_25/src/common/cc26xx/ccs/cc26xx_app.cmd" \
-"./Application/board_key.obj" \
 "./Application/util.obj" \
 "./Drivers/Display/Display.obj" \
 "./Drivers/Display/DisplayUart.obj" \
@@ -34,10 +33,11 @@ ORDERED_OBJS += \
 "./PROFILES/gatt_uuid.obj" \
 "./PROFILES/gattservapp_util.obj" \
 "./PROFILES/peripheral.obj" \
-"./Startup/board.obj" \
 "./Startup/ccfg_app_ble.obj" \
-"./drv/board_display.obj" \
-"./drv/board_led.obj" \
+"./drv/etx_board.obj" \
+"./drv/etx_board_display.obj" \
+"./drv/etx_board_key.obj" \
+"./drv/etx_board_led.obj" \
 "./src/evrs_gatt_profile.obj" \
 "./src/evrs_tx_main.obj" \
 "./src/main.obj" \
@@ -220,8 +220,8 @@ evrs_tx_cc2650etx_app.hex: $(EXE_OUTPUTS)
 clean:
 	-$(RM) $(GEN_CMDS__QUOTED)$(GEN_MISC_FILES__QUOTED)$(BIN_OUTPUTS__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)$(GEN_OPTS__QUOTED)
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
-	-$(RM) "Application\board_key.obj" "Application\util.obj" "Drivers\Display\Display.obj" "Drivers\Display\DisplayUart.obj" "Drivers\ECC\ECCROMCC26XX.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\RF\RFCC26XX_singleMode.obj" "Drivers\SPI\SPI.obj" "Drivers\SPI\SPICC26XXDMA.obj" "Drivers\TRNG\TRNGCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "Drivers\UDMA\UDMACC26XX.obj" "ICall\icall.obj" "ICall\icall_cc2650.obj" "ICallBLE\ble_user_config.obj" "ICallBLE\icall_api.obj" "Middleware\extflash\ExtFlash.obj" "PROFILES\devinfoservice.obj" "PROFILES\gatt_uuid.obj" "PROFILES\gattservapp_util.obj" "PROFILES\peripheral.obj" "Startup\board.obj" "Startup\ccfg_app_ble.obj" "drv\board_display.obj" "drv\board_led.obj" "src\evrs_gatt_profile.obj" "src\evrs_tx_main.obj" "src\main.obj" 
-	-$(RM) "Application\board_key.d" "Application\util.d" "Drivers\Display\Display.d" "Drivers\Display\DisplayUART.d" "Drivers\ECC\ECCROMCC26XX.d" "Drivers\PIN\PINCC26XX.d" "Drivers\RF\RFCC26XX_singleMode.d" "Drivers\SPI\SPI.d" "Drivers\SPI\SPICC26XXDMA.d" "Drivers\TRNG\TRNGCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "Drivers\UDMA\UDMACC26XX.d" "ICall\icall.d" "ICall\icall_cc2650.d" "ICallBLE\ble_user_config.d" "ICallBLE\icall_api.d" "Middleware\extflash\ExtFlash.d" "PROFILES\devinfoservice.d" "PROFILES\gatt_uuid.d" "PROFILES\gattservapp_util.d" "PROFILES\peripheral.d" "Startup\board.d" "Startup\ccfg_app_ble.d" "drv\board_display.d" "drv\board_led.d" "src\evrs_gatt_profile.d" "src\evrs_tx_main.d" "src\main.d" 
+	-$(RM) "Application\util.obj" "Drivers\Display\Display.obj" "Drivers\Display\DisplayUart.obj" "Drivers\ECC\ECCROMCC26XX.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\RF\RFCC26XX_singleMode.obj" "Drivers\SPI\SPI.obj" "Drivers\SPI\SPICC26XXDMA.obj" "Drivers\TRNG\TRNGCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "Drivers\UDMA\UDMACC26XX.obj" "ICall\icall.obj" "ICall\icall_cc2650.obj" "ICallBLE\ble_user_config.obj" "ICallBLE\icall_api.obj" "Middleware\extflash\ExtFlash.obj" "PROFILES\devinfoservice.obj" "PROFILES\gatt_uuid.obj" "PROFILES\gattservapp_util.obj" "PROFILES\peripheral.obj" "Startup\ccfg_app_ble.obj" "drv\etx_board.obj" "drv\etx_board_display.obj" "drv\etx_board_key.obj" "drv\etx_board_led.obj" "src\evrs_gatt_profile.obj" "src\evrs_tx_main.obj" "src\main.obj" 
+	-$(RM) "Application\util.d" "Drivers\Display\Display.d" "Drivers\Display\DisplayUART.d" "Drivers\ECC\ECCROMCC26XX.d" "Drivers\PIN\PINCC26XX.d" "Drivers\RF\RFCC26XX_singleMode.d" "Drivers\SPI\SPI.d" "Drivers\SPI\SPICC26XXDMA.d" "Drivers\TRNG\TRNGCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "Drivers\UDMA\UDMACC26XX.d" "ICall\icall.d" "ICall\icall_cc2650.d" "ICallBLE\ble_user_config.d" "ICallBLE\icall_api.d" "Middleware\extflash\ExtFlash.d" "PROFILES\devinfoservice.d" "PROFILES\gatt_uuid.d" "PROFILES\gattservapp_util.d" "PROFILES\peripheral.d" "Startup\ccfg_app_ble.d" "drv\etx_board.d" "drv\etx_board_display.d" "drv\etx_board_key.d" "drv\etx_board_led.d" "src\evrs_gatt_profile.d" "src\evrs_tx_main.d" "src\main.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

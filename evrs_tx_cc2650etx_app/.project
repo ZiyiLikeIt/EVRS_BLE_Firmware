@@ -72,16 +72,6 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
-			<name>Application/board_key.c</name>
-			<type>1</type>
-			<locationURI>SRC_EX/common/cc26xx/board_key.c</locationURI>
-		</link>
-		<link>
-			<name>Application/board_key.h</name>
-			<type>1</type>
-			<locationURI>SRC_EX/common/cc26xx/board_key.h</locationURI>
-		</link>
-		<link>
 			<name>Application/rcosc_calibration.h</name>
 			<type>1</type>
 			<locationURI>SRC_EX/common/cc26xx/rcosc/rcosc_calibration.h</locationURI>
@@ -295,11 +285,6 @@
 			<name>PROFILES/simplekeys.h</name>
 			<type>1</type>
 			<locationURI>SRC_EX/profiles/keys/simplekeys.h</locationURI>
-		</link>
-		<link>
-			<name>Startup/board.c</name>
-			<type>1</type>
-			<locationURI>SRC_EX/target/board.c</locationURI>
 		</link>
 		<link>
 			<name>Startup/ccfg_app_ble.c</name>

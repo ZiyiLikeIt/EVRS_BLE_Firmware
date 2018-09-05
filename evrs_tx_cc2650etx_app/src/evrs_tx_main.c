@@ -1,49 +1,16 @@
-/******************************************************************************
-
- @file  simple_peripheral.c
-
- @brief This file contains the Simple BLE Peripheral sample application for use
- with the CC2650 Bluetooth Low Energy Protocol Stack.
-
- Group: WCS, BTS
- Target Device: CC2650, CC2640
-
- ******************************************************************************
-
- Copyright (c) 2013-2018, Texas Instruments Incorporated
- All rights reserved.
-
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
-
- *  Redistributions of source code must retain the above copyright
- notice, this list of conditions and the following disclaimer.
-
- *  Redistributions in binary form must reproduce the above copyright
- notice, this list of conditions and the following disclaimer in the
- documentation and/or other materials provided with the distribution.
-
- *  Neither the name of Texas Instruments Incorporated nor the names of
- its contributors may be used to endorse or promote products derived
- from this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- ******************************************************************************
- Release Name: ble_sdk_2_02_02_25
- Release Date: 2018-04-02 18:03:35
- *****************************************************************************/
+/*****************************************************************************
+ *
+ * @filepath    /evrs_tx_cc2650etx_app/src/evrs_tx_main.c
+ *
+ * @project     evrs_tx_cc2650etx_app
+ *
+ * @brief       the main functionality of ETX firmware
+ *
+ * @date        5 Sep. 2018
+ *
+ * @author      Ziyi@outlook.com.au
+ *
+ ****************************************************************************/
 
 /*********************************************************************
  * INCLUDES
@@ -75,11 +42,11 @@
 #include "rcosc_calibration.h"
 #endif //USE_RCOSC
 
-#include "board_key.h"
-#include "board_led.h"
-#include "board_display.h"
+#include "etx_board_key.h"
+#include "etx_board_led.h"
+#include "etx_board_display.h"
 
-#include "board.h"
+#include "etx_board.h"
 
 #include "evrs_tx_main.h"
 
@@ -130,9 +97,9 @@
 #define ETX_ADTYPE_DEVID			0xAE
 
 // Application state
-typedef enum {
+typedef enum AppStates_t {
 	APP_STATE_INIT, APP_STATE_IDLE, APP_STATE_ADVERT
-} appStates_t;
+} AppStates_t;
 
 // Internal Events for RTOS application
 #define ETX_STATE_CHANGE_EVT                  0x0001
@@ -150,9 +117,9 @@ typedef enum {
  */
 
 // App event passed from profiles.
-typedef struct {
+typedef struct SbpEvt_t {
 	appEvtHdr_t hdr;  // event header.
-} sbpEvt_t;
+} SbpEvt_t;
 
 /*********************************************************************
  * GLOBAL VARIABLES
@@ -184,7 +151,7 @@ Task_Struct sbpTask;
 Char sbpTaskStack[ETX_TASK_STACK_SIZE];
 
 // Profile state and parameters
-static appStates_t appState = APP_STATE_INIT;
+static AppStates_t appState = APP_STATE_INIT;
 
 // GAP - Advertisement data (max size = 31 bytes, though this is
 // best kept short to conserve power while advertisting)
@@ -257,7 +224,7 @@ static void ETX_taskFxn(UArg a0, UArg a1);
 
 static uint8_t ETX_processStackMsg(ICall_Hdr *pMsg);
 static uint8_t ETX_processGATTMsg(gattMsgEvent_t *pMsg);
-static void ETX_processAppMsg(sbpEvt_t *pMsg);
+static void ETX_processAppMsg(SbpEvt_t *pMsg);
 static void ETX_processStateChangeEvt(gaprole_States_t newState);
 static void ETX_processCharValueChangeEvt(uint8_t paramID);
 //static void ETX_performPeriodicTask(void);
@@ -456,15 +423,9 @@ static void ETX_init(void) {
 
 	// Setup the EVRSProfile Characteristic Values
 	{
-		uint8_t sysIdVal = 0xA1;
-		uint8_t devIdVal = 0xA2;
-		uint8_t cmdVal = 0xA3;
-		uint8_t dataVal = 0xA4;
+		uint8_t cmdVal = 0x00;
+		uint8_t dataVal = 0x00;
 
-		EVRSProfile_SetParameter(EVRSPROFILE_SYSID, sizeof(sysIdVal),
-				&sysIdVal);
-		EVRSProfile_SetParameter(EVRSPROFILE_DEVID, sizeof(devIdVal),
-				&devIdVal);
 		EVRSProfile_SetParameter(EVRSPROFILE_CMD, sizeof(cmdVal),
 				&cmdVal);
 		EVRSProfile_SetParameter(EVRSPROFILE_DATA, sizeof(dataVal),
@@ -555,7 +516,7 @@ static void ETX_taskFxn(UArg a0, UArg a1) {
 			// If RTOS queue is not empty, process app message.
 			while (!Queue_empty(appMsgQueue))
 			{
-				sbpEvt_t *pMsg = (sbpEvt_t *) Util_dequeueMsg(appMsgQueue);
+				SbpEvt_t *pMsg = (SbpEvt_t *) Util_dequeueMsg(appMsgQueue);
 				if (pMsg)
 				{
 					// Process message.
@@ -757,7 +718,7 @@ static void ETX_freeAttRsp(uint8_t status) {
  *
  * @return  None.
  */
-static void ETX_processAppMsg(sbpEvt_t *pMsg) {
+static void ETX_processAppMsg(SbpEvt_t *pMsg) {
 	switch (pMsg->hdr.event)
 	{
 		case ETX_STATE_CHANGE_EVT:
@@ -994,13 +955,6 @@ static void ETX_processCharValueChangeEvt(uint8_t paramID) {
 
 	switch (paramID)
 	{
-		case EVRSPROFILE_DEVID:
-			EVRSProfile_GetParameter(EVRSPROFILE_DEVID, &newValue);
-
-			uout1("Device Id: 0x%02x",
-					(uint8_t )newValue);
-			break;
-
 		case EVRSPROFILE_CMD:
 			EVRSProfile_GetParameter(EVRSPROFILE_CMD, &newValue);
 
@@ -1032,10 +986,10 @@ static void ETX_processCharValueChangeEvt(uint8_t paramID) {
  * @return  None.
  */
 static void ETX_enqueueMsg(uint8_t event, uint8_t state) {
-	sbpEvt_t *pMsg;
+	SbpEvt_t *pMsg;
 
 	// Create dynamic pointer to message.
-	if ((pMsg = ICall_malloc(sizeof(sbpEvt_t))))
+	if ((pMsg = ICall_malloc(sizeof(SbpEvt_t))))
 	{
 		pMsg->hdr.event = event;
 		pMsg->hdr.state = state;
@@ -1079,7 +1033,7 @@ static void ETX_handleKeys(uint8_t shift, uint8_t keys) {
 			break;
 
 		case APP_STATE_IDLE:
-			if (keys & KEY_RIGHT)
+			if (keys & KEY_1)
 			{
 				ETX_Advert_UpdateDestinyBS();
 				bStatus_t rtn = 0;
@@ -1091,19 +1045,19 @@ static void ETX_handleKeys(uint8_t shift, uint8_t keys) {
 			}
 			break;
 		case APP_STATE_ADVERT:
-			if (keys & KEY_LEFT)
+			if (keys & KEY_0)
 			{
 				advertEnable = FALSE;
 				GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
 						&advertEnable);
 				appState = APP_STATE_IDLE;
 			}
-			if (keys & KEY_RIGHT)
+			if (keys & KEY_1)
 			{
-				uint32 newValue = 0;
+				uint8_t newValue = 0;
 				EVRSProfile_GetParameter(EVRSPROFILE_DATA, &newValue);
 				newValue += 1;
-				EVRSProfile_SetParameter(EVRSPROFILE_DATA, sizeof(uint32), &newValue );
+				EVRSProfile_SetParameter(EVRSPROFILE_DATA, sizeof(uint8_t), &newValue );
 				appState = APP_STATE_IDLE;
 			}
 			break;
@@ -1114,7 +1068,7 @@ static void ETX_handleKeys(uint8_t shift, uint8_t keys) {
 }
 
 static void ETX_DevId_Find(uint8_t* nvBuf) {
-	uint8_t rtn = osal_snv_read(ETX_DEVID_NV_ID, ETX_DEVID_LEN, (uint8 *)nvBuf);
+	    uint8_t rtn = osal_snv_read(ETX_DEVID_NV_ID, ETX_DEVID_LEN, (uint8 *)nvBuf);
 	if (rtn == SUCCESS)
 		uout1("Device ID found: 0x%08x",
 				BUILD_UINT32(nvBuf[0], nvBuf[1], nvBuf[2], nvBuf[3]));
@@ -1147,9 +1101,8 @@ static void ETX_ScanRsp_UpdateDeviceID() {
 }
 
 static void ETX_Advert_UpdateDestinyBS() {
-	destBsID = 0x02;
+	// TODO: need a input of the destiny BS
+    destBsID = 0x02;
 	advertData[9] = destBsID;
 }
 
-/*********************************************************************
- *********************************************************************/
