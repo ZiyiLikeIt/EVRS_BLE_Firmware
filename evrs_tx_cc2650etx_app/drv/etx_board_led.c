@@ -20,10 +20,9 @@
 #include <ti/sysbios/knl/Clock.h>
 #include <ti/drivers/PIN.h>
 
-#include "etx_board.h"
-
 #include "util.h"
 #include "etx_board_led.h"
+#include "etx_board.h"
 
 /*********************************************************************
  * Typedefs

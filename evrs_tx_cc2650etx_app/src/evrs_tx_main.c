@@ -42,11 +42,11 @@
 #include "rcosc_calibration.h"
 #endif //USE_RCOSC
 
+//#include "etx_board.h"
 #include "etx_board_key.h"
 #include "etx_board_led.h"
 #include "etx_board_display.h"
 
-#include "etx_board.h"
 
 #include "evrs_tx_main.h"
 
