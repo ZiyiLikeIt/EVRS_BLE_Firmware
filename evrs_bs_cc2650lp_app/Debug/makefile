@@ -30,7 +30,6 @@ ORDERED_OBJS += \
 "./Startup/ccfg_app_ble.obj" \
 "./drv/board_display.obj" \
 "./drv/board_led.obj" \
-"./drv/file_header.obj" \
 "./src/evrs_bs_main.obj" \
 "./src/evrs_bs_rssi.obj" \
 "./src/main.obj" \
@@ -213,8 +212,8 @@ evrs_bs_cc2650lp_app.hex: $(EXE_OUTPUTS)
 clean:
 	-$(RM) $(GEN_CMDS__QUOTED)$(GEN_MISC_FILES__QUOTED)$(BIN_OUTPUTS__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)$(GEN_OPTS__QUOTED)
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
-	-$(RM) "Application\board_key.obj" "Application\util.obj" "Drivers\ECC\ECCROMCC26XX.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\RF\RFCC26XX_singleMode.obj" "Drivers\SPI\SPI.obj" "Drivers\SPI\SPICC26XXDMA.obj" "Drivers\TRNG\TRNGCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "Drivers\UDMA\UDMACC26XX.obj" "ICall\icall.obj" "ICall\icall_cc2650.obj" "ICallBLE\ble_user_config.obj" "ICallBLE\icall_api.obj" "PROFILES\central.obj" "Startup\board.obj" "Startup\ccfg_app_ble.obj" "drv\board_display.obj" "drv\board_led.obj" "drv\file_header.obj" "src\evrs_bs_main.obj" "src\evrs_bs_rssi.obj" "src\main.obj" 
-	-$(RM) "Application\board_key.d" "Application\util.d" "Drivers\ECC\ECCROMCC26XX.d" "Drivers\PIN\PINCC26XX.d" "Drivers\RF\RFCC26XX_singleMode.d" "Drivers\SPI\SPI.d" "Drivers\SPI\SPICC26XXDMA.d" "Drivers\TRNG\TRNGCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "Drivers\UDMA\UDMACC26XX.d" "ICall\icall.d" "ICall\icall_cc2650.d" "ICallBLE\ble_user_config.d" "ICallBLE\icall_api.d" "PROFILES\central.d" "Startup\board.d" "Startup\ccfg_app_ble.d" "drv\board_display.d" "drv\board_led.d" "drv\file_header.d" "src\evrs_bs_main.d" "src\evrs_bs_rssi.d" "src\main.d" 
+	-$(RM) "Application\board_key.obj" "Application\util.obj" "Drivers\ECC\ECCROMCC26XX.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\RF\RFCC26XX_singleMode.obj" "Drivers\SPI\SPI.obj" "Drivers\SPI\SPICC26XXDMA.obj" "Drivers\TRNG\TRNGCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "Drivers\UDMA\UDMACC26XX.obj" "ICall\icall.obj" "ICall\icall_cc2650.obj" "ICallBLE\ble_user_config.obj" "ICallBLE\icall_api.obj" "PROFILES\central.obj" "Startup\board.obj" "Startup\ccfg_app_ble.obj" "drv\board_display.obj" "drv\board_led.obj" "src\evrs_bs_main.obj" "src\evrs_bs_rssi.obj" "src\main.obj" 
+	-$(RM) "Application\board_key.d" "Application\util.d" "Drivers\ECC\ECCROMCC26XX.d" "Drivers\PIN\PINCC26XX.d" "Drivers\RF\RFCC26XX_singleMode.d" "Drivers\SPI\SPI.d" "Drivers\SPI\SPICC26XXDMA.d" "Drivers\TRNG\TRNGCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "Drivers\UDMA\UDMACC26XX.d" "ICall\icall.d" "ICall\icall_cc2650.d" "ICallBLE\ble_user_config.d" "ICallBLE\icall_api.d" "PROFILES\central.d" "Startup\board.d" "Startup\ccfg_app_ble.d" "drv\board_display.d" "drv\board_led.d" "src\evrs_bs_main.d" "src\evrs_bs_rssi.d" "src\main.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

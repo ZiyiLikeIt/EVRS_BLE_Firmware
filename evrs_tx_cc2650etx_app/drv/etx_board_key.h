@@ -63,14 +63,14 @@ extern "C" {
 /*********************************************************************
  * CONSTANTS
  */
-#define KEY_0           0x0001
-#define KEY_1           0x0002
-#define KEY_2           0x0004
-#define KEY_3           0x0008
-#define KEY_4           0x0010
-#define KEY_5           0x0020
-#define KEY_6           0x0040
-#define KEY_7           0x0080
+#define S1           0x0001
+#define S2           0x0002
+#define S3           0x0004
+#define S4           0x0008
+#define S5           0x0010
+#define S6           0x0020
+#define S7           0x0040
+#define S8           0x0080
 
 
 // Debounce timeout in milliseconds

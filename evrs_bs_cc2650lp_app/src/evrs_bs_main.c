@@ -129,10 +129,8 @@
 // GATT Params
 // EVRS Profile Service UUID
 #define EVRSPROFILE_SERV_UUID 			0xAFF0
-#define EVRSPROFILE_SYSID_UUID         	0xAFF2
-#define EVRSPROFILE_DEVID_UUID      	0xAFF4
-#define EVRSPROFILE_CMD_UUID        	0xAFF8
-#define EVRSPROFILE_DATA_UUID         	0xAFFE
+#define EVRSPROFILE_CMD_UUID        	0xAFF2
+#define EVRSPROFILE_DATA_UUID         	0xAFF4
 
 #define ETX_ADTYPE_DEST				0xAF
 #define ETX_ADTYPE_DEVID			0xAE
@@ -165,8 +163,6 @@ typedef enum {
 } EbsPollState_t;
 
 typedef enum {
-	EVRSPROFILE_SYSID,
-	EVRSPROFILE_DEVID,
 	EVRSPROFILE_CMD,
 	EVRSPROFILE_DATA
 } ProfileId_t;
@@ -1048,20 +1044,6 @@ static void EBS_processGATTDiscEvent(gattMsgEvent_t *pMsg) {
 			{
 				switch(*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 5))
 				{
-					case LO_UINT16(EVRSPROFILE_SYSID_UUID):
-						charHdl[EVRSPROFILE_SYSID] = BUILD_UINT16(
-								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 3),
-								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 4));
-						profileCounter++;
-						break;
-
-					case LO_UINT16(EVRSPROFILE_DEVID_UUID):
-						charHdl[EVRSPROFILE_DEVID] = BUILD_UINT16(
-								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 3),
-								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 4));
-						profileCounter++;
-						break;
-
 					case LO_UINT16(EVRSPROFILE_CMD_UUID):
 						charHdl[EVRSPROFILE_CMD] = BUILD_UINT16(
 								*(pMsg->msg.readByTypeRsp.pDataList + counter*7 + 3),

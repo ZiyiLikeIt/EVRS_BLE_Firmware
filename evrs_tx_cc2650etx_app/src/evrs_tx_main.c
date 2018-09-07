@@ -1026,14 +1026,14 @@ void ETX_keyChangeHandler(uint8_t keys) {
  */
 static void ETX_handleKeys(uint8_t shift, uint8_t keys) {
 	//uout0("handleKey() called");
-	uint8_t advertEnable = FALSE;
+	//uint8_t advertEnable = FALSE;
 	switch (appState)
 	{
 		case APP_STATE_INIT:
 			break;
 
 		case APP_STATE_IDLE:
-			if (keys & KEY_1)
+			if (keys & S1)
 			{
 				ETX_Advert_UpdateDestinyBS();
 				bStatus_t rtn = 0;
@@ -1045,20 +1045,15 @@ static void ETX_handleKeys(uint8_t shift, uint8_t keys) {
 			}
 			break;
 		case APP_STATE_ADVERT:
-			if (keys & KEY_0)
-			{
-				advertEnable = FALSE;
-				GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t),
-						&advertEnable);
-				appState = APP_STATE_IDLE;
-			}
-			if (keys & KEY_1)
-			{
-				uint8_t newValue = 0;
-				EVRSProfile_GetParameter(EVRSPROFILE_DATA, &newValue);
-				newValue += 1;
+
+			if (keys & S2) {
+				uint8_t newValue = 0x22;
 				EVRSProfile_SetParameter(EVRSPROFILE_DATA, sizeof(uint8_t), &newValue );
-				appState = APP_STATE_IDLE;
+				uout0("set to 0x22");
+			} else if (keys & S3) {
+			    uint8_t newValue = 0x33;
+			    EVRSProfile_SetParameter(EVRSPROFILE_DATA, sizeof(uint8_t), &newValue );
+			    uout0("set to 0x33");
 			}
 			break;
 		default:

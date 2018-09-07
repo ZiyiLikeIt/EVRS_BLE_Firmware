@@ -175,21 +175,21 @@ static void Board_keyCallback(PIN_Handle hPin, PIN_Id pinId)
     keysPressed = 0;
 
     if ( PIN_getInputValue(Board_BTN0) == 0 )
-        keysPressed |= KEY_0;
+        keysPressed |= S1;
     if ( PIN_getInputValue(Board_BTN1) == 0 )
-        keysPressed |= KEY_1;
+        keysPressed |= S2;
     if ( PIN_getInputValue(Board_BTN2) == 0 )
-        keysPressed |= KEY_2;
+        keysPressed |= S3;
     if ( PIN_getInputValue(Board_BTN3) == 0 )
-        keysPressed |= KEY_3;
+        keysPressed |= S4;
     if ( PIN_getInputValue(Board_BTN4) == 0 )
-        keysPressed |= KEY_4;
+        keysPressed |= S5;
     if ( PIN_getInputValue(Board_BTN5) == 0 )
-        keysPressed |= KEY_5;
+        keysPressed |= S6;
     if ( PIN_getInputValue(Board_BTN6) == 0 )
-        keysPressed |= KEY_6;
+        keysPressed |= S7;
     if ( PIN_getInputValue(Board_BTN7) == 0 )
-        keysPressed |= KEY_7;
+        keysPressed |= S8;
 
     Util_startClock(&keyChangeClock);
 }

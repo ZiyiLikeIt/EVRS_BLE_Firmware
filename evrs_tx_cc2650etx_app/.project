@@ -52,11 +52,6 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
-			<name>Middleware</name>
-			<type>2</type>
-			<locationURI>virtual:/virtual</locationURI>
-		</link>
-		<link>
 			<name>PROFILES</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
@@ -205,11 +200,6 @@
 			<name>Include/osal_snv.h</name>
 			<type>1</type>
 			<locationURI>SRC_COMMON/osal/src/inc/osal_snv.h</locationURI>
-		</link>
-		<link>
-			<name>Middleware/extflash</name>
-			<type>2</type>
-			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
 			<name>PROFILES/devinfoservice.c</name>
@@ -430,16 +420,6 @@
 			<name>Drivers/UDMA/UDMACC26XX.h</name>
 			<type>1</type>
 			<locationURI>TI_RTOS_DRIVERS_BASE/ti/drivers/dma/UDMACC26XX.h</locationURI>
-		</link>
-		<link>
-			<name>Middleware/extflash/ExtFlash.c</name>
-			<type>1</type>
-			<locationURI>TI_RTOS_DRIVERS_BASE/ti/mw/extflash/ExtFlash.c</locationURI>
-		</link>
-		<link>
-			<name>Middleware/extflash/ExtFlash.h</name>
-			<type>1</type>
-			<locationURI>TI_RTOS_DRIVERS_BASE/ti/mw/extflash/ExtFlash.h</locationURI>
 		</link>
 	</linkedResources>
 	<variableList>
