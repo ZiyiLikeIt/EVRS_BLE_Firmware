@@ -71,7 +71,7 @@
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_16.9.compilerID.DEFINE.63517004" name="Pre-define NAME (--define, -D)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_16.9.compilerID.DEFINE" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="BOARD_DISPLAY_EXCLUDE_LCD"/>
 									<listOptionValue builtIn="false" value="xBOARD_DISPLAY_EXCLUDE_UART"/>
-									<listOptionValue builtIn="false" value="CC2650_LAUNCHXL"/>
+									<listOptionValue builtIn="false" value="xCC2650_LAUNCHXL"/>
 									<listOptionValue builtIn="false" value="CC26XX"/>
 									<listOptionValue builtIn="false" value="xDisplay_DISABLE_ALL"/>
 									<listOptionValue builtIn="false" value="GAPROLE_TASK_STACK_SIZE=540"/>

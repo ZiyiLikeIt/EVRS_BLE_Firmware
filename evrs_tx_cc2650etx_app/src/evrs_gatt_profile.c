@@ -47,24 +47,16 @@
  * GLOBAL VARIABLES
  */
 // EVRS GATT Profile Service UUID: 0xAFF0
-CONST uint8 EVRSProfileServUUID[ATT_BT_UUID_SIZE] = { LO_UINT16(
-		EVRSPROFILE_SERV_UUID), HI_UINT16(EVRSPROFILE_SERV_UUID) };
+CONST uint8 EVRSProfileServUUID[ATT_BT_UUID_SIZE] =
+        { LO_UINT16(EVRSPROFILE_SERV_UUID), HI_UINT16(EVRSPROFILE_SERV_UUID) };
 
-// System serial number UUID: 0xAFF1
-CONST uint8 EVRSProfileSysIdUUID[ATT_BT_UUID_SIZE] = { LO_UINT16(
-		EVRSPROFILE_SYSID_UUID), HI_UINT16(EVRSPROFILE_SYSID_UUID) };
+// Command number UUID: 0xAFF2
+CONST uint8 EVRSProfileCmdUUID[ATT_BT_UUID_SIZE] =
+        { LO_UINT16(EVRSPROFILE_CMD_UUID), HI_UINT16(EVRSPROFILE_CMD_UUID) };
 
-// Device serial number UUID: 0xAFF2
-CONST uint8 EVRSProfileDevIdUUID[ATT_BT_UUID_SIZE] = { LO_UINT16(
-		EVRSPROFILE_DEVID_UUID), HI_UINT16(EVRSPROFILE_DEVID_UUID) };
-
-// Command number UUID: 0xAFF4
-CONST uint8 EVRSProfileCmdUUID[ATT_BT_UUID_SIZE] = { LO_UINT16(
-		EVRSPROFILE_CMD_UUID), HI_UINT16(EVRSPROFILE_CMD_UUID) };
-
-// User data UUID: 0xAFF8
-CONST uint8 EVRSProfileDataUUID[ATT_BT_UUID_SIZE] = { LO_UINT16(
-		EVRSPROFILE_DATA_UUID), HI_UINT16(EVRSPROFILE_DATA_UUID) };
+// User data UUID: 0xAFF4
+CONST uint8 EVRSProfileDataUUID[ATT_BT_UUID_SIZE] =
+        { LO_UINT16(EVRSPROFILE_DATA_UUID), HI_UINT16(EVRSPROFILE_DATA_UUID) };
 
 /*********************************************************************
  * EXTERNAL VARIABLES
@@ -85,26 +77,8 @@ static EVRSProfileCBs_t *EVRSProfile_AppCBs = NULL;
  */
 
 // EVRS Profile Service attribute
-static CONST gattAttrType_t EVRSProfileService = { ATT_BT_UUID_SIZE,
-		EVRSProfileServUUID };
-
-// EVRS Profile System Id Properties
-static uint8 EVRSProfileSysIdProps = GATT_PROP_READ;
-
-// System Id Value
-static uint8 EVRSProfileSysId = 0;
-
-// EVRS Profile System Id User Description
-static uint8 EVRSProfileSysIdUserDesp[10] = "System Id";
-
-// EVRS Profile Device Id Properties
-static uint8 EVRSProfileDevIdProps = GATT_PROP_READ | GATT_PROP_WRITE;
-
-// Device Id Value
-static uint8 EVRSProfileDevId = 0;
-
-// EVRS Profile Device Id User Description
-static uint8 EVRSProfileDevIdUserDesp[10] = "Device Id";
+static CONST gattAttrType_t EVRSProfileService =
+        { ATT_BT_UUID_SIZE,	EVRSProfileServUUID };
 
 // EVRS Profile Command BS Properties
 static uint8 EVRSProfileCmdProps = GATT_PROP_READ | GATT_PROP_WRITE;
@@ -135,30 +109,6 @@ static gattAttribute_t EVRSProfileAttrTbl[SERVAPP_NUM_ATTR_SUPPORTED] = {
 		0, /* handle */
 		(uint8 *) &EVRSProfileService /* pValue */
 		},
-
-		// System Id Declaration
-		{ { ATT_BT_UUID_SIZE, characterUUID },
-		GATT_PERMIT_READ, 0, &EVRSProfileSysIdProps },
-
-		// System Id Value
-		{ { ATT_BT_UUID_SIZE, EVRSProfileSysIdUUID },
-		GATT_PERMIT_READ, 0, &EVRSProfileSysId },
-
-		// System Id User Description
-		{ { ATT_BT_UUID_SIZE, charUserDescUUID },
-		GATT_PERMIT_READ, 0, EVRSProfileSysIdUserDesp },
-
-		// Device Id Declaration
-		{ { ATT_BT_UUID_SIZE, characterUUID },
-		GATT_PERMIT_READ, 0, &EVRSProfileDevIdProps },
-
-		// Device Id Value
-		{ { ATT_BT_UUID_SIZE, EVRSProfileDevIdUUID },
-		GATT_PERMIT_READ | GATT_PERMIT_WRITE, 0, &EVRSProfileDevId },
-
-		// Device Id User Description
-		{ { ATT_BT_UUID_SIZE, charUserDescUUID },
-		GATT_PERMIT_READ, 0, EVRSProfileDevIdUserDesp },
 
 		// BS Command Declaration
 		{ { ATT_BT_UUID_SIZE, characterUUID },
@@ -209,7 +159,7 @@ static bStatus_t EVRSProfile_WriteAttrCB(uint16_t connHandle,
 CONST gattServiceCBs_t EVRSProfileCBs = {
 		EVRSProfile_ReadAttrCB, // Read callback function pointer
 		EVRSProfile_WriteAttrCB, // Write callback function pointer
-		NULL                       // Authorization callback function pointer
+		NULL                     // Authorization callback function pointer
 		};
 
 /*********************************************************************
@@ -286,36 +236,16 @@ bStatus_t EVRSProfile_RegisterAppCBs(EVRSProfileCBs_t *appCallbacks) {
  * @return  bStatus_t
  */
 bStatus_t EVRSProfile_SetParameter(uint8 param, uint8 len, void *value) {
-	bStatus_t ret = SUCCESS;
+	bStatus_t rtn = SUCCESS;
 	switch (param)
 	{
-		case EVRSPROFILE_SYSID:
-			if (len == sizeof(uint8))
-			{
-				EVRSProfileSysId = *((uint8*) value);
-			} else
-			{
-				ret = bleInvalidRange;
-			}
-			break;
-
-		case EVRSPROFILE_DEVID:
-			if (len == sizeof(uint8))
-			{
-				EVRSProfileDevId = *((uint8*) value);
-			} else
-			{
-				ret = bleInvalidRange;
-			}
-			break;
-
 		case EVRSPROFILE_CMD:
 			if (len == sizeof(uint8))
 			{
 				EVRSProfileCmd = *((uint8*) value);
 			} else
 			{
-				ret = bleInvalidRange;
+				rtn = bleInvalidRange;
 			}
 			break;
 
@@ -325,16 +255,16 @@ bStatus_t EVRSProfile_SetParameter(uint8 param, uint8 len, void *value) {
 				EVRSProfileData = *((uint8*) value);
 			} else
 			{
-				ret = bleInvalidRange;
+				rtn = bleInvalidRange;
 			}
 			break;
 
 		default:
-			ret = INVALIDPARAMETER;
+			rtn = INVALIDPARAMETER;
 			break;
 	}
 
-	return (ret);
+	return (rtn);
 }
 
 /*********************************************************************
@@ -351,17 +281,9 @@ bStatus_t EVRSProfile_SetParameter(uint8 param, uint8 len, void *value) {
  * @return  bStatus_t
  */
 bStatus_t EVRSProfile_GetParameter(uint8 param, void *value) {
-	bStatus_t ret = SUCCESS;
+	bStatus_t rtn = SUCCESS;
 	switch (param)
 	{
-		case EVRSPROFILE_SYSID:
-			*((uint8*) value) = EVRSProfileSysId;
-			break;
-
-		case EVRSPROFILE_DEVID:
-			*((uint8*) value) = EVRSProfileDevId;
-			break;
-
 		case EVRSPROFILE_CMD:
 			*((uint8*) value) = EVRSProfileCmd;
 			break;
@@ -371,11 +293,11 @@ bStatus_t EVRSProfile_GetParameter(uint8 param, void *value) {
 			break;
 
 		default:
-			ret = INVALIDPARAMETER;
+			rtn = INVALIDPARAMETER;
 			break;
 	}
 
-	return (ret);
+	return (rtn);
 }
 
 /*********************************************************************
@@ -413,8 +335,6 @@ static bStatus_t EVRSProfile_ReadAttrCB(uint16_t connHandle,
 			// No need for "GATT_SERVICE_UUID" or "GATT_CLIENT_CHAR_CFG_UUID" cases;
 			// gattserverapp handles those reads
 
-			case EVRSPROFILE_SYSID_UUID:
-			case EVRSPROFILE_DEVID_UUID:
 			case EVRSPROFILE_CMD_UUID:
 			case EVRSPROFILE_DATA_UUID:
 				*pLen = 1;
@@ -463,7 +383,6 @@ static bStatus_t EVRSProfile_WriteAttrCB(uint16_t connHandle,
 		uint16 uuid = BUILD_UINT16(pAttr->type.uuid[0], pAttr->type.uuid[1]);
 		switch (uuid)
 		{
-			case EVRSPROFILE_DEVID_UUID:
 			case EVRSPROFILE_CMD_UUID:
 			case EVRSPROFILE_DATA_UUID:
 
@@ -486,12 +405,8 @@ static bStatus_t EVRSProfile_WriteAttrCB(uint16_t connHandle,
 					uint8 *pCurValue = (uint8 *)pAttr->pValue;
 					*pCurValue = pValue[0];
 
-					if (pAttr->pValue == &EVRSProfileDevId)
-						notifyApp = EVRSPROFILE_DEVID;
-					else if (pAttr->pValue == &EVRSProfileCmd)
-						notifyApp = EVRSPROFILE_CMD;
-					else
-						notifyApp = EVRSPROFILE_DATA;
+					notifyApp = (pAttr->pValue == &EVRSProfileCmd)?
+					            (EVRSPROFILE_CMD):(EVRSPROFILE_DATA);
 				}
 				break;
 

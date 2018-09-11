@@ -30,22 +30,18 @@ extern "C"
  */
 
 // Profile Parameters
-#define EVRSPROFILE_SYSID				0x00  // RW uint8
-#define EVRSPROFILE_DEVID				0x01  // RW uint8
-#define EVRSPROFILE_CMD				0x02  // RW uint8
-#define EVRSPROFILE_DATA				0x03  // RW uint8
+#define EVRSPROFILE_CMD         0x00  // RW uint8
+#define EVRSPROFILE_DATA        0x01  // RW uint8
 
 // EVRS Profile Service UUID
-#define EVRSPROFILE_SERV_UUID       	0xAFF0
+#define EVRSPROFILE_SERV_UUID   0xAFF0
 
 // Key Pressed UUID
-#define EVRSPROFILE_SYSID_UUID         	0xAFF2
-#define EVRSPROFILE_DEVID_UUID      	0xAFF4
-#define EVRSPROFILE_CMD_UUID         	0xAFF8
-#define EVRSPROFILE_DATA_UUID        	0xAFFE
+#define EVRSPROFILE_CMD_UUID    0xAFF2
+#define EVRSPROFILE_DATA_UUID   0xAFF4
 
 // EVRS Keys Profile Services bit fields
-#define EVRSPROFILE_SERVICE         	0x00000001
+#define EVRSPROFILE_SERVICE     0x00000001
 
 /*********************************************************************
  * TYPEDEFS

@@ -134,7 +134,6 @@ Drivers/UART \
 Drivers/UDMA \
 ICall \
 ICallBLE \
-Middleware/extflash \
 PROFILES \
 Startup \
 TOOLS \

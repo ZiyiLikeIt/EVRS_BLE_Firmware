@@ -12,7 +12,6 @@ GEN_CMDS__FLAG := -l"configPkg/linker.cmd"
 ORDERED_OBJS += \
 "C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/config/ccs_linker_defines.cmd" \
 "C:/ti/ble_sdk_2_02_02_25/src/common/cc26xx/ccs/cc26xx_app.cmd" \
-"./Application/board_key.obj" \
 "./Application/util.obj" \
 "./Drivers/Display/Display.obj" \
 "./Drivers/Display/DisplayUart.obj" \
@@ -29,15 +28,15 @@ ORDERED_OBJS += \
 "./ICall/icall_cc2650.obj" \
 "./ICallBLE/ble_user_config.obj" \
 "./ICallBLE/icall_api.obj" \
-"./Middleware/extflash/ExtFlash.obj" \
 "./PROFILES/devinfoservice.obj" \
 "./PROFILES/gatt_uuid.obj" \
 "./PROFILES/gattservapp_util.obj" \
 "./PROFILES/peripheral.obj" \
-"./Startup/board.obj" \
 "./Startup/ccfg_app_ble.obj" \
-"./drv/board_display.obj" \
-"./drv/board_led.obj" \
+"./drv/etx_board.obj" \
+"./drv/etx_board_display.obj" \
+"./drv/etx_board_key.obj" \
+"./drv/etx_board_led.obj" \
 "./src/evrs_gatt_profile.obj" \
 "./src/evrs_tx_main.obj" \
 "./src/main.obj" \
@@ -64,7 +63,6 @@ RMDIR := RMDIR /S/Q
 -include Drivers/UDMA/subdir_vars.mk
 -include ICall/subdir_vars.mk
 -include ICallBLE/subdir_vars.mk
--include Middleware/extflash/subdir_vars.mk
 -include PROFILES/subdir_vars.mk
 -include Startup/subdir_vars.mk
 -include TOOLS/subdir_vars.mk
@@ -81,7 +79,6 @@ RMDIR := RMDIR /S/Q
 -include Drivers/UDMA/subdir_rules.mk
 -include ICall/subdir_rules.mk
 -include ICallBLE/subdir_rules.mk
--include Middleware/extflash/subdir_rules.mk
 -include PROFILES/subdir_rules.mk
 -include Startup/subdir_rules.mk
 -include TOOLS/subdir_rules.mk
@@ -203,7 +200,7 @@ all: $(OBJS) $(GEN_CMDS)
 evrs_tx_cc2650etx_app.out: $(OBJS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: ARM Linker'
-	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armcl" --cmd_file="C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/app/../../iar/stack/../../../../../src/config/build_components.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/app/../../iar/stack/build_config.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/app/../../iar/stack/../../ccs/config/ccs_compiler_defines.bcfg"  -mv7M3 --code_state=16 -me -O4 --opt_for_speed=0 --define=BOARD_DISPLAY_EXCLUDE_LCD --define=xBOARD_DISPLAY_EXCLUDE_UART --define=CC2650_LAUNCHXL --define=CC26XX --define=xDisplay_DISABLE_ALL --define=GAPROLE_TASK_STACK_SIZE=540 --define=HEAPMGR_SIZE=0 --define=ICALL_MAX_NUM_ENTITIES=6 --define=ICALL_MAX_NUM_TASKS=3 --define=POWER_MEASURE --define=POWER_SAVING --define=USE_ICALL --define=xdc_runtime_Assert_DISABLE_ALL --define=xdc_runtime_Log_DISABLE_ALL -g --c99 --gcc --diag_suppress=48 --diag_warning=225 --diag_wrap=off --display_error_number --gen_func_subsections=on --abi=eabi -z -m"evrs_tx_cc2650etx_app.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/lib" -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/include" --reread_libs --diag_suppress=10247-D --diag_suppress=16002-D --diag_wrap=off --display_error_number --warn_sections --xml_link_info="evrs_tx_cc2650etx_app_linkInfo.xml" --rom_model --compress_dwarf=on --unused_section_elimination=on -o "evrs_tx_cc2650etx_app.out" $(ORDERED_OBJS)
+	"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/bin/armcl" --cmd_file="C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/app/../../iar/stack/../../../../../src/config/build_components.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/app/../../iar/stack/build_config.opt" --cmd_file="C:/ti/ble_sdk_2_02_02_25/examples/cc2650lp/simple_peripheral/ccs/app/../../iar/stack/../../ccs/config/ccs_compiler_defines.bcfg"  -mv7M3 --code_state=16 -me -O4 --opt_for_speed=0 --define=BOARD_DISPLAY_EXCLUDE_LCD --define=xBOARD_DISPLAY_EXCLUDE_UART --define=xCC2650_LAUNCHXL --define=CC26XX --define=xDisplay_DISABLE_ALL --define=GAPROLE_TASK_STACK_SIZE=540 --define=HEAPMGR_SIZE=0 --define=ICALL_MAX_NUM_ENTITIES=6 --define=ICALL_MAX_NUM_TASKS=3 --define=POWER_MEASURE --define=POWER_SAVING --define=USE_ICALL --define=xdc_runtime_Assert_DISABLE_ALL --define=xdc_runtime_Log_DISABLE_ALL -g --c99 --gcc --diag_suppress=48 --diag_warning=225 --diag_wrap=off --display_error_number --gen_func_subsections=on --abi=eabi -z -m"evrs_tx_cc2650etx_app.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/lib" -i"C:/ti/ccsv8/tools/compiler/ti-cgt-arm_16.9.4.LTS/include" --reread_libs --diag_suppress=10247-D --diag_suppress=16002-D --diag_wrap=off --display_error_number --warn_sections --xml_link_info="evrs_tx_cc2650etx_app_linkInfo.xml" --rom_model --compress_dwarf=on --unused_section_elimination=on -o "evrs_tx_cc2650etx_app.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
@@ -220,8 +217,8 @@ evrs_tx_cc2650etx_app.hex: $(EXE_OUTPUTS)
 clean:
 	-$(RM) $(GEN_CMDS__QUOTED)$(GEN_MISC_FILES__QUOTED)$(BIN_OUTPUTS__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)$(GEN_OPTS__QUOTED)
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
-	-$(RM) "Application\board_key.obj" "Application\util.obj" "Drivers\Display\Display.obj" "Drivers\Display\DisplayUart.obj" "Drivers\ECC\ECCROMCC26XX.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\RF\RFCC26XX_singleMode.obj" "Drivers\SPI\SPI.obj" "Drivers\SPI\SPICC26XXDMA.obj" "Drivers\TRNG\TRNGCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "Drivers\UDMA\UDMACC26XX.obj" "ICall\icall.obj" "ICall\icall_cc2650.obj" "ICallBLE\ble_user_config.obj" "ICallBLE\icall_api.obj" "Middleware\extflash\ExtFlash.obj" "PROFILES\devinfoservice.obj" "PROFILES\gatt_uuid.obj" "PROFILES\gattservapp_util.obj" "PROFILES\peripheral.obj" "Startup\board.obj" "Startup\ccfg_app_ble.obj" "drv\board_display.obj" "drv\board_led.obj" "src\evrs_gatt_profile.obj" "src\evrs_tx_main.obj" "src\main.obj" 
-	-$(RM) "Application\board_key.d" "Application\util.d" "Drivers\Display\Display.d" "Drivers\Display\DisplayUART.d" "Drivers\ECC\ECCROMCC26XX.d" "Drivers\PIN\PINCC26XX.d" "Drivers\RF\RFCC26XX_singleMode.d" "Drivers\SPI\SPI.d" "Drivers\SPI\SPICC26XXDMA.d" "Drivers\TRNG\TRNGCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "Drivers\UDMA\UDMACC26XX.d" "ICall\icall.d" "ICall\icall_cc2650.d" "ICallBLE\ble_user_config.d" "ICallBLE\icall_api.d" "Middleware\extflash\ExtFlash.d" "PROFILES\devinfoservice.d" "PROFILES\gatt_uuid.d" "PROFILES\gattservapp_util.d" "PROFILES\peripheral.d" "Startup\board.d" "Startup\ccfg_app_ble.d" "drv\board_display.d" "drv\board_led.d" "src\evrs_gatt_profile.d" "src\evrs_tx_main.d" "src\main.d" 
+	-$(RM) "Application\util.obj" "Drivers\Display\Display.obj" "Drivers\Display\DisplayUart.obj" "Drivers\ECC\ECCROMCC26XX.obj" "Drivers\PIN\PINCC26XX.obj" "Drivers\RF\RFCC26XX_singleMode.obj" "Drivers\SPI\SPI.obj" "Drivers\SPI\SPICC26XXDMA.obj" "Drivers\TRNG\TRNGCC26XX.obj" "Drivers\UART\UART.obj" "Drivers\UART\UARTCC26XX.obj" "Drivers\UDMA\UDMACC26XX.obj" "ICall\icall.obj" "ICall\icall_cc2650.obj" "ICallBLE\ble_user_config.obj" "ICallBLE\icall_api.obj" "PROFILES\devinfoservice.obj" "PROFILES\gatt_uuid.obj" "PROFILES\gattservapp_util.obj" "PROFILES\peripheral.obj" "Startup\ccfg_app_ble.obj" "drv\etx_board.obj" "drv\etx_board_display.obj" "drv\etx_board_key.obj" "drv\etx_board_led.obj" "src\evrs_gatt_profile.obj" "src\evrs_tx_main.obj" "src\main.obj" 
+	-$(RM) "Application\util.d" "Drivers\Display\Display.d" "Drivers\Display\DisplayUART.d" "Drivers\ECC\ECCROMCC26XX.d" "Drivers\PIN\PINCC26XX.d" "Drivers\RF\RFCC26XX_singleMode.d" "Drivers\SPI\SPI.d" "Drivers\SPI\SPICC26XXDMA.d" "Drivers\TRNG\TRNGCC26XX.d" "Drivers\UART\UART.d" "Drivers\UART\UARTCC26XX.d" "Drivers\UDMA\UDMACC26XX.d" "ICall\icall.d" "ICall\icall_cc2650.d" "ICallBLE\ble_user_config.d" "ICallBLE\icall_api.d" "PROFILES\devinfoservice.d" "PROFILES\gatt_uuid.d" "PROFILES\gattservapp_util.d" "PROFILES\peripheral.d" "Startup\ccfg_app_ble.d" "drv\etx_board.d" "drv\etx_board_display.d" "drv\etx_board_key.d" "drv\etx_board_led.d" "src\evrs_gatt_profile.d" "src\evrs_tx_main.d" "src\main.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

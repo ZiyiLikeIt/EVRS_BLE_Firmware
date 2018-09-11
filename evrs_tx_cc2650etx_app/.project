@@ -52,11 +52,6 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
-			<name>Middleware</name>
-			<type>2</type>
-			<locationURI>virtual:/virtual</locationURI>
-		</link>
-		<link>
 			<name>PROFILES</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
@@ -70,16 +65,6 @@
 			<name>TOOLS</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
-		</link>
-		<link>
-			<name>Application/board_key.c</name>
-			<type>1</type>
-			<locationURI>SRC_EX/common/cc26xx/board_key.c</locationURI>
-		</link>
-		<link>
-			<name>Application/board_key.h</name>
-			<type>1</type>
-			<locationURI>SRC_EX/common/cc26xx/board_key.h</locationURI>
 		</link>
 		<link>
 			<name>Application/rcosc_calibration.h</name>
@@ -217,11 +202,6 @@
 			<locationURI>SRC_COMMON/osal/src/inc/osal_snv.h</locationURI>
 		</link>
 		<link>
-			<name>Middleware/extflash</name>
-			<type>2</type>
-			<locationURI>virtual:/virtual</locationURI>
-		</link>
-		<link>
 			<name>PROFILES/devinfoservice.c</name>
 			<type>1</type>
 			<locationURI>SRC_EX/profiles/dev_info/cc26xx/devinfoservice.c</locationURI>
@@ -295,11 +275,6 @@
 			<name>PROFILES/simplekeys.h</name>
 			<type>1</type>
 			<locationURI>SRC_EX/profiles/keys/simplekeys.h</locationURI>
-		</link>
-		<link>
-			<name>Startup/board.c</name>
-			<type>1</type>
-			<locationURI>SRC_EX/target/board.c</locationURI>
 		</link>
 		<link>
 			<name>Startup/ccfg_app_ble.c</name>
@@ -445,16 +420,6 @@
 			<name>Drivers/UDMA/UDMACC26XX.h</name>
 			<type>1</type>
 			<locationURI>TI_RTOS_DRIVERS_BASE/ti/drivers/dma/UDMACC26XX.h</locationURI>
-		</link>
-		<link>
-			<name>Middleware/extflash/ExtFlash.c</name>
-			<type>1</type>
-			<locationURI>TI_RTOS_DRIVERS_BASE/ti/mw/extflash/ExtFlash.c</locationURI>
-		</link>
-		<link>
-			<name>Middleware/extflash/ExtFlash.h</name>
-			<type>1</type>
-			<locationURI>TI_RTOS_DRIVERS_BASE/ti/mw/extflash/ExtFlash.h</locationURI>
 		</link>
 	</linkedResources>
 	<variableList>
