@@ -1,7 +1,7 @@
 ******************************************************************************
                   TI ARM Linker PC v16.9.4                     
 ******************************************************************************
->> Linked Mon Sep 03 23:00:43 2018
+>> Linked Tue Sep 11 17:02:33 2018
 
 OUTPUT FILE NAME:   <evrs_bs_cc2650lp_app.out>
 ENTRY POINT SYMBOL: "ResetISR"  address: 000066e1
@@ -743,9 +743,9 @@ xdc.noload
 *          0    00000000    00000000     UNINITIALIZED
 
 .text.4    0    000005ec    000080e4     
-                  000005ec    0000067c     evrs_bs_main.obj (.text:EBS_taskFxn$21)
-                  00000c68    0000059c     evrs_bs_main.obj (.text:EBS_processStackMsg$21)
-                  00001204    00000450     driverlib.lib : setup.obj (.text:TrimAfterColdResetWakeupFromShutDown$33)
+                  000005ec    0000067c     evrs_bs_main.obj (.text:EBS_taskFxn$20)
+                  00000c68    0000059c     evrs_bs_main.obj (.text:EBS_processStackMsg$20)
+                  00001204    00000450     driverlib.lib : setup.obj (.text:TrimAfterColdResetWakeupFromShutDown$32)
                   00001654    0000033c     rom_sysbios.aem3 : rom_sysbios.obj (.text:xdc_runtime_System_doPrint__I)
                   00001990    00000280     RFCC26XX_singleMode.obj (.text:fsmActiveState$4)
                   00001c10    00000228     drivers_cc26xxware.aem3 : PowerCC26XX.oem3 (.text:Power_sleep)
@@ -764,7 +764,7 @@ xdc.noload
                   000032f0    00000148     driverlib.lib : setup.obj (.text:NOROM_SetupTrimDevice)
                   00003438    00000128     ECCROMCC26XX.obj (.text:ECCROMCC26XX_genKeys)
                   00003560    00000128     central.obj (.text:gapCentralRole_taskFxn$15)
-                  00003688    00000120     evrs_bs_main.obj (.text:EBS_updatePollState$21)
+                  00003688    00000120     evrs_bs_main.obj (.text:EBS_updatePollState$20)
                   000037a8    00000120     central.obj (.text:gapCentralRole_ProcessGAPMsg$15)
                   000038c8    0000011c     drivers_cc26xxware.aem3 : PowerCC26XX.oem3 (.text:Power_init)
                   000039e4    00000118     UARTCC26XX.obj (.text:UARTCC26XX_read)
@@ -813,7 +813,7 @@ xdc.noload
                   00005648    0000006d                      : rom_sysbios.obj (.text:xdc_runtime_System_formatNum__I)
                   000056b5    00000001     --HOLE-- [fill = 0]
                   000056b6    00000002     RFCC26XX_singleMode.obj (.text:defaultErrCb$4)
-                  000056b8    0000006c     evrs_bs_main.obj (.text:EBS_updateTargetList$21)
+                  000056b8    0000006c     evrs_bs_main.obj (.text:EBS_updateTargetList$20)
                   00005724    0000006c     icall.obj (.text:ICall_createRemoteTasks)
                   00005790    0000006c     drivers_cc26xxware.aem3 : PowerCC26XX.oem3 (.text:PowerCC26XX_calibrate)
                   000057fc    00000068     driverlib.lib : sys_ctrl.obj (.text:NOROM_SysCtrl_DCDC_VoltageConditionalControl)
@@ -980,7 +980,7 @@ xdc.noload
                   00007ad8    00000024     rom_sysbios.aem3 : rom_sysbios.obj (.text:ti_sysbios_family_arm_cc26xx_Timer_getMaxTicks__E)
                   00007afc    00000020     icall_api.obj (.text:ICall_allocMsg$14)
                   00007b1c    00000020     icall_api.obj (.text:ICall_getEntityId$14)
-                  00007b3c    00000020     evrs_bs_main.obj (.text:ICall_malloc$21)
+                  00007b3c    00000020     evrs_bs_main.obj (.text:ICall_malloc$20)
                   00007b5c    00000020     icall.obj (.text:ICall_primService$11)
                   00007b7c    00000020     drivers_cc26xxware.aem3 : PowerCC26XX.oem3 (.text:Power_unregisterNotify)
                   00007b9c    00000020     app_ble_pem3.oem3 (.text:ti_sysbios_BIOS_rtsLock__I)
@@ -993,7 +993,7 @@ xdc.noload
                   00007c60    0000001e     PINCC26XX.obj (.text:PIN_close)
                   00007c7e    0000001e     drivers_cc26xxware.aem3 : PowerCC26XX.oem3 (.text:Power_getTransitionLatency)
                   00007c9c    0000001e     icall_api.obj (.text:matchHciCS$14)
-                  00007cba    0000001c     evrs_bs_main.obj (.text:EBS_pairStateCB$21)
+                  00007cba    0000001c     evrs_bs_main.obj (.text:EBS_pairStateCB$20)
                   00007cd6    00000002     rom_sysbios.aem3 : rom_sysbios.obj (.text:xdc_runtime_SysCallback_defaultExit)
                   00007cd8    0000001c     evrs_bs_main.obj (.text:EBS_startDiscHandler)
                   00007cf4    0000001c     driverlib.lib : osc.obj (.text:NOROM_OSCClockSourceGet)
@@ -1015,9 +1015,9 @@ xdc.noload
                   00007e9c    00000018     icall_cc2650.obj (.text:ICallPlatform_pwrDispense)
                   00007eb4    00000018     icall_cc2650.obj (.text:ICallPlatform_pwrRequire)
                   00007ecc    00000018     util.obj (.text:ICall_free$1)
-                  00007ee4    00000018     evrs_bs_main.obj (.text:ICall_free$21)
+                  00007ee4    00000018     evrs_bs_main.obj (.text:ICall_free$20)
                   00007efc    00000018     icall_api.obj (.text:ICall_freeMsg$14)
-                  00007f14    00000018     evrs_bs_main.obj (.text:ICall_freeMsg$21)
+                  00007f14    00000018     evrs_bs_main.obj (.text:ICall_freeMsg$20)
                   00007f2c    00000018     icall.obj (.text:ICall_primMalloc$11)
                   00007f44    00000018     driverlib.lib : aon_rtc.obj (.text:NOROM_AONRTCCurrentCompareValueGet)
                   00007f5c    00000018                   : chipinfo.obj (.text:NOROM_ChipInfo_GetPackageType)
@@ -1035,14 +1035,14 @@ xdc.noload
                   0000807c    00000008     (.tramp.ti_sysbios_BIOS_RtsGateProxy_leave__E.1)
                   00008084    00000018     rom_sysbios.aem3 : rom_sysbios.obj (.text:ti_sysbios_knl_Swi_or__E)
                   0000809c    00000018     app_ble_pem3.oem3 (.text:ti_sysbios_rom_cortexm_cc26xx_CC26xx_checkRevision__E)
-                  000080b4    00000016     evrs_bs_main.obj (.text:EBS_eventCB$21)
+                  000080b4    00000016     evrs_bs_main.obj (.text:EBS_eventCB$20)
                   000080ca    00000016     icall.obj (.text:ICall_leaveCSImpl)
                   000080e0    00000016     icall.obj (.text:ICall_primStopTimer$11)
                   000080f6    00000016     ble_user_config.obj (.text:driverTable_fnSpinlock)
                   0000810c    00000016     app_ble_pem3.oem3 (.text:ti_sysbios_BIOS_exitFunc__I)
                   00008122    00000002     rom_sysbios.aem3 : rom_sysbios.obj (.text:xdc_runtime_SysCallback_defaultPutch)
                   00008124    00000014     board_key.obj (.text:Board_keyChangeHandler$0)
-                  00008138    00000014     evrs_bs_main.obj (.text:EBS_updateEbsState$21)
+                  00008138    00000014     evrs_bs_main.obj (.text:EBS_updateEbsState$20)
                   0000814c    00000014     driverlib.lib : aon_rtc.obj (.text:NOROM_AONRTCCurrent64BitValueGet)
                   00008160    00000014     PINCC26XX.obj (.text:PINCC26XX_getInputValue$3)
                   00008174    00000014     PINCC26XX.obj (.text:PINCC26XX_getOutputValue$3)
@@ -1286,10 +1286,10 @@ xdc.noload
                   20001c04    000000c8     (.common:ti_sysbios_family_arm_m3_Hwi_dispatchTable)
                   20001ccc    00000080     board.obj (.bss:uartStringBuf$16)
                   20001d4c    00000020     (.common:displayUartObject)
-                  20001d6c    00000014     driverlib.lib : osc.obj (.bss:oscHfGlobals$31)
+                  20001d6c    00000014     driverlib.lib : osc.obj (.bss:oscHfGlobals$30)
                   20001d80    00000010     util.obj (.bss:str$1$1)
                   20001d90    00000008     RFCC26XX_singleMode.obj (.bss)
-                  20001d98    00000008     driverlib.lib : sys_ctrl.obj (.bss:powerQualGlobals$35)
+                  20001d98    00000008     driverlib.lib : sys_ctrl.obj (.bss:powerQualGlobals$34)
                   20001da0    00000004     (.common:trngCC26XXObjects)
                   20001da4    00000002     UARTCC26XX.obj (.bss)
                   20001da6    00000001     (.common:driverlib_release_0_47020)
@@ -1383,7 +1383,7 @@ MODULE SUMMARY
        Total:                                   4548    20        1380   
                                                                          
     C:\Users\ziyix\AppData\Local\Temp\
-       {2613D1E1-DDAC-4733-BA66-BC079C4C2A54}   0       0         337    
+       {858321E2-A056-48C3-87B8-9A9713B9A1F6}   0       0         337    
     +--+----------------------------------------+-------+---------+---------+
        Total:                                   0       0         337    
                                                                          
@@ -1627,7 +1627,7 @@ eccRom_genSharedSecret    $Tramp$TT$L$PI$$eccRom_genSharedSecret
 ti_sysbios_knl_Semaphore_pend__E  $Tramp$TT$L$PI$$ti_sysbios_knl_Semaphore_pend__E
    1001a0cd     00008628     00002b68   ECCROMCC26XX.obj (.text:ECCROMCC26XX_genDHKey)
                              0000346a   ECCROMCC26XX.obj (.text:ECCROMCC26XX_genKeys)
-                             00003742   evrs_bs_main.obj (.text:EBS_updatePollState$21)
+                             00003742   evrs_bs_main.obj (.text:EBS_updatePollState$20)
                              00003aa6   UARTCC26XX.obj (.text:UARTCC26XX_read)
                              00003d7e   icall.obj (.text:ICall_primWaitMatch$11)
                              00003e8e   UARTCC26XX.obj (.text:UARTCC26XX_write)
@@ -1841,17 +1841,17 @@ ti_sysbios_family_arm_m3_Hwi_disableFxn__E  $Tramp$TT$L$PI$$ti_sysbios_family_ar
                              000082c2   icall.obj (.text:ICall_primDisableMInt$11)
                              0000854c   tirtosport.aem3 : HwiP_tirtos.oem3 (.text:HwiP_disable)
 ti_sysbios_knl_Clock_destruct  $Tramp$TT$L$PI$$ti_sysbios_knl_Clock_destruct
-   1001c2b9     000086a0     00000ce0   evrs_bs_main.obj (.text:EBS_processStackMsg$21)
+   1001c2b9     000086a0     00000ce0   evrs_bs_main.obj (.text:EBS_processStackMsg$20)
                              0000553e   UARTCC26XX.obj (.text:UARTCC26XX_close)
 ti_sysbios_knl_Queue_empty__E  $Tramp$TT$L$PI$$ti_sysbios_knl_Queue_empty__E
-   1001c113     000086a8     00000ae2   evrs_bs_main.obj (.text:EBS_taskFxn$21)
+   1001c113     000086a8     00000ae2   evrs_bs_main.obj (.text:EBS_taskFxn$20)
 ti_sysbios_knl_Semaphore_post__E  $Tramp$TT$L$PI$$ti_sysbios_knl_Semaphore_post__E
-   1001ac41     000086b0     000009b6   evrs_bs_main.obj (.text:EBS_taskFxn$21)
+   1001ac41     000086b0     000009b6   evrs_bs_main.obj (.text:EBS_taskFxn$20)
                              00002b9a   ECCROMCC26XX.obj (.text:ECCROMCC26XX_genDHKey)
                              00002c86   ECCROMCC26XX.obj (.text:ECCROMCC26XX_genDHKey)
                              0000349c   ECCROMCC26XX.obj (.text:ECCROMCC26XX_genKeys)
                              0000352e   ECCROMCC26XX.obj (.text:ECCROMCC26XX_genKeys)
-                             00003720   evrs_bs_main.obj (.text:EBS_updatePollState$21)
+                             00003720   evrs_bs_main.obj (.text:EBS_updatePollState$20)
                              00003e08   icall.obj (.text:ICall_primWaitMatch$11)
                              00004858   RFCC26XX_singleMode.obj (.text:fsmPowerDownState$4)
                              00004c7a   PINCC26XX.obj (.text:PIN_open)
@@ -1864,13 +1864,13 @@ ti_sysbios_knl_Semaphore_post__E  $Tramp$TT$L$PI$$ti_sysbios_knl_Semaphore_post_
                              000084c0   UARTCC26XX.obj (.text:readSemCallback$9)
                              000084c8   UARTCC26XX.obj (.text:writeSemCallback$9)
 ti_sysbios_knl_Queue_get__E  $Tramp$TT$L$PI$$ti_sysbios_knl_Queue_get__E
-   1001bf11     000086b8     000008fc   evrs_bs_main.obj (.text:EBS_taskFxn$21)
+   1001bf11     000086b8     000008fc   evrs_bs_main.obj (.text:EBS_taskFxn$20)
 ti_sysbios_knl_Semaphore_create  $Tramp$TT$L$PI$$ti_sysbios_knl_Semaphore_create
-   1001b5ad     000086c0     0000086a   evrs_bs_main.obj (.text:EBS_taskFxn$21)
+   1001b5ad     000086c0     0000086a   evrs_bs_main.obj (.text:EBS_taskFxn$20)
                              0000634c   icall.obj (.text:ICall_newTask$11)
                              0000681c   ECCROMCC26XX.obj (.text:ECCROMCC26XX_init)
 ti_sysbios_knl_Queue_construct  $Tramp$TT$L$PI$$ti_sysbios_knl_Queue_construct
-   1001b8f5     000086c8     0000061c   evrs_bs_main.obj (.text:EBS_taskFxn$21)
+   1001b8f5     000086c8     0000061c   evrs_bs_main.obj (.text:EBS_taskFxn$20)
 
 [60 trampolines]
 [301 trampoline calls]
