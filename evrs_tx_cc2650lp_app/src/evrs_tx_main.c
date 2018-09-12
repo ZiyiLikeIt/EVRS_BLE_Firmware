@@ -61,7 +61,7 @@
 #include "gapgattserver.h"
 #include "gattservapp.h"
 #include "devinfoservice.h"
-#include "evrs_gatt_profile.h"
+#include "etx_gatt_prof.h"
 
 #include "peripheral.h"
 #include "gapbondmgr.h"
@@ -130,16 +130,17 @@
 #define ETX_ADTYPE_DEVID			0xAE
 
 // Application state
-typedef enum {
+typedef enum AppStates_t{
 	APP_STATE_INIT, APP_STATE_IDLE, APP_STATE_ADVERT
-} appStates_t;
+} AppStates_t;
 
 // Internal Events for RTOS application
-#define ETX_STATE_CHANGE_EVT                  0x0001
-#define ETX_CHAR_CHANGE_EVT                   0x0002
-#define ETX_PERIODIC_EVT                      0x0004
-#define ETX_CONN_EVT_END_EVT                  0x0008
-#define ETX_KEY_CHANGE_EVT                    0x0010
+#define ETX_STATE_CHANGE_EVT        0x0001
+#define ETX_CHAR_CHANGE_EVT         0x0002
+#define ETX_CHAR_ENQUIRE_EVT        0x0004
+#define ETX_PERIODIC_EVT            0x0008
+#define ETX_CONN_EVT_END_EVT        0x0010
+#define ETX_KEY_CHANGE_EVT          0x0020
 
 #define ETX_DEVID_LEN 			4
 #define ETX_DEVID_NV_ID			0x80
@@ -150,9 +151,9 @@ typedef enum {
  */
 
 // App event passed from profiles.
-typedef struct {
+typedef struct EtxEvt_t{
 	appEvtHdr_t hdr;  // event header.
-} sbpEvt_t;
+} EtxEvt_t;
 
 /*********************************************************************
  * GLOBAL VARIABLES
@@ -184,7 +185,7 @@ Task_Struct sbpTask;
 Char sbpTaskStack[ETX_TASK_STACK_SIZE];
 
 // Profile state and parameters
-static appStates_t appState = APP_STATE_INIT;
+static AppStates_t appState = APP_STATE_INIT;
 
 // GAP - Advertisement data (max size = 31 bytes, though this is
 // best kept short to conserve power while advertisting)
@@ -200,7 +201,7 @@ static uint8_t advertData[] = {
 		// in this peripheral
 		0x03,// length of this data
 		GAP_ADTYPE_16BIT_MORE,      // some of the UUID's, but not all
-		LO_UINT16(EVRSPROFILE_SERV_UUID), HI_UINT16(EVRSPROFILE_SERV_UUID),
+		LO_UINT16(ETXPROFILE_SERV_UUID), HI_UINT16(ETXPROFILE_SERV_UUID),
 
 		0x02,
 		ETX_ADTYPE_DEST,
@@ -257,9 +258,11 @@ static void ETX_taskFxn(UArg a0, UArg a1);
 
 static uint8_t ETX_processStackMsg(ICall_Hdr *pMsg);
 static uint8_t ETX_processGATTMsg(gattMsgEvent_t *pMsg);
-static void ETX_processAppMsg(sbpEvt_t *pMsg);
+static void ETX_processAppMsg(EtxEvt_t *pMsg);
+
 static void ETX_processStateChangeEvt(gaprole_States_t newState);
 static void ETX_processCharValueChangeEvt(uint8_t paramID);
+static void ETX_processCharValueEnquireEvt(uint8_t paramID);
 //static void ETX_performPeriodicTask(void);
 //static void ETX_clockHandler(UArg arg);
 
@@ -267,9 +270,9 @@ static void ETX_sendAttRsp(void);
 static void ETX_freeAttRsp(uint8_t status);
 
 static void ETX_stateChangeCB(gaprole_States_t newState);
-#ifndef FEATURE_OAD_ONCHIP
 static void ETX_charValueChangeCB(uint8_t paramID);
-#endif //!FEATURE_OAD_ONCHIP
+static void ETX_charValueEnquireCB(uint8_t paramID);
+
 static void ETX_enqueueMsg(uint8_t event, uint8_t state);
 
 void ETX_keyChangeHandler(uint8_t keys);
@@ -302,8 +305,9 @@ static gapBondCBs_t ETX_BondMgrCBs = {
 		};
 
 // Simple GATT Profile Callbacks
-static EVRSProfileCBs_t ETX_EVRSProfileCBs = {
-		ETX_charValueChangeCB // Characteristic value change callback
+static ETXProfileCBs_t ETX_ProfileCBs = {
+		ETX_charValueChangeCB, // Characteristic value change callback
+		ETX_charValueEnquireCB // char enquired callback
 		};
 
 /*********************************************************************
@@ -452,27 +456,21 @@ static void ETX_init(void) {
 	GATTServApp_AddService(GATT_ALL_SERVICES);   // GATT attributes
 	DevInfo_AddService();                        // Device Information Service
 
-	EVRSProfile_AddService(GATT_ALL_SERVICES); // EVRS GATT Profile
+	ETXProfile_AddService(GATT_ALL_SERVICES); // EVRS GATT Profile
 
 	// Setup the EVRSProfile Characteristic Values
 	{
-		uint8_t sysIdVal = 0xA1;
-		uint8_t devIdVal = 0xA2;
 		uint8_t cmdVal = 0xA3;
 		uint8_t dataVal = 0xA4;
 
-		EVRSProfile_SetParameter(EVRSPROFILE_SYSID, sizeof(sysIdVal),
-				&sysIdVal);
-		EVRSProfile_SetParameter(EVRSPROFILE_DEVID, sizeof(devIdVal),
-				&devIdVal);
-		EVRSProfile_SetParameter(EVRSPROFILE_CMD, sizeof(cmdVal),
+		ETXProfile_SetParameter(ETXPROFILE_CMD, sizeof(cmdVal),
 				&cmdVal);
-		EVRSProfile_SetParameter(EVRSPROFILE_DATA, sizeof(dataVal),
+		ETXProfile_SetParameter(ETXPROFILE_DATA, sizeof(dataVal),
 				&dataVal);
 	}
 
 	// Register callback with SimpleGATTprofile
-	EVRSProfile_RegisterAppCBs(&ETX_EVRSProfileCBs);
+	ETXProfile_RegisterAppCBs(&ETX_ProfileCBs);
 
 	// Start the Device
 	VOID GAPRole_StartDevice(&ETX_gapRoleCBs);
@@ -489,7 +487,7 @@ static void ETX_init(void) {
 	HCI_LE_ReadMaxDataLenCmd();
 
 	uout0("EVRS TX initialized");
-	Board_ledControl(BOARD_LED_ID_G, BOARD_LED_STATE_FLASH, 300);
+	Board_ledControl(BOARD_LED_ID_G, BOARD_LED_STATE_TRIGGER, 1500);
 	//Board_ledControl(BOARD_LED_ID_R, BOARD_LED_STATE_ON, 0);
 }
 
@@ -555,7 +553,7 @@ static void ETX_taskFxn(UArg a0, UArg a1) {
 			// If RTOS queue is not empty, process app message.
 			while (!Queue_empty(appMsgQueue))
 			{
-				sbpEvt_t *pMsg = (sbpEvt_t *) Util_dequeueMsg(appMsgQueue);
+				EtxEvt_t *pMsg = (EtxEvt_t *) Util_dequeueMsg(appMsgQueue);
 				if (pMsg)
 				{
 					// Process message.
@@ -757,7 +755,7 @@ static void ETX_freeAttRsp(uint8_t status) {
  *
  * @return  None.
  */
-static void ETX_processAppMsg(sbpEvt_t *pMsg) {
+static void ETX_processAppMsg(EtxEvt_t *pMsg) {
 	switch (pMsg->hdr.event)
 	{
 		case ETX_STATE_CHANGE_EVT:
@@ -768,6 +766,10 @@ static void ETX_processAppMsg(sbpEvt_t *pMsg) {
 		case ETX_CHAR_CHANGE_EVT:
 			ETX_processCharValueChangeEvt(pMsg->hdr.state);
 			break;
+
+		case ETX_CHAR_ENQUIRE_EVT:
+            ETX_processCharValueEnquireEvt(pMsg->hdr.state);
+            break;
 
 		case ETX_KEY_CHANGE_EVT:
 			ETX_handleKeys(0, pMsg->hdr.state);
@@ -966,7 +968,7 @@ static void ETX_processStateChangeEvt(gaprole_States_t newState) {
 }
 
 /*********************************************************************
- * @fn      ETX_charValueChangeCB
+ * @fn      ETX_charValueChange/EnquireCB
  *
  * @brief   Callback from Simple Profile indicating a characteristic
  *          value change.
@@ -977,6 +979,10 @@ static void ETX_processStateChangeEvt(gaprole_States_t newState) {
  */
 static void ETX_charValueChangeCB(uint8_t paramID) {
 	ETX_enqueueMsg(ETX_CHAR_CHANGE_EVT, paramID);
+}
+
+static void ETX_charValueEnquireCB(uint8_t paramID) {
+    ETX_enqueueMsg(ETX_CHAR_ENQUIRE_EVT, paramID);
 }
 
 /*********************************************************************
@@ -994,22 +1000,16 @@ static void ETX_processCharValueChangeEvt(uint8_t paramID) {
 
 	switch (paramID)
 	{
-		case EVRSPROFILE_DEVID:
-			EVRSProfile_GetParameter(EVRSPROFILE_DEVID, &newValue);
 
-			uout1("Device Id: 0x%02x",
-					(uint8_t )newValue);
-			break;
-
-		case EVRSPROFILE_CMD:
-			EVRSProfile_GetParameter(EVRSPROFILE_CMD, &newValue);
+		case ETXPROFILE_CMD:
+			ETXProfile_GetParameter(ETXPROFILE_CMD, &newValue);
 
 			uout1("BS Command: 0x%02x",
 					(uint8_t )newValue);
 			break;
 
-		case EVRSPROFILE_DATA:
-			EVRSProfile_GetParameter(EVRSPROFILE_DATA, &newValue);
+		case ETXPROFILE_DATA:
+			ETXProfile_GetParameter(ETXPROFILE_DATA, &newValue);
 
 			uout1("User Data: 0x%02x",
 					(uint8_t )newValue);
@@ -1019,6 +1019,34 @@ static void ETX_processCharValueChangeEvt(uint8_t paramID) {
 			// should not reach here!
 			break;
 	}
+}
+
+static void ETX_processCharValueEnquireEvt(uint8_t paramID) {
+
+    uint8_t newValue;
+    switch (paramID)
+    {
+
+        case ETXPROFILE_CMD:
+            ETXProfile_GetParameter(ETXPROFILE_CMD, &newValue);
+            uout1("BS Command Submitted: 0x%02x", (uint8_t )newValue);
+
+            newValue = 0;
+            ETXProfile_SetParameter(ETXPROFILE_CMD, sizeof(newValue), &newValue);
+            break;
+
+        case ETXPROFILE_DATA:
+            ETXProfile_GetParameter(ETXPROFILE_DATA, &newValue);
+            uout1("User Data Submitted: 0x%02x", (uint8_t )newValue);
+
+            newValue = 0;
+            ETXProfile_SetParameter(ETXPROFILE_DATA, sizeof(newValue), &newValue);
+            break;
+
+        default:
+            // should not reach here!
+            break;
+    }
 }
 
 /*********************************************************************
@@ -1032,10 +1060,10 @@ static void ETX_processCharValueChangeEvt(uint8_t paramID) {
  * @return  None.
  */
 static void ETX_enqueueMsg(uint8_t event, uint8_t state) {
-	sbpEvt_t *pMsg;
+	EtxEvt_t *pMsg;
 
 	// Create dynamic pointer to message.
-	if ((pMsg = ICall_malloc(sizeof(sbpEvt_t))))
+	if ((pMsg = ICall_malloc(sizeof(EtxEvt_t))))
 	{
 		pMsg->hdr.event = event;
 		pMsg->hdr.state = state;
@@ -1101,9 +1129,9 @@ static void ETX_handleKeys(uint8_t shift, uint8_t keys) {
 			if (keys & KEY_RIGHT)
 			{
 				uint32 newValue = 0;
-				EVRSProfile_GetParameter(EVRSPROFILE_DATA, &newValue);
+				ETXProfile_GetParameter(ETXPROFILE_DATA, &newValue);
 				newValue += 1;
-				EVRSProfile_SetParameter(EVRSPROFILE_DATA, sizeof(uint32), &newValue );
+				ETXProfile_SetParameter(ETXPROFILE_DATA, sizeof(uint32), &newValue );
 				appState = APP_STATE_IDLE;
 			}
 			break;

@@ -26,20 +26,21 @@ extern "C"
  */
 
 /** LED Identifications **/
-typedef enum
+typedef enum BoardLedId_t
 {
     BOARD_LED_ID_R,
     BOARD_LED_ID_G
-} boardLedId_t;
+} BoardLedId_t;
 
 
 /** LED States */
-typedef enum
+typedef enum BoardLedState_t
 {
     BOARD_LED_STATE_OFF,
     BOARD_LED_STATE_ON,
+    BOARD_LED_STATE_TRIGGER,
     BOARD_LED_STATE_FLASH
-} boardLedState_t;
+} BoardLedState_t;
 
 
 /*****************************************************************************
@@ -64,7 +65,7 @@ void Board_initLEDs(void);
  *
  * @return  none
  */
-void Board_ledControl(boardLedId_t ledId, boardLedState_t state, uint32_t period);
+void Board_ledControl(BoardLedId_t ledId, BoardLedState_t state, uint32_t period);
 
 
 

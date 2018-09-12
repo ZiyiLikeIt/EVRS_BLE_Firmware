@@ -20,7 +20,11 @@
 #include <ti/sysbios/knl/Clock.h>
 #include <ti/drivers/PIN.h>
 
-#include "Board.h"
+#if defined(CC2650_LAUNCHXL)
+    #include "board.h"
+#elif defined(CC2650_ETX)
+    #include "etx_board.h"
+#endif
 
 #include "util.h"
 #include "board_led.h"
@@ -44,9 +48,11 @@ PIN_Config ledPinTable[] = {
 /*********************************************************************
  * Local Varibles
  */
+/* LED trigger flag */
+static uint8_t isFlashing[2];
 
 /* flash control timer */
-static Clock_Struct ledFlashClk[2];
+static Clock_Struct ledClk[2];
 
 /* LED pin state */
 static PIN_State ledPinState;
@@ -55,7 +61,7 @@ static PIN_State ledPinState;
 static PIN_Handle ledPinHandle;
 
 /* LED state table */
-static boardLedState_t ledState[2];
+static BoardLedState_t ledState[2];
 
 /*********************************************************************
  * Local Functions
@@ -86,10 +92,10 @@ void Board_initLEDs(void) {
 	ledState[BOARD_LED_ID_R] = BOARD_LED_STATE_OFF;
 
 	/* construct clock to control the flashing */
-	Util_constructClock(&ledFlashClk[BOARD_LED_ID_R], Board_ledFlashTimeoutCB,
-	BOARD_LED_FLASH_PERIOD, 0, false, BOARD_LED_ID_R);
-	Util_constructClock(&ledFlashClk[BOARD_LED_ID_G], Board_ledFlashTimeoutCB,
-	BOARD_LED_FLASH_PERIOD, 0, false, BOARD_LED_ID_G);
+	Util_constructClock(&ledClk[BOARD_LED_ID_R], Board_ledFlashTimeoutCB,
+            BOARD_LED_FLASH_PERIOD, 0, false, BOARD_LED_ID_R);
+	Util_constructClock(&ledClk[BOARD_LED_ID_G], Board_ledFlashTimeoutCB,
+            BOARD_LED_FLASH_PERIOD, 0, false, BOARD_LED_ID_G);
 }
 
 /*****************************************************************************
@@ -103,25 +109,30 @@ void Board_initLEDs(void) {
  *
  * @return  none
  */
-void Board_ledControl(boardLedId_t ledId, boardLedState_t state,
+void Board_ledControl(BoardLedId_t ledId, BoardLedState_t state,
 		uint32_t period) {
 	switch (state)
 	{
 		case BOARD_LED_STATE_OFF:
 			PIN_setOutputValue(ledPinHandle, IDPARSER(ledId), 0);
-			if (ledState[ledId] == BOARD_LED_STATE_FLASH) Util_stopClock(
-					&ledFlashClk[ledId]);
+			if (ledState[ledId] == BOARD_LED_STATE_FLASH)
+			    Util_stopClock(&ledClk[ledId]);
 			break;
 
 		case BOARD_LED_STATE_ON:
 			PIN_setOutputValue(ledPinHandle, IDPARSER(ledId), 1);
-			if (ledState[ledId] == BOARD_LED_STATE_FLASH) Util_stopClock(
-					&ledFlashClk[ledId]);
+			if (ledState[ledId] == BOARD_LED_STATE_FLASH)
+			    Util_stopClock(&ledClk[ledId]);
 			break;
-
+		case BOARD_LED_STATE_TRIGGER:
+            PIN_setOutputValue(ledPinHandle, IDPARSER(ledId), 1);
+            isFlashing[ledId] = 0;
+            Util_restartClock(&ledClk[ledId], period);
+            break;
 		case BOARD_LED_STATE_FLASH:
 			PIN_setOutputValue(ledPinHandle, IDPARSER(ledId), 0);
-			Util_restartClock(&ledFlashClk[ledId], period);
+			isFlashing[ledId] = 1;
+			Util_restartClock(&ledClk[ledId], period);
 			break;
 
 		default:
@@ -147,8 +158,8 @@ void Board_ledControl(boardLedId_t ledId, boardLedState_t state,
  }
  */
 static void Board_ledFlashTimeoutCB(UArg ledId) {
-	PIN_setOutputValue(ledPinHandle, IDPARSER((boardLedId_t ) ledId),
-			!PIN_getOutputValue(IDPARSER((boardLedId_t ) ledId)));
-
-	Util_startClock(&ledFlashClk[ledId]);
+	PIN_setOutputValue(ledPinHandle, IDPARSER((BoardLedId_t ) ledId),
+			!PIN_getOutputValue(IDPARSER((BoardLedId_t ) ledId)));
+	if (isFlashing[ledId])
+	    Util_startClock(&ledClk[ledId]);
 }
